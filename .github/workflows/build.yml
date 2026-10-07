@@ -1,0 +1,178 @@
+name: build
+
+# 触发：push 到 main、打 tag、手动作
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # CI 能做什么、不能做什么
+  #
+  # 【不能】编译 plugin/ —— 它需要 refs/*.dll（游戏程序集），
+  #        而那是版权内容，被有意排除在仓库外。CI 上没有游戏。
+  #        所以「从源码自动构建」在这类 Mod 项目上做不到，
+  #        除非把游戏 DLL 传上去 —— 那正是我们不做的事。
+  #
+  # 【能做】① 安全闸：确认仓库里没有混进游戏内容
+  #        ② 产物完整性：dist/ 里的文件在不在、是不是有效 PE
+  #        ③ 生成 SHA256 校验和，随 Release 一起发
+  #        ④ 打 tag 时自动建 Release
+  # ─────────────────────────────────────────────────────────────
+
+  guard:
+    name: 安全闸 + 产物完整性
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 确认仓库里没有游戏内容
+        shell: pwsh
+        run: |
+          $bad = @()
+          # 游戏素材的扩展名
+          $exts = @('.moc3', '.assets', '.bundle', '.resource', '.ress', '.dat', '.anm')
+          # 游戏程序集的特征名
+          $names = @('Assembly-CSharp', 'UnityEngine.', '0Harmony', 'Mono.Cecil', 'BepInEx.dll')
+
+          $files = Get-ChildItem -Recurse -File | Where-Object { $_.FullName -notmatch '\\\.git\\' }
+          foreach ($f in $files) {
+            $e = $f.Extension.ToLower()
+            if ($exts -contains $e) { $bad += "扩展名: $($f.FullName)" }
+            foreach ($n in $names) {
+              if ($f.Name -like "*$n*" -and $f.Extension -ne '.cs') {
+                $bad += "文件名: $($f.FullName)"
+              }
+            }
+            # dll / exe 里不能内嵌 moc3
+            if ($e -in @('.dll', '.exe')) {
+              $bytes = [IO.File]::ReadAllBytes($f.FullName)
+              $txt = [Text.Encoding]::ASCII.GetString($bytes)
+              if ($txt -match 'moc3') { $bad += "内嵌 moc3: $($f.FullName)" }
+            }
+          }
+
+          if ($bad.Count -gt 0) {
+            Write-Host "::error::仓库里混进了游戏内容："
+            $bad | ForEach-Object { Write-Host "  $_" }
+            exit 1
+          }
+          Write-Host "✓ 没有游戏素材、没有游戏程序集、exe/dll 里没有内嵌 moc3"
+          Write-Host "  共检查 $($files.Count) 个文件"
+
+      - name: 确认 dist/ 产物齐全
+        shell: pwsh
+        run: |
+          $want = @(
+            'dist/BurgerShopModder.dll',
+            'dist/数值修改器.exe',
+            'dist/汉堡店修改器-安装程序.exe',
+            'dist/使用说明.md'
+          )
+          $miss = @()
+          foreach ($w in $want) { if (-not (Test-Path $w)) { $miss += $w } }
+          if ($miss.Count -gt 0) {
+            Write-Host "::error::dist/ 缺文件："
+            $miss | ForEach-Object { Write-Host "  $_" }
+            exit 1
+          }
+          # 确认 exe/dll 是有效 PE（以 MZ 开头）
+          foreach ($p in @('dist/BurgerShopModder.dll', 'dist/数值修改器.exe', 'dist/汉堡店修改器-安装程序.exe')) {
+            $b = [IO.File]::ReadAllBytes($p)
+            if ($b[0] -ne 0x4D -or $b[1] -ne 0x5A) { Write-Host "::error::$p 不是有效 PE"; exit 1 }
+            $kb = [math]::Round($b.Length / 1KB)
+            Write-Host "  ✓ $p  (${kb} KB)"
+          }
+
+      - name: 确认安装程序自带了载荷
+        shell: pwsh
+        run: |
+          $asm = [Reflection.Assembly]::LoadFrom((Resolve-Path 'dist/汉堡店修改器-安装程序.exe'))
+          $res = $asm.GetManifestResourceNames()
+          Write-Host "内嵌资源: $($res -join ', ')"
+          foreach ($need in @('payload.zip', 'art.png', 'art.ico')) {
+            if ($res -notcontains $need) { Write-Host "::error::安装程序缺少内嵌资源 $need"; exit 1 }
+          }
+          Write-Host "✓ 安装程序自包含"
+
+      - name: 生成 SHA256
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          $lines = @()
+          foreach ($f in Get-ChildItem dist -File | Where-Object { $_.Extension -in @('.dll', '.exe') }) {
+            $h = (Get-FileHash $f.FullName -Algorithm SHA256).Hash.ToLower()
+            $lines += "$h  $($f.Name)"
+          }
+          # 安装程序与修改器用 ASCII 名另存一份（Release 资产必须 ASCII）
+          Copy-Item 'dist/汉堡店修改器-安装程序.exe' 'out/BurgerShopModder-Installer.exe'
+          Copy-Item 'dist/数值修改器.exe'            'out/BurgerShopModder-Trainer.exe'
+          Copy-Item 'dist/BurgerShopModder.dll'      'out/BurgerShopModder.dll'
+          Copy-Item 'dist/使用说明.md'               'out/README-使用说明.md'
+          $lines += (Get-FileHash 'out/BurgerShopModder-Installer.exe' -Algorithm SHA256).Hash.ToLower() + '  BurgerShopModder-Installer.exe'
+          $lines += (Get-FileHash 'out/BurgerShopModder-Trainer.exe'   -Algorithm SHA256).Hash.ToLower() + '  BurgerShopModder-Trainer.exe'
+          $lines | Set-Content -Encoding utf8 out/SHA256SUMS.txt
+          Write-Host "校验和："
+          $lines | ForEach-Object { Write-Host "  $_" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: out/
+
+  release:
+    name: 打 tag 时自动建 Release
+    needs: guard
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+          path: out
+
+      - name: 从 CHANGELOG 提取本版说明
+        id: notes
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          if (Test-Path CHANGELOG.md) {
+            $txt = Get-Content CHANGELOG.md -Raw
+            # 抓 "## <tag>" 到下一个 "## " 之间
+            $pat = "(?ms)^##\s+" + [regex]::Escape($tag) + "\s*\r?\n(.*?)(?=^##\s|\z)"
+            $m = [regex]::Match($txt, $pat)
+            if ($m.Success) {
+              $m.Groups[1].Value.Trim() | Set-Content -Encoding utf8 notes.md
+            }
+          }
+          if (-not (Test-Path notes.md)) {
+            "见仓库 README 与 使用说明.md。" | Set-Content -Encoding utf8 notes.md
+          }
+
+      - name: 建 Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          $assets = @(
+            'out/BurgerShopModder-Installer.exe',
+            'out/BurgerShopModder-Trainer.exe',
+            'out/BurgerShopModder.dll',
+            'out/SHA256SUMS.txt'
+          )
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Release $tag 已存在 → 只更新资产"
+            gh release upload $tag @assets --clobber
+          } else {
+            gh release create $tag @assets --title "数值修改器 $tag" --notes-file notes.md
+          }

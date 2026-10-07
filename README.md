@@ -19,7 +19,9 @@
 | `tools/` | 调试用脚本（驱动游戏、快照配置、逻辑交叉检查） |
 | `dist/` | 编译好的成品 |
 | `使用说明.md` | **完整说明书**（功能、参数、排查） |
-| `KNOWN-ISSUES.md` | **已知问题与踩过的坑**（40 条，含每条根因与修法） |
+| `KNOWN-ISSUES.md` | **当前未解决的问题**（只放还没修的） |
+| `ENGINEERING-NOTES.md` | **工程笔记**：每个坑的症状 / 根因 / 修法 / 教训（40 条历史记录） |
+| `CHANGELOG.md` | 版本级变更 |
 
 ## 直接下载用（不编译）
 
@@ -118,10 +120,16 @@ bash tools/gcmd.sh demand status   # 索取/榨取模式状态
 
 ---
 
-## 已知问题
+## 文档
 
-见 **[`KNOWN-ISSUES.md`](KNOWN-ISSUES.md)** —— 40 条，
-每条都写了**症状 / 根因 / 修法 / 教训**。踩过的坑包括：
+| 想找什么 | 去哪 |
+| --- | --- |
+| 怎么用、每个参数是什么 | [`使用说明.md`](使用说明.md) |
+| **现在还有什么没修** | [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md) |
+| **某个功能为什么长这样**（逆向发现、踩过的坑） | [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) |
+| 每个版本改了什么 | [`CHANGELOG.md`](CHANGELOG.md) |
+
+`ENGINEERING-NOTES.md` 里有 40 条历史记录，每条都写了**症状 / 根因 / 修法 / 教训**。踩过的坑包括：
 
 - Harmony 挂错类会**静默失败**（同一个方法名可能属于不同的类）
 - 游戏的动画有**两种播法**（混合器 `*.State` 与层上 `Play` 的 `*.CurrentState`），调速逻辑两种都要覆盖
