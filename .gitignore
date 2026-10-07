@@ -1,0 +1,27 @@
+# 游戏的引用程序集（版权内容，不入库）—— 见 README「编译」
+refs/
+*.dll
+!dist/*.dll
+!installer/art.ico
+
+# 本机配置与路径
+tools/gamepath.txt
+cfg-snapshots/
+*.cfg
+
+# 运行记录与分析产物
+watch-archive/
+src/
+tex/
+model/
+dxt/
+demosaic-audit/
+.venv*/
+
+# 编译中间产物
+bin/
+obj/
+
+# 临时脚本
+_*.py
+*.bak
