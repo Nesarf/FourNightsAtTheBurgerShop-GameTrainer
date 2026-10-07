@@ -767,6 +767,11 @@ namespace BurgerShopModder
             // 绑定没做完就迁移的话，副本还不存在 —— 会漏掉一部分参数。
             MigrateConfigIfNeeded();
 
+            // 【游戏绑定校验】确认每个补丁目标都真的在它该在的类上。
+            // 挂错类在 Harmony 里是静默失败 —— 这里把它变成启动日志里的一条 WARN。
+            try { GameBindings.VerifyAll(FindType, Log.LogWarning, Log.LogInfo); }
+            catch (Exception e) { Log.LogWarning("[绑定] 校验失败：" + e.Message); }
+
             Log.LogInfo("数值修改器已加载 — F9 开关面板");
 
             // 变化率 + 部件覆盖：都靠 Harmony 前缀/后缀补丁
@@ -1182,7 +1187,7 @@ namespace BurgerShopModder
         // ---------------------------------------------------------------
         private static readonly Dictionary<string, Type> _typeCache = new Dictionary<string, Type>();
         private static readonly Dictionary<string, FieldInfo> _fieldCache = new Dictionary<string, FieldInfo>();
-        private const BindingFlags AllFlags = BindingFlags.Instance | BindingFlags.Static
+        internal const BindingFlags AllFlags = BindingFlags.Instance | BindingFlags.Static
                                             | BindingFlags.Public | BindingFlags.NonPublic;
 
         internal static Type FindType(string name)
@@ -7651,6 +7656,7 @@ namespace BurgerShopModder
 
         // 给 GameCommandServer 用的包装（它拿不到 private 成员）
         internal static int PoseIdxPublic() { return PoseIdx(); }
+        internal static string DumpBindingsPublic() { return GameBindings.Dump(FindType); }
         internal static bool ManmanEnabledPublic() { return SitPussyAreaEnabled.Value; }
         internal static void SetSitLockPublic(bool on) { SitLockEnabled.Value = on; }
         internal static Type FindTypePublic(string n) { return FindType(n); }

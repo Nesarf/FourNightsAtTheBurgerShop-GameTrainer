@@ -20,6 +20,7 @@
     <Compile Include="ActivityLogger.cs" />
     <Compile Include="GameCommandServer.cs" />
         <Compile Include="CfgGuard.cs" />
+    <Compile Include="GameBindings.cs" />
   </ItemGroup>
 
   <ItemGroup>

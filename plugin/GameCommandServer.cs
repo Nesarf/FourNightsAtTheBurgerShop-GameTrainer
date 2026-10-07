@@ -286,6 +286,9 @@ namespace BurgerShopModder
                     Plugin.SetSitLockPublic(true);
                     Say("[坐姿锁定] 已锁上 —— 进入坐姿后不会再被切走");
                     break;
+                case "bindings":
+                    Say(Plugin.DumpBindingsPublic());
+                    break;
                 case "manman":
                     {
                         var sb = new System.Text.StringBuilder();

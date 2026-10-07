@@ -417,3 +417,74 @@ bug 修掉后它就没意义了。**但我把规则改成了注释说明而不�
 已改成"会自动迁移"并说明备份位置与"已调过的不覆盖" ✓
 
 > **功能变了，文档没跟上，就等于文档在骗人。**
+
+---
+
+## S4. ✅ 游戏绑定层 GameBindings（已完成）
+
+**状态：✅ 已实施并实测通过（2026-10-07）**
+
+### 要解决的问题
+
+插件通过 Harmony 按**方法名**打补丁，而游戏里同一个方法名可能属于不同的类 ✗
+挂错了**不会有任何报错** —— Harmony 只是静静不生效 ✗
+
+这个坑在这个项目里踩了**五次**：
+
+```
+Osiri叩かれる()            → TabemiControl
+Event_OsiriSyaseiStart()   → Live2D_Animation_SitOsiri（不是 Live2D_AnimationControl）
+DealDamage_Fella()         → TabemiControl
+Event_SitKissSyaseiOnEnd() → Live2D_Animation_SitOsiri（不是 TabemiControl）
+GetTouchTargetName()       → Live2D_HitAreaCheck（不是 HitAreaCheck）
+```
+
+### 做法
+
+新增 `plugin/GameBindings.cs`：把"方法属于哪个类"变成**一张可校验的表**。
+
+启动时 `VerifyAll()` 逐条确认：
+
+1. 方法**在不在**它该在的类上
+2. 如果不在 —— **看看它是不是跑到别的已知类上去了** ← **这就是"挂错类"的自动检测** ✓
+3. 把结果汇总成一条日志
+
+```
+[绑定] 30 个补丁目标全部校验通过
+```
+
+出问题时会是：
+
+```
+[绑定] ★挂错类：Event_SitKissSyaseiOnEnd 不在 TabemiControl，而是在 Live2D_Animation_SitOsiri
+[绑定] 有 1 个方法挂错了类 —— 这些补丁不会生效，功能静默失效
+```
+
+### 为什么不追求"全部集中"
+
+**只收录 30 条**（那些曾经挂错或容易挂错的跨类同名方法），不做全量搬迁 ✗
+
+理由：全量搬迁要改动几乎每一处反射调用，属于高风险大重构 ✗
+**而这 30 条恰好就是真正出过问题的那一类** ✓ —— 用 20% 的改动覆盖 80% 的风险 ✓
+
+新增的 `bindings` 命令可以随时打出全表：
+
+```
+[OK]   TabemiControl.ShowCenterGirlOsiri   — ★ 方法体内直接赋值 centerGirlState
+[OK]   Live2D_Animation_SitOsiri.Event_SitKissSyaseiOnEnd   — ★ 不在 TabemiControl
+[OK]   Live2D_HitAreaCheck.GetTouchTargetName   — ★ 类名是 Live2D_HitAreaCheck
+```
+
+**排错时不用再去翻反编译代码找"这个方法到底属于谁"** ✓
+
+### 未验证的部分（如实说明）
+
+**"挂错类"的报警路径本身没有实测过** ✗ —— 要验证它得故意把一个方法挂到错误的类上 ✗
+编号逻辑是直读的（`GetMethod` 返回 null → 去别的类找 → 找到就报），
+但**没有跑过真实的误配场景** ✓
+
+### 教训
+
+> **"挂错类静默失败"这类问题，正解不是"记住正确的类名"**，
+> **而是把它变成机器能检查的东西** ✓
+> —— 人记不住 30 个映射，但启动时校验一次是零成本的。
