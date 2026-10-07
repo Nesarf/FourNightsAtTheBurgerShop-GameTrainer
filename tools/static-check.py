@@ -27,6 +27,14 @@ import re
 import sys
 import pathlib
 
+# 【CI 上会崩】GitHub runner 的 Python 默认编码是 cp1252，打印中文直接抛
+# UnicodeEncodeError。必须显式把标准输出设成 UTF-8。
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
 ROOT = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else '.')
 PLUGIN = ROOT / 'plugin' / 'BurgerShopModder.cs'
 CMD = ROOT / 'plugin' / 'GameCommandServer.cs'

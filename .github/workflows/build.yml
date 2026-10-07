@@ -99,6 +99,10 @@ jobs:
 
       - name: 静态一致性检查
         shell: pwsh
+        env:
+          # runner 的 Python 默认 cp1252，打印中文会崩
+          PYTHONIOENCODING: utf-8
+          PYTHONUTF8: '1'
         run: |
           # 配置项要同时出现在 BindP3 / 面板 / set 命令 / 说明书里，
           # 漏掉任何一处都是【静默失败】。这里把它做成可自动检查的规则。
