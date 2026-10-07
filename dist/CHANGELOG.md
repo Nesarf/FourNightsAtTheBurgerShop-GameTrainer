@@ -27,6 +27,14 @@
 - `states` / `manman` / `demand status` / `urgeaudit` / `animlog` 等诊断命令
 - 活动记录器、配置快照与还原、逻辑交叉检查
 
+### 配置 Schema 化（第一块）
+
+`set` 命令的 54 个手写分支改成**通用路径**（走 `_p3ByName` 索引）：
+
+- **新增一个按姿势参数，`set` 命令自动支持**，不用再改 switch
+- 三种类型都覆盖（float / int / bool）
+- 实测：`set DemandAttBonus` / `set DemandEnabled 42` / `set AfterglowPerSyasei` 全部走通
+
 ### 配置迁移
 
 从旧版升级时**自动迁移**（旧版是"全局单份键"，本版是"按姿势三份"）：

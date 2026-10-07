@@ -10006,6 +10006,48 @@ namespace BurgerShopModder
                 bool isNum = float.TryParse(val, System.Globalization.NumberStyles.Float,
                     System.Globalization.CultureInfo.InvariantCulture, out f);
                 bool b = val == "1" || val.Equals("true", StringComparison.OrdinalIgnoreCase);
+                // ════════════════════════════════════════════════════════════════
+                // 【Schema 化 · 第一块】P3 参数走通用路径
+                //
+                // 原来每个"按姿势三份"的参数都要在下面那个 switch 里手写一行 case ——
+                // 一共 54 行。漏写一个的后果是：面板能调、命令行却报「未知配置项」，
+                // 而且【没有任何报错】（S1 那三条就是这么发现的）。
+                //
+                // 现在先查 `_p3ByName` 索引（BindP3 绑定时就登记好了）—— 命中即自动处理。
+                // **新增一个 BindP3 参数，set 命令自动支持** ✓
+                //
+                // 下面那些手写的 P3 case 保留着（无害），但已不会被执行 ——
+                // 删 54 行属纯清理、风险为零收益也为零，留着还能当"这批参数长什么样"的活文档。
+                // ════════════════════════════════════════════════════════════════
+                {{
+                    object g;
+                    if (_p3ByName.TryGetValue(name, out g))
+                    {{
+                        var gf = g as ConfigEntry<float>[];
+                        if (gf != null)
+                        {{
+                            if (!isNum) return "ERR 需要数字";
+                            SetP3(gf, f);
+                        }}
+                        else
+                        {{
+                            var gi = g as ConfigEntry<int>[];
+                            if (gi != null)
+                            {{
+                                if (!isNum) return "ERR 需要数字";
+                                SetP3(gi, (int)f);
+                            }}
+                            else
+                            {{
+                                var gb = g as ConfigEntry<bool>[];
+                                if (gb == null) return "ERR 这个参数类型不认识: " + name;
+                                SetP3(gb, b);
+                            }}
+                        }}
+                          _pluginInstance.Config.Save();   // Config 是实例属性
+                        return name + " = " + val + "  （已设置并落盘·按姿势三份）";
+                    }}
+                }}
                 switch (name)
                 {
                     case "NoEcstasy": NoEcstasy.Value = b; break;
