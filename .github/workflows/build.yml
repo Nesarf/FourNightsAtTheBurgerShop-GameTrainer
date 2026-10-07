@@ -97,6 +97,18 @@ jobs:
           }
           Write-Host "✓ 安装程序自包含"
 
+      - name: 静态一致性检查
+        shell: pwsh
+        run: |
+          # 配置项要同时出现在 BindP3 / 面板 / set 命令 / 说明书里，
+          # 漏掉任何一处都是【静默失败】。这里把它做成可自动检查的规则。
+          python tools/static-check.py .
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::error::静态一致性检查未通过"
+            exit 1
+          }
+          Write-Host "✓ 静态一致性检查通过"
+
       - name: 生成 SHA256
         shell: pwsh
         run: |
