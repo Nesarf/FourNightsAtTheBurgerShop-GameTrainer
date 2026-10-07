@@ -7567,13 +7567,14 @@ namespace BurgerShopModder
             // 【先做占位符替换，再按栏位换词】
             string d = desc.Replace("{模式}", ModeWordAt(i));
 
-            // 描述模板里有大量【硬编码的"索取"】（15 条），而模板是三栏共用的 ——
-            // 另外两份照抄就会在自己栏里显示"索取"。与其逐条改文案，不如按栏位统一换词：
-            //   口交 → 吸取（用户要求：口交那边都用吸取）
-            //   正骑 → 榨取
-            //   背榨 → 保持"索取"（那是它本来的叫法）
-            if (i == 2) d = d.Replace("索取", "榨取");
-            else if (i == 0) d = d.Replace("索取", "吸取");
+            // 描述模板是三栏共用的，而模板里【混着三个词】——
+            // 有的条写"索取"、有的写"榨取"。单向替换不够：只把"索取"改成别的，
+            // 模板里本来写着"榨取"的那些，在【背榨】栏就会显示成"榨取" ✗
+            //
+            // 所以【先归一成占位符，再按栏位填】—— 三个方向都成立：
+            //   口交 → 吸取    背榨 → 索取    正骑 → 榨取
+            d = d.Replace("榨取", "").Replace("吸取", "").Replace("索取", "");
+            d = d.Replace("", ModeWordAt(i));
 
             return "【" + PoseLabel[i] + "·" + ModeWordAt(i) + "】" + d;
         }
@@ -9837,6 +9838,13 @@ namespace BurgerShopModder
                     case "CapSmoothEnabled": CapSmoothEnabled.Value = b; break;
                     case "SitLockEnabled": SitLockEnabled.Value = b; break;
                     case "CapSmoothRate": if (!isNum) return "ERR 需要数字"; CapSmoothRate.Value = f; break;
+                    // ── 连榨那一组（原来只有面板没有 set 分支）
+                    case "ChainEcstasyGain": SetP3(ChainEcstasyGain3, b); break;
+                    case "ChainGainPerDrain": if (!isNum) return "ERR 需要数字"; SetP3(ChainGainPerDrain3, f); break;
+                    case "ChainGainPerHp": if (!isNum) return "ERR 需要数字"; SetP3(ChainGainPerHp3, f); break;
+                    case "ChainSoftCap": if (!isNum) return "ERR 需要数字"; SetP3(ChainSoftCap3, f); break;
+                    case "ChainWobble": if (!isNum) return "ERR 需要数字"; SetP3(ChainWobble3, f); break;
+                    case "ChainWobbleHz": if (!isNum) return "ERR 需要数字"; SetP3(ChainWobbleHz3, f); break;
                     case "KissSpeedMul": if (!isNum) return "ERR 需要数字"; KissSpeedMul.Value = f; break;
                     case "KissSpeedWobble": if (!isNum) return "ERR 需要数字"; KissSpeedWobble.Value = f; break;
                     case "KissSpeedHz": if (!isNum) return "ERR 需要数字"; KissSpeedHz.Value = f; break;
