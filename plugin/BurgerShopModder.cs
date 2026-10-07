@@ -25,6 +25,7 @@ namespace BurgerShopModder
         internal static ManualLogSource Log;
 
         // ---- 玩家（被喂食的一方） ----
+        internal static ConfigEntry<int> ConfigVersion;
         internal static ConfigEntry<bool> GodMode;
         internal static ConfigEntry<bool> NoEcstasy;
         internal static ConfigEntry<bool> LockMaxHp;
@@ -227,6 +228,14 @@ namespace BurgerShopModder
               // 插件没初始化、游戏里连面板都打不开。
               _pluginInstance = this;
             Log = Logger;
+
+            // 【配置版本】用于自动迁移。
+            //   0 = 还没迁移过（老配置 / 全新配置都算 0）
+            //   1 = 已经把「单份键」的值搬到「按姿势三份键」
+            // 注意默认值必须是 0 —— 老用户的 cfg 里没有这个键，
+            // BepInEx 会用默认值创建它；若默认写 1 就永远不会触发迁移。
+            ConfigVersion = Config.Bind("0-System", "ConfigVersion", 0,
+                "配置版本号（自动迁移用）。不要手动改。");
 
             GodMode = Config.Bind("1-Player", "GodMode", false,
                 "每帧把当前 HP 补满（走游戏自己的 HPChange，界面同步）。注意：这不阻止上限下降。");
@@ -710,6 +719,7 @@ namespace BurgerShopModder
             //                     + "设它是为了让最后一段的连榨、吸精、动画收尾都跑完再发动。",
             //                     new AcceptableValueRange<float>(0f, 5f)))
             AfterglowSettleDelay3 = BindP3("AfterglowSettleDelay", 0.6f, "最后一段结束到发动余韵之间，等待局面稳定的秒数。", 0f, 5f);
+
             DemandAfterglowMin = Config.Bind("1-Player", "DemandAfterglowMin", 8,
                 new ConfigDescription("索取模式结束后「余韵」的连续吸精次数下限。",
                     new AcceptableValueRange<int>(0, 100)));
@@ -752,6 +762,10 @@ namespace BurgerShopModder
                 new ConfigDescription("1 = 原速（时钟也按此速度走）。", new AcceptableValueRange<float>(0.5f, 5f)));
             UnlockAllDays = Config.Bind("3-Flow", "UnlockAllDays", false,
                 "把已通关天数写满，标题画面可选全部日期。写入 PlayerPrefs，重开仍生效。");
+
+            // 【必须在所有配置绑定之后】迁移要读「三份副本的当前值」，
+            // 绑定没做完就迁移的话，副本还不存在 —— 会漏掉一部分参数。
+            MigrateConfigIfNeeded();
 
             Log.LogInfo("数值修改器已加载 — F9 开关面板");
 
@@ -6673,6 +6687,186 @@ namespace BurgerShopModder
             return true;
         }
 
+        // =================================================================
+        // 配置自动迁移
+        //
+        // 【为什么需要】v1.0.0 之前参数是"全局单份"的，之后改成了"按姿势三份"
+        // （`X` → `X_Fella` / `X_Osiri` / `X_Sit`）。老用户升级时，
+        // 旧键的值会【静默丢掉】—— 参数回到代码默认，而且没有任何提示。
+        //
+        // 实测踩过两次：31 个参数那次丢了 48 个用户调过的值；
+        // 最后 3 个参数那次丢了 DemandFellaDecay=59.78。两次都是手工改文件救回来的。
+        //
+        // 【做法】旧键已经不再 Bind，所以读不到内存值 —— 直接解析 cfg 原文。
+        //   ① 备份原文件
+        //   ② 逐对找：旧键有值 且 三份副本都还是默认 → 把旧值复制到三份
+        //   ③ 记日志告诉用户搬了什么
+        //   ④ ConfigVersion 置 1，以后不再跑
+        // =================================================================
+
+        private const int CONFIG_VERSION_CURRENT = 1;
+
+        private static int _migratedCount;
+
+        internal static void MigrateConfigIfNeeded()
+        {
+            try
+            {
+                if (ConfigVersion.Value >= CONFIG_VERSION_CURRENT) return;
+
+                string path = _pluginInstance.Config.ConfigFilePath;   // Config 是实例属性
+                if (string.IsNullOrEmpty(path) || !System.IO.File.Exists(path))
+                {
+                    ConfigVersion.Value = CONFIG_VERSION_CURRENT;
+                    return;
+                }
+
+                string[] lines = System.IO.File.ReadAllLines(path, System.Text.Encoding.UTF8);
+                // 解析成 key → 值
+                var vals = new Dictionary<string, string>();
+                foreach (string raw in lines)
+                {
+                    string l = raw.Trim();
+                    if (l.Length == 0 || l[0] == '#' || l[0] == '[') continue;
+                    int eq = l.IndexOf('=');
+                    if (eq <= 0) continue;
+                    vals[l.Substring(0, eq).Trim()] = l.Substring(eq + 1).Trim();
+                }
+
+                // ── 找出"有旧键、且三份副本都还是默认"的参数 ──
+                var moved = new List<string>();
+                foreach (string key in new List<string>(vals.Keys))
+                {
+                    if (key.EndsWith("_Fella") || key.EndsWith("_Osiri") || key.EndsWith("_Sit")) continue;
+                    // 旧键必须不在新体系里（新体系里没有不带后缀的键）
+                    if (vals.ContainsKey(key + "_Fella") || vals.ContainsKey(key + "_Osiri")
+                        || vals.ContainsKey(key + "_Sit")) continue;
+                    continue;   // 旧键本身没后缀、也没有对应副本 → 不是我们要搬的
+                }
+
+                // 上面那段只是确认命名约定；真正的搬运按"三份副本"来
+                // 收集所有 _Fella 键 → 推出 base 名
+                var bases = new List<string>();
+                foreach (string key in vals.Keys)
+                {
+                    if (!key.EndsWith("_Fella")) continue;
+                    string b = key.Substring(0, key.Length - "_Fella".Length);
+                    if (!vals.ContainsKey(b)) continue;             // 没有旧键，跳过
+                    bases.Add(b);
+                }
+
+                if (bases.Count > 0)
+                {
+                    Log.LogInfo("[配置] 发现 " + bases.Count + " 个候选（旧键 + 三份副本都在），开始尝试迁移");
+                    // ① 备份
+                    string bak = path + ".bak-before-v1";
+                    if (!System.IO.File.Exists(bak)) System.IO.File.Copy(path, bak, true);
+
+                    foreach (string b in bases)
+                    {
+                        string oldVal = vals[b];
+                        string newVal = vals[b + "_Fella"];
+                        // 只在"三份副本完全一致且等于默认"时才搬 ——
+                        // 否则说明用户已经在新体系里调过，不能覆盖他
+                        string vO = vals.ContainsKey(b + "_Osiri") ? vals[b + "_Osiri"] : newVal;
+                        string vS = vals.ContainsKey(b + "_Sit") ? vals[b + "_Sit"] : newVal;
+                        if (vO != newVal || vS != newVal)
+                        {
+                            Log.LogInfo("[配置] 跳过 " + b + "：三份副本不一致（用户已在新体系里调过）");
+                            continue;
+                        }
+
+                        foreach (string suf in PoseSuffix)
+                        {
+                            ConfigEntry<float>[] fArr = FindP3Float(b);
+                            if (fArr == null)
+                            {
+                                // 诊断：找到了旧键却找不到对应的三份组 —— 说明注册有问题
+                                Log.LogWarning("[配置] 迁移：找不到三份组 " + b + "（已注册 float 组 "
+                                               + _p3Groups.Count + " / int " + _p3IntGroups.Count
+                                               + " / bool " + _p3BoolGroups.Count + "）");
+                            }
+                            if (fArr != null)
+                            {
+                                float fv;
+                                if (float.TryParse(oldVal, System.Globalization.NumberStyles.Float,
+                                        System.Globalization.CultureInfo.InvariantCulture, out fv))
+                                    fArr[Array.IndexOf(PoseSuffix, suf)].Value = fv;
+                                moved.Add(string.Format("{0} = {1}", b + suf, oldVal));
+                                continue;
+                            }
+                            ConfigEntry<int>[] iArr = FindP3Int(b);
+                            if (iArr != null)
+                            {
+                                int iv;
+                                if (int.TryParse(oldVal, out iv))
+                                    iArr[Array.IndexOf(PoseSuffix, suf)].Value = iv;
+                                moved.Add(string.Format("{0} = {1}", b + suf, oldVal));
+                                continue;
+                            }
+                            ConfigEntry<bool>[] bArr = FindP3Bool(b);
+                            if (bArr != null)
+                            {
+                                bool bv = oldVal.Equals("true", StringComparison.OrdinalIgnoreCase);
+                                bArr[Array.IndexOf(PoseSuffix, suf)].Value = bv;
+                                moved.Add(string.Format("{0} = {1}", b + suf, oldVal));
+                            }
+                        }
+                    }
+                }
+
+                // 【关键】只有真的搬到了东西才推进版本号。
+                // 第一版写的是无条件置 1 —— 结果测试时它"跑了但没搬成"，
+                // 版本号却被推到 1，于是【以后永远不会再试】✗
+                // 那比不迁移更糟：用户以为迁过了，实际参数全回落默认。
+                //
+                // 现在：没搬成就不推进 → 下次启动还会再试一次（开销可忽略）。
+                if (moved.Count > 0) ConfigVersion.Value = CONFIG_VERSION_CURRENT;
+                _migratedCount = moved.Count;
+
+                if (moved.Count > 0)
+                {
+                    Log.LogInfo("════════ 配置自动迁移 ════════");
+                    Log.LogInfo("检测到旧版配置（单份键），已把值复制到「按姿势三份」键。");
+                    Log.LogInfo("原文件已备份为：" + System.IO.Path.GetFileName(path) + ".bak-before-v1");
+                    Log.LogInfo("共迁移 " + moved.Count + " 个键：");
+                    for (int i = 0; i < moved.Count && i < 40; i++) Log.LogInfo("  " + moved[i]);
+                    if (moved.Count > 40) Log.LogInfo("  …（其余 " + (moved.Count - 40) + " 个见配置文件）");
+                    Log.LogInfo("════════════════════════════");
+                }
+                else
+                {
+                    Log.LogInfo("[配置] 无需迁移（没有发现旧版单份键）");
+                }
+            }
+            catch (Exception e)
+            {
+                Log.LogWarning("[配置] 自动迁移失败（不影响使用）：" + e.Message);
+            }
+        }
+
+        /// <summary>按 base 名在已绑定的三份组里查（float）。</summary>
+        private static ConfigEntry<float>[] FindP3Float(string baseName)
+        {
+            object o;
+            if (_p3ByName.TryGetValue(baseName, out o)) return o as ConfigEntry<float>[];
+            return null;
+        }
+
+        private static ConfigEntry<int>[] FindP3Int(string baseName)
+        {
+            object o;
+            if (_p3ByName.TryGetValue(baseName, out o)) return o as ConfigEntry<int>[];
+            return null;
+        }
+
+        private static ConfigEntry<bool>[] FindP3Bool(string baseName)
+        {
+            object o;
+            if (_p3ByName.TryGetValue(baseName, out o)) return o as ConfigEntry<bool>[];
+            return null;
+        }
+
         private static bool Prefix_ShowCenterGirlFella()
         {
             if (_afterglowRemaining > 0)
@@ -7561,6 +7755,17 @@ namespace BurgerShopModder
         ///   口交 → 吸取    背榨 → 索取    正骑 → 榨取
         /// 这样一个描述模板就能在三栏里各自读通。
         /// </summary>
+        /// <summary>
+        /// 【按 base 名索引三份组】
+        ///
+        /// 原来迁移时用 `g[0].Definition.Key == baseName` 去查 —— 那个属性拿到的
+        /// 并不是配置键，于是 41 个组全都查不到，迁移静默地一个键都没搬 ✗
+        /// （诊断日志把这点直接打出来了。）
+        ///
+        /// 改成在绑定的时候就登记，不再依赖反射去猜。
+        /// </summary>
+        private static readonly Dictionary<string, object> _p3ByName = new Dictionary<string, object>();
+
         private static string ModeWordAt(int i) { return i == 0 ? "吸取" : (i == 2 ? "榨取" : "索取"); }
         private static string PoseDesc(int i, string desc)
         {
@@ -7587,6 +7792,7 @@ namespace BurgerShopModder
                     new ConfigDescription(PoseDesc(i, desc),
                         new AcceptableValueRange<float>(min, max)));
             _p3Groups.Add(arr);
+            _p3ByName[name] = arr;
             return arr;
         }
 
@@ -7598,6 +7804,7 @@ namespace BurgerShopModder
                     new ConfigDescription(PoseDesc(i, desc),
                         new AcceptableValueRange<int>(min, max)));
             _p3IntGroups.Add(arr);
+            _p3ByName[name] = arr;
             return arr;
         }
 
@@ -7608,6 +7815,7 @@ namespace BurgerShopModder
                 arr[i] = _pluginInstance.Config.Bind("1-Player", name + PoseSuffix[i], def,
                     PoseDesc(i, desc));
             _p3BoolGroups.Add(arr);
+            _p3ByName[name] = arr;
             return arr;
         }
 
