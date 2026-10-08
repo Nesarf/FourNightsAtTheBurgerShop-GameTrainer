@@ -139,6 +139,10 @@ for p in list(ROOT.rglob('*.cs')) + list(ROOT.rglob('*.ps1')) + list(ROOT.rglob(
     # 跳过检查器自己 —— 它内部就写着这些模式，否则会自己检自己
     if p.resolve() == pathlib.Path(__file__).resolve():
         continue
+    # tools/sync.sh 是【检测器】—— 它的 LEAKPAT 变量里就写着这些字面量。
+    # 和检查器自己一样，属于合理的自引用豁免。
+    if p.name == 'sync.sh' and p.parent.name == 'tools':
+        continue
     t = read(p) or ''
     for pat in LEAKS:
         if re.search(pat, t):

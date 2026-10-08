@@ -2034,8 +2034,8 @@ private float GetMoveVector()
 **项目有两棵树**：
 
 ```
-E:\DSHuildurger-shop          工作副本（编译在这里）
-E:\DSHuildurger-shop-publish  发布副本（git 仓库在这里）
+<仓库上级>uildurger-shop          工作副本（编译在这里）
+<仓库上级>uildurger-shop-publish  发布副本（git 仓库在这里）
 ```
 
 **流向不是单向的，按文件类别分**：
