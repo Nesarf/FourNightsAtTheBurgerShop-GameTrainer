@@ -9260,7 +9260,7 @@ namespace BurgerShopModder
         // ---- 页 1：玩家 ----
         private void DrawTabPlayer(object player)
         {
-            GUILayout.Label("—— 变化率（按每次实际变化的量缩放）——");
+            GUILayout.Label("变化率（按每次实际变化的量缩放）");
             GUILayout.Label("100% = 原版；0% = 该类变化完全不发生");
             HpDownRate.Value = SliderF("HP 下降率", HpDownRate.Value, 0f, 200f, "{0:0}%", 5f);
             HpUpRate.Value = SliderF("HP 回复率", HpUpRate.Value, 0f, 200f, "{0:0}%", 5f);
@@ -9332,7 +9332,7 @@ namespace BurgerShopModder
         private void DrawTremorSection()
         {
             GUILayout.Space(8f);
-            GUILayout.Label("—— 绝顶动摇（累积时随机触发的衰减正弦波动）——");
+            GUILayout.Label("绝顶动摇（累积时随机触发的衰减正弦波动）");
             TremorEnabled.Value = GUILayout.Toggle(TremorEnabled.Value, "  启用动摇");
             if (TremorEnabled.Value)
             {
@@ -9350,7 +9350,7 @@ namespace BurgerShopModder
             }
 
             GUILayout.Space(4f);
-            GUILayout.Label("—— 绝顶适应（动摇结束后，均为临时，结束严格还原）——");
+            GUILayout.Label("绝顶适应（动摇结束后，均为临时，结束严格还原）");
             TremorWeaken.Value = SliderF("动摇期间攻击削弱", TremorWeaken.Value, 0f, 100f, "{0:0}%", 5f);
             TremorAdaptTime.Value = SliderF("适应持续", TremorAdaptTime.Value, 0f, 30f, "{0:0.0}s", 0.5f);
             TremorAdaptFactor.Value = SliderF("适应期累积倍率", TremorAdaptFactor.Value, 0f, 100f, "{0:0}%", 5f);
@@ -9410,12 +9410,12 @@ namespace BurgerShopModder
             LockMaxEcstasy.Value = GUILayout.Toggle(LockMaxEcstasy.Value, "  锁绝顶值上限");
 
             GUILayout.Space(4f);
-            GUILayout.Label("—— 目标上限（绝对值，每帧平滑逼近）——");
+            GUILayout.Label("目标上限（绝对值，每帧平滑逼近）");
             TargetHp.Value = SliderF("HP 上限目标", TargetHp.Value, 0f, 3000f, "{0:0}", 25f);
             TargetEcstasy.Value = SliderF("绝顶上限目标", TargetEcstasy.Value, 0f, 3000f, "{0:0}", 25f);
             CapStepPerSec.Value = SliderF("逼近速度（点/秒）", CapStepPerSec.Value, 1f, 2000f, "{0:0}", 20f);
             GUILayout.Label("0 = 不启用。这是「设到多少」，不是「加百分之多少」");
-            GUILayout.Label("—— 拖滑块只是改目标，不会累乘，绝不会膨胀。");
+            Section("拖滑块只是改目标，不会累乘，绝不会膨胀。");
 
             GUILayout.Space(4f);
             GUILayout.BeginHorizontal();
@@ -9635,7 +9635,7 @@ namespace BurgerShopModder
                 GUILayout.Label("    调低它 → 余韵之后有一段干净空档，不会马上又进" + mw + "模式");
                 SetP3(AfterglowClearsUrge3, GUILayout.Toggle(P3(AfterglowClearsUrge3),
                     "  余韵清空后把索取欲一并归零"));
-                GUILayout.Label("  —— 手动余韵 = 强制退出" + mw + "模式 ——");
+                GUILayout.Label("  手动余韵 = 强制退出" + mw + "模式");
                 GUILayout.Label("    " + mw + "太久导致换不了姿势时，用它把" + mw + "模式清干净");
                 GUILayout.Space(4f);
                 Section("余韵 · 调速与波动");
@@ -9646,7 +9646,7 @@ namespace BurgerShopModder
                     P3(AfterglowSpeed3) * (1f - P3(AfterglowSpeedWobble3) / 100f),
                     P3(AfterglowSpeed3) * (1f + P3(AfterglowSpeedWobble3) / 100f)));
                 GUILayout.Space(4f);
-                GUILayout.Label("  —— 余韵 · 绝顶值（与连榨分开的一套）——");
+                GUILayout.Label("  余韵 · 绝顶值（与连榨分开的一套）");
                 SetP3(AfterglowSoftCap3, SliderF("余韵绝顶值软上限", P3(AfterglowSoftCap3), 5f, 98f, "{0:0}%", 1f));
                 SetP3(AfterglowEcstasyWobble3, SliderF("到位后波动幅度", P3(AfterglowEcstasyWobble3), 0f, 40f, "±{0:0}%", 1f));
                 GUILayout.Label(string.Format("    绝顶值在 {0:0}% ~ {1:0}% 之间起伏",
@@ -9668,7 +9668,7 @@ namespace BurgerShopModder
                 // 而它和共享逻辑混在一起，读的时候要一直记着"这段只在坐姿下跑"。
                 private void DrawSitExtras()
                 {
-                GUILayout.Label("  —— 正骑 · 榨取模式（坐姿）——");
+                GUILayout.Label("  正骑 · 榨取模式（坐姿）");
                 SitClickAlwaysAccumulate.Value = GUILayout.Toggle(SitClickAlwaysAccumulate.Value,
                     "  坐姿点头部随时可累积榨取欲（不限束缚之吻）");
                 SitSyaseiToDrainChance.Value = SliderF("坐姿射精→进榨取的概率",
@@ -9714,7 +9714,7 @@ namespace BurgerShopModder
                 SitPussyAreaShowRect.Value = GUILayout.Toggle(SitPussyAreaShowRect.Value,
                     "  跟着总开关一起画（粉色）—— 总开关在下面「实验性高亮」那个");
                 GUILayout.Space(4f);
-                GUILayout.Label("  —— 素材绑定（比手拖更贴合，跟着网格形变走）——");
+                GUILayout.Label("  素材绑定（比手拖更贴合，跟着网格形变走）");
                 GUILayout.Label("    当前绑定：" + (string.IsNullOrEmpty(ManmanBindDrawable.Value)
                     ? "（无，用手拖的矩形）" : ManmanBindDrawable.Value));
                 if (GUILayout.Button("清除绑定（回到手拖矩形）"))
