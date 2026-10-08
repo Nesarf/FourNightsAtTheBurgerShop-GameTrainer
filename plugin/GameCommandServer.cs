@@ -286,6 +286,26 @@ namespace BurgerShopModder
                     Plugin.SetSitLockPublic(true);
                     Say("[坐姿锁定] 已锁上 —— 进入坐姿后不会再被切走");
                     break;
+                case "tab":
+                    {
+                        // tab          -> 列出页签
+                        // tab 3        -> 切到第 4 栏（0 起）
+                        // tab 正骑     -> 按名字切
+                        string a2 = a.Length >= 2 ? string.Join(" ", a, 1, a.Length - 1).Trim() : "";
+                        if (a2.Length == 0) { Say(Plugin.DumpTabsPublic()); break; }
+                        string[] names = Plugin.TabNamesPublic();
+                        int idx = -1;
+                        int.TryParse(a2, out idx);
+                        if (idx < 0 || idx >= names.Length)
+                        {
+                            for (int i = 0; i < names.Length; i++)
+                                if (names[i] == a2 || names[i].Contains(a2)) { idx = i; break; }
+                        }
+                        if (idx < 0 || idx >= names.Length) { Say("ERR 没有这个页签：" + a2); break; }
+                        Plugin.SetTabPublic(idx);
+                        Say("已切到 [" + idx + "] " + names[idx]);
+                        break;
+                    }
                 case "bindings":
                     Say(Plugin.DumpBindingsPublic());
                     break;

@@ -9016,6 +9016,17 @@ namespace BurgerShopModder
         // ---------------------------------------------------------------
         private static readonly string[] TabNames = { "玩家", "口交", "背榨", "正骑", "换装", "系统" };
         private int _tab;
+
+        /// <summary>供命令通道切栏（截图验证布局时用）。</summary>
+        internal static void SetTabPublic(int i) { if (_pluginInstance != null) _pluginInstance._tab = i; }
+        internal static string[] TabNamesPublic() { return TabNames; }
+        internal static string DumpTabsPublic()
+        {
+            var sb = new System.Text.StringBuilder("页签: ");
+            for (int i = 0; i < TabNames.Length; i++)
+                sb.Append(i).Append('=').Append(TabNames[i]).Append(i == _pluginInstance._tab ? "(当前) " : " ");
+            return sb.ToString();
+        }
         private bool _collapsed;
         private Vector2 _scroll;
         private string _snapHint = "";
@@ -9607,10 +9618,15 @@ namespace BurgerShopModder
                 GUILayout.Space(4f);
                 GUILayout.Label(sitSide ? "  榨取模式期间速度不因射精减缓；只能由角色自行退出"
                     : "  索取模式期间速度不因射精减缓；只能由角色自行退出");
+                // 【顺序】共享内容全部跑完，最后才是正骑专属的那些。
+                // 原来这个调用夹在共享内容中间，导致坐姿栏里「束缚之吻 / 坐姿锁定 /
+                // Manman 区」插在叠层门槛之前，读起来是跳的。
+                if (sitSide) DrawSitExtras();
+
                 GUILayout.Label("  余韵 = 基础速度更低、单次持续时间更长的连榨");
                 GUILayout.Label("  只在模式中按射精累积；等最后一段的连榨等活动全部结束才发动");
                 GUILayout.Space(4f);
-                GUILayout.Label("  —— 余韵 · 累积与发动 ——");
+                Section("余韵 · 累积与发动");
                 SetP3(AfterglowPerSyasei3, SliderI("模式中每射精累积余韵", P3(AfterglowPerSyasei3), 0, 20));
                 SetP3(AfterglowSettleDelay3, SliderF("局面稳定后发动延迟", P3(AfterglowSettleDelay3), 0f, 5f, "{0:0.0}s", 0.1f));
                 SetP3(AfterglowUseDemandGain3, GUILayout.Toggle(P3(AfterglowUseDemandGain3),
@@ -9622,7 +9638,7 @@ namespace BurgerShopModder
                 GUILayout.Label("  —— 手动余韵 = 强制退出" + mw + "模式 ——");
                 GUILayout.Label("    " + mw + "太久导致换不了姿势时，用它把" + mw + "模式清干净");
                 GUILayout.Space(4f);
-                GUILayout.Label("  —— 余韵 · 调速与波动 ——");
+                Section("余韵 · 调速与波动");
                 SetP3(AfterglowSpeed3, SliderF("余韵动画速度", P3(AfterglowSpeed3), 10f, 400f, "{0:0}%", 5f));
                 SetP3(AfterglowSpeedWobble3, SliderF("速度波动幅度", P3(AfterglowSpeedWobble3), 0f, 90f, "±{0:0}%", 5f));
                 SetP3(AfterglowSpeedHz3, SliderF("速度波动频率", P3(AfterglowSpeedHz3), 0.02f, 4f, "{0:0.00}Hz", 0.05f));
@@ -9642,11 +9658,6 @@ namespace BurgerShopModder
                 DemandAfterglowMax.Value = SliderI("手动余韵上限", DemandAfterglowMax.Value, 0, 100);
             }
             GUILayout.BeginHorizontal();
-            // 【顺序】共享内容全部跑完，最后才是正骑专属的那些。
-            // 原来这个调用夹在共享内容中间，导致坐姿栏里「束缚之吻 / 坐姿锁定 /
-            // Manman 区」插在叠层门槛之前，读起来是跳的。
-            if (sitSide) DrawSitExtras();
-
             if (GUILayout.Button("手动进入" + mw)) DemandCmd("fire");
             if (GUILayout.Button("手动进入余韵")) DemandCmd("afterglow");
             GUILayout.EndHorizontal();
@@ -9664,7 +9675,7 @@ namespace BurgerShopModder
                     SitSyaseiToDrainChance.Value, 0f, 100f, "{0:0}%", 5f);
                 Hint("坐姿挂起超时见下方「余韵」区");
                 GUILayout.Space(4f);
-                GUILayout.Label("  —— 正骑 · 束缚之吻 ——");
+                Section("正骑 · 束缚之吻");
                 Hint("正骑的连榨/余韵【只有进入束缚之吻才会发生】");
                 GUILayout.Label("    本栏下面那些滑块（攻击力/倍速/连榨…）都已绑定到束缚之吻：");
                 Hint("进入吻或榨取状态时才会生效，退出即失效");
@@ -9697,7 +9708,7 @@ namespace BurgerShopModder
                         KissSpeedHz.Value = SliderF("波动频率", KissSpeedHz.Value, 0.02f, 4f, "{0:0.00}Hz", 0.05f);
                 }
                 GUILayout.Space(4f);
-                GUILayout.Label("  —— 正骑 · HitArea_Manman_By_Plugins ——");
+                Section("正骑 · HitArea_Manman_By_Plugins");
                 Hint("点击 = 坐姿版的「打屁股」：涨榨取欲 + 给坐姿动作一个速度冲量");
                 Hint("判定按【人物模型包围盒】算 → 跟着人物走，换分辨率也不跑偏");
                 SitPussyAreaShowRect.Value = GUILayout.Toggle(SitPussyAreaShowRect.Value,
