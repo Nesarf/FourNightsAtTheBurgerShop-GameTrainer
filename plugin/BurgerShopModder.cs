@@ -455,7 +455,7 @@ namespace BurgerShopModder
                     + "开着的话：连榨（osiriState == kyusei）期间在 3、4 两档之间随机；"
                     + "其他状态（含普通骑乘）保持原版的速度分档。");
             // ---- 正骑：束缚之吻【自己的】调速 ----
-            // 【为什么需要】进入束缚之吻 ≠ 一定触发连榨 ——
+            // 【为什么需要】进入束缚之吻  !=  一定触发连榨 ——
             //   · Play_SitKiss吸精() 才是榨取入口（它把 kissing 置 2）
             //   · 但 PrepareKissing() 让 kissing 变 1 之后，可能一直没进榨取
             //   · 那段时间用的是 SitKissMixer*，跟榨取/绝顶走的是不同的混合器
@@ -973,7 +973,7 @@ namespace BurgerShopModder
 
         /// <summary>
         /// 游戏写完透明度之后：
-        ///   ② 「部件」页勾选的强制显示：在**游戏本帧算出的值**之上叠加
+        ///   (2) 「部件」页勾选的强制显示：在**游戏本帧算出的值**之上叠加
         ///
         /// 关键点：不勾选的部件**一律写回游戏本帧的值**（`natural`）。
         /// 之前的做法是「只把强制项设为 1、其余不动」——那样一旦取消强制，
@@ -1464,7 +1464,7 @@ namespace BurgerShopModder
                 }
                 catch { }
                 if (hit) targeted++;
-                sb.Append(hit ? "√ " : "× ").Append(n).Append("  ");
+                sb.Append(hit ? "(自然) " : "× ").Append(n).Append("  ");
             }
             string s = targeted + "/" + names.Length + " 已挂：" + sb;
             Log.LogInfo("补丁检查 → " + s);
@@ -1647,8 +1647,8 @@ namespace BurgerShopModder
                                     if (!_pixelCache.TryGetValue(texName, out buf) || buf == null)
                                     {
                                         // 取像素的优先级：
-                                        //   ① 纯 CPU 路径（GetRawTextureData + 自己解 DXT5）—— 数据最精确
-                                        //   ② GPU 回读 —— CPU 路径不可用时的兜底
+                                        //   (1) 纯 CPU 路径（GetRawTextureData + 自己解 DXT5）—— 数据最精确
+                                        //   (2) GPU 回读 —— CPU 路径不可用时的兜底
                                         // 注意 `GetPixels32()` 对压缩格式（DXT5/fmt 12）会抛 ArgumentException，
                                         // 所以不能拿它当"可读就能用"的判据。
                                         buf = null;
@@ -2858,7 +2858,7 @@ namespace BurgerShopModder
         /// 假设：丝袜 drawable 的**部件透明度已被正确设为 1**（时间线已证明），却看不到 ——
         /// 因为它们被某个「遮罩源 drawable」裁剪，而那个遮罩源是暗的。
         /// Cubism 的遮罩做法是"把遮罩源画进裁剪缓冲"；遮罩源不可见 → 缓冲为空 → 被遮罩者被完全裁掉。
-        /// 这能同时解释两件事：① 部件透明度对了却看不到；② 「全部强制显示」后丝袜就出现。
+        /// 这能同时解释两件事：(1) 部件透明度对了却看不到；(2) 「全部强制显示」后丝袜就出现。
         /// </summary>
         private bool DumpMasks()
         {
@@ -3328,13 +3328,13 @@ namespace BurgerShopModder
             note = "";
             if (t == null) { note = "null"; return null; }
 
-            // ① 非压缩且可读 → Unity 自己的 CPU 解码
+            // (1) 非压缩且可读 → Unity 自己的 CPU 解码
             if (t.isReadable && t.format != TextureFormat.DXT5)
             {
                 try { note = "cpu(" + t.format + ")"; return t.GetPixels32(); }
                 catch { }
             }
-            // ② .resS 直读（已验证）—— 必须按**实例**匹配，不能按名字
+            // (2) .resS 直读（已验证）—— 必须按**实例**匹配，不能按名字
             RegisterResTexture(t);
             long[] ri;
             if (ResInfoById.TryGetValue(t.GetInstanceID(), out ri))
@@ -3351,7 +3351,7 @@ namespace BurgerShopModder
                 note = "来源未知(非.resS，可能是DLC包内贴图)";
                 return null;
             }
-            // ③ 兜底：GPU 回读（已知不可靠，仅当上面都不行时用）
+            // (3) 兜底：GPU 回读（已知不可靠，仅当上面都不行时用）
             try
             {
                 note = (note == "" ? "" : note + ",") + "gpu-readback(不可靠)";
@@ -5644,10 +5644,10 @@ namespace BurgerShopModder
         }
 
         /// 一次打屁股的完整效果。真实点击与测试命令共用这一份逻辑。
-        ///   ① 速度冲量（快速升、缓慢消、递减叠加）
-        ///   ② 累积索取欲（每次随机加 下限~上限）
-        ///   ③ 有概率把"脱出所需点击次数"乘上一截（打屁股让脱出变难）
-        ///   ④ 以当前索取欲为概率掷骰：进入索取模式，或叠加一段总时长
+        ///   (1) 速度冲量（快速升、缓慢消、递减叠加）
+        ///   (2) 累积索取欲（每次随机加 下限~上限）
+        ///   (3) 有概率把"脱出所需点击次数"乘上一截（打屁股让脱出变难）
+        ///   (4) 以当前索取欲为概率掷骰：进入索取模式，或叠加一段总时长
         /// </summary>
         private static void DoSpankLogic(object tab) { DoSpankLogic(tab, "Osiri解除叩く量"); }
 
@@ -6703,10 +6703,10 @@ namespace BurgerShopModder
         // 最后 3 个参数那次丢了 DemandFellaDecay=59.78。两次都是手工改文件救回来的。
         //
         // 【做法】旧键已经不再 Bind，所以读不到内存值 —— 直接解析 cfg 原文。
-        //   ① 备份原文件
-        //   ② 逐对找：旧键有值 且 三份副本都还是默认 → 把旧值复制到三份
-        //   ③ 记日志告诉用户搬了什么
-        //   ④ ConfigVersion 置 1，以后不再跑
+        //   (1) 备份原文件
+        //   (2) 逐对找：旧键有值 且 三份副本都还是默认 → 把旧值复制到三份
+        //   (3) 记日志告诉用户搬了什么
+        //   (4) ConfigVersion 置 1，以后不再跑
         // =================================================================
 
         private const int CONFIG_VERSION_CURRENT = 1;
@@ -6763,7 +6763,7 @@ namespace BurgerShopModder
                 if (bases.Count > 0)
                 {
                     Log.LogInfo("[配置] 发现 " + bases.Count + " 个候选（旧键 + 三份副本都在），开始尝试迁移");
-                    // ① 备份
+                    // (1) 备份
                     string bak = path + ".bak-before-v1";
                     if (!System.IO.File.Exists(bak)) System.IO.File.Copy(path, bak, true);
 
@@ -6831,13 +6831,13 @@ namespace BurgerShopModder
 
                 if (moved.Count > 0)
                 {
-                    Log.LogInfo("════════ 配置自动迁移 ════════");
+                    Log.LogInfo("======== 配置自动迁移 ========");
                     Log.LogInfo("检测到旧版配置（单份键），已把值复制到「按姿势三份」键。");
                     Log.LogInfo("原文件已备份为：" + System.IO.Path.GetFileName(path) + ".bak-before-v1");
                     Log.LogInfo("共迁移 " + moved.Count + " 个键：");
                     for (int i = 0; i < moved.Count && i < 40; i++) Log.LogInfo("  " + moved[i]);
                     if (moved.Count > 40) Log.LogInfo("  …（其余 " + (moved.Count - 40) + " 个见配置文件）");
-                    Log.LogInfo("════════════════════════════");
+                    Log.LogInfo("============================");
                 }
                 else
                 {
@@ -7478,8 +7478,8 @@ namespace BurgerShopModder
             int ok = 0;
             // 两个判定点：Fella 的吸精收尾、以及另一处同样的判定
             // 判定点只有这两个 —— grep KyuseiRate 全代码只出现在这两处的表达式里：
-            //   ① Event_Fella吸精End      —— 吸精收尾时的重播判定
-            //   ② Event_FellaSyaseiOnEnd  —— 绝顶收尾时的「吸精フェラflag && KyuseiRate/100」判定
+            //   (1) Event_Fella吸精End      —— 吸精收尾时的重播判定
+            //   (2) Event_FellaSyaseiOnEnd  —— 绝顶收尾时的「吸精フェラflag && KyuseiRate/100」判定
             // （Event_Osiri吸精End 与 Even_SitKiss吸精OnEnd 都不读 KyuseiRate，不要挂；
             //   Play_Fella吸精 是开始入口，也不读，挂了只会造成嵌套改写。）
             foreach (string mn in new string[] { "Event_Fella吸精End", "Event_FellaSyaseiOnEnd" })
@@ -8017,11 +8017,11 @@ namespace BurgerShopModder
             float syaseing = GetFloat(player, "Syaseing");
             float resist = GetFloat(player, "ecstasyResist");
 
-            // ① 上限天花板
-            chk("① 上限天花板", maxHp <= CapCeiling + 0.5f && maxEc <= CapCeiling + 0.5f,
+            // (1) 上限天花板
+            chk("(1) 上限天花板", maxHp <= CapCeiling + 0.5f && maxEc <= CapCeiling + 0.5f,
                 string.Format("maxHP={0:0.#} maxEcstasy={1:0.#} 天花板={2:0}", maxHp, maxEc, CapCeiling));
 
-            // ② 动摇生命加成的账目自洽
+            // (2) 动摇生命加成的账目自洽
             {
                 bool ok;
                 string d;
@@ -8036,31 +8036,31 @@ namespace BurgerShopModder
                     ok = true;
                     d = "无未还清的加成";
                 }
-                chk("② 生命加成账目", ok, d);
+                chk("(2) 生命加成账目", ok, d);
             }
 
-            // ③ 安全闸：削弱生效时，绝顶值必须仍能到达上限
+            // (3) 安全闸：削弱生效时，绝顶值必须仍能到达上限
             {
                 float gate = Mathf.Clamp(TremorSafetyGate.Value, 50f, 100f) / 100f;
                 bool ok = gate < 1f;
                 string d = string.Format("闸门 {0:0}%（绝顶值到 {0:0}% 后不再削弱）{1}",
                     TremorSafetyGate.Value,
                     ok ? "" : " ← 闸门关闭，绝顶值可能永远到不了顶，榨取不会收束！");
-                chk("③ 绝顶可及性安全闸", ok, d);
+                chk("(3) 绝顶可及性安全闸", ok, d);
             }
 
-            // ④ 绝顶值范围
-            chk("④ 绝顶值范围", curEc >= -0.01f && (maxEc <= 0f || curEc <= maxEc + 0.01f),
+            // (4) 绝顶值范围
+            chk("(4) 绝顶值范围", curEc >= -0.01f && (maxEc <= 0f || curEc <= maxEc + 0.01f),
                 string.Format("CurrentEcstasy={0:0.##} / maxEcstasy={1:0.##}", curEc, maxEc));
 
-            // ⑤ Syaseing 与值是否自相矛盾（值远低于上限却在榨取中 = 状态卡死）
+            // (5) Syaseing 与值是否自相矛盾（值远低于上限却在榨取中 = 状态卡死）
             // 注意：只看"值为 0 且 Syaseing 为真"会大量误报 ——
             // 榨取动画正常播放期间本来就是这样。真正该看的是【它持续了多久】。
             {
                 float el = SyaseingElapsed();
                 float limit = 12f;   // 榨取动画正常几秒内结束；超过这个数就是真卡住
                 bool stuck = syaseing > 0.5f && el > limit;
-                soft("⑤ Syaseing 未长时间卡住", !stuck,
+                soft("(5) Syaseing 未长时间卡住", !stuck,
                     string.Format("Syaseing={0:0} 已持续={1:0.##}s 值={2:0.##}/{3:0.##}  timeScale={4:0.###} "
                         + "动摇={5} 近10s榨取={6}次  本次会话最长={7:0.##}s{8}",
                         syaseing, el, curEc, maxEc, Time.timeScale,
@@ -8069,12 +8069,12 @@ namespace BurgerShopModder
                         stuck ? " ← 超过 " + limit + "s 仍未解除，是真卡住" : ""));
             }
 
-            // ⑥ 抑制标志必须在帧末复位
-            chk("⑥ 抑制标志已复位", !_suppressDrive && !_suppressRateScale && !_suppressDamageFx,
+            // (6) 抑制标志必须在帧末复位
+            chk("(6) 抑制标志已复位", !_suppressDrive && !_suppressRateScale && !_suppressDamageFx,
                 string.Format("drive={0} rate={1} fx={2}（都应为 false）",
                     _suppressDrive, _suppressRateScale, _suppressDamageFx));
 
-            // ⑦ timeScale 应等于 游戏速度 × 动摇模板输出
+            // (7) timeScale 应等于 游戏速度 × 动摇模板输出
             {
                 float expect = Mathf.Clamp(GameSpeed.Value, 0.05f, 20f);
                 if (_tremorActive)
@@ -8083,20 +8083,20 @@ namespace BurgerShopModder
                     float depth = EvalSlowPattern(_tremorPat, Time.unscaledTime - _tremorT0);
                     expect *= Mathf.Lerp(1f, floorPct, depth);
                 }
-                chk("⑦ 时间刻度一致", Mathf.Abs(Time.timeScale - expect) < 0.02f,
+                chk("(7) 时间刻度一致", Mathf.Abs(Time.timeScale - expect) < 0.02f,
                     string.Format("实际 {0:0.###}  期望 {1:0.###}", Time.timeScale, expect));
             }
 
-            // ⑧ 动摇状态自洽
-            soft("⑧ 动摇状态自洽", !(_tremorActive && TremorActiveFlag() == false),
+            // (8) 动摇状态自洽
+            soft("(8) 动摇状态自洽", !(_tremorActive && TremorActiveFlag() == false),
                 string.Format("_tremorActive={0} 模板={1} 剩余={2:0.##}s",
                     _tremorActive, (_tremorPat >= 0 && _tremorPat < TremorPatNames.Length) ? TremorPatNames[_tremorPat] : "?",
                     _tremorActive ? Mathf.Max(0f, _tremorDur - (Time.unscaledTime - _tremorT0)) : 0f));
 
-            // ⑨ 条的尺寸：当前 vs 基准（查"条不响应"）
+            // (9) 条的尺寸：当前 vs 基准（查"条不响应"）
             {
                 object holder = FindGaugeHolder();
-                if (holder == null) soft("⑨ 条尺寸", true, "找不到 UI（可能不在店内场景）");
+                if (holder == null) soft("(9) 条尺寸", true, "找不到 UI（可能不在店内场景）");
                 else
                 {
                     var bad = new List<string>();
@@ -8107,71 +8107,71 @@ namespace BurgerShopModder
                         Vector2 bv;
                         if (!_gaugeBaseline.TryGetValue(f, out bv)) continue;
                         if (Mathf.Abs(rt.sizeDelta.x - bv.x) >= 0.5f || Mathf.Abs(rt.sizeDelta.y - bv.y) >= 0.5f)
-                            bad.Add(f + "(" + rt.sizeDelta.x.ToString("0.#") + "≠" + bv.x.ToString("0.#") + ")");
+                            bad.Add(f + "(" + rt.sizeDelta.x.ToString("0.#") + " != " + bv.x.ToString("0.#") + ")");
                     }
-                    soft("⑨ 条尺寸 vs 基准", bad.Count == 0,
+                    soft("(9) 条尺寸 vs 基准", bad.Count == 0,
                         bad.Count == 0 ? "全部与基准一致" : string.Join(" ", bad.ToArray()));
                 }
             }
 
-            // ⑩ 变化率设置是否会把某一路彻底掐死
+            // (10) 变化率设置是否会把某一路彻底掐死
             {
                 bool dead = RatePct(EcstasyUpRate) <= 0.0001f;
-                soft("⑩ 绝顶上升率未归零", !dead,
+                soft("(10) 绝顶上升率未归零", !dead,
                     "上升率=" + EcstasyUpRate.Value.ToString("0") + "%" + (dead ? " ← 归零，绝顶值永不增长" : ""));
             }
 
-            // ⑪ 抗性与归零开关的组合
+            // (11) 抗性与归零开关的组合
             {
                 bool inert = EcstasyResist.Value >= 1f || NoEcstasy.Value;
-                soft("⑪ 绝顶未被完全冻结", !inert,
+                soft("(11) 绝顶未被完全冻结", !inert,
                     "抗性=" + EcstasyResist.Value.ToString("0.##")
                     + " 归零=" + (NoEcstasy.Value ? "开" : "关")
                     + (inert ? " ← 组合起来绝顶值完全不动" : ""));
             }
 
-            // ⑫ 榨取循环：短时间内榨取反复触发 = 卡在循环里（用户报的"卡在这里一直重复"）
+            // (12) 榨取循环：短时间内榨取反复触发 = 卡在循环里（用户报的"卡在这里一直重复"）
             {
                 int n10 = EcsResetCountIn(10f), n30 = EcsResetCountIn(30f);
                 bool ok = n10 <= 3;
-                chk("⑫ 榨取未陷入循环", ok,
+                chk("(12) 榨取未陷入循环", ok,
                     string.Format("近 10 秒 {0} 次、近 30 秒 {1} 次{2}",
                         n10, n30,
                         ok ? "" : " ← 反复重演，通常是 maxEcstasy 被削减到过小，"
                                  + "导致 CurrentEcstasy 很快又 >= maxEcstasy，Syaseing 一清就又触发"));
             }
 
-            // ⑬ 上限是否被削到过小（榨取螺旋的燃料）
-            soft("⑬ 绝顶上限未被削到过小", !(maxEc > 0f && maxEc < 10f),
+            // (13) 上限是否被削到过小（榨取螺旋的燃料）
+            soft("(13) 绝顶上限未被削到过小", !(maxEc > 0f && maxEc < 10f),
                 string.Format("maxEcstasy={0:0.##} 本次会话见过的最小值={1}", maxEc,
                     _maxEcMinSeen == float.MaxValue ? -1f : _maxEcMinSeen));
 
-            // ⑭ 时间刻度不得归零 —— 动画停住 = 动画事件不触发 = Syaseing 永不清除
+            // (14) 时间刻度不得归零 —— 动画停住 = 动画事件不触发 = Syaseing 永不清除
             //    （Syaseing 的清除点是 Event_FellaSyaseiOnEnd / Event_SitSyasei_OnEnd /
             //      Event_SitKissSyaseiOnEnd / Event_OsiriSyasei_OnEnd 这几个【动画事件】）
             {
                 bool ok = Time.timeScale > 0.05f;
-                chk("⑭ 时间刻度未归零", ok,
+                chk("(14) 时间刻度未归零", ok,
                     string.Format("Time.timeScale={0:0.###}{1}", Time.timeScale,
                         ok ? "" : " ← 动画会停住，动画事件不触发，Syaseing 永不解除（榨取不收束）"));
             }
 
-            // ⑮ 视觉特效未反复触发（"持续闪红光"）
+            // (15) 视觉特效未反复触发（"持续闪红光"）
             {
                 int sy = FxCountIn(_fxSyaseiTimes, 3f);
                 int ky = FxCountIn(_fx吸精Times, 3f);
                 int dm = FxCountIn(_fxDamageTimes, 3f);
                 bool ok = sy <= 3 && ky <= 3 && dm <= 8;
-                chk("⑮ 特效未反复触发", ok,
+                chk("(15) 特效未反复触发", ok,
                     string.Format("近 3 秒：绝顶红光 {0} 次、吸精红光 {1} 次、受伤红光 {2} 次（Syaseing 已持续 {3:0.##}s）{4}",
                         sy, ky, dm, SyaseingElapsed(),
                         ok ? "" : " ← 在反复播特效，说明对应动画在重复触发而收尾事件没跟上"));
             }
 
-            // ⑯ 当前值不得超过上限
+            // (16) 当前值不得超过上限
             //    典型的越界来源：锁上限（KeepMaxCaps）每帧把上限钉回基线，
             //    而榨取的上限削减与它互相拉扯，当前值就被留在上限之上了。
-            chk("⑯ 生命当前值未越上限", curHp <= maxHp + 0.5f && curHp >= -0.01f,
+            chk("(16) 生命当前值未越上限", curHp <= maxHp + 0.5f && curHp >= -0.01f,
                 string.Format("currentHP={0:0.##} maxHP={1:0.##}{2}", curHp, maxHp,
                     curHp > maxHp + 0.5f ? " ← 当前值超过上限，锁上限与上限削减在互相拉扯" : ""));
 
@@ -8180,7 +8180,7 @@ namespace BurgerShopModder
 
             {
                 bool ok = _demandMode || _demandModePose == -1;
-                chk("⑰ 模式姿势记录自洽", ok,
+                chk("(17) 模式姿势记录自洽", ok,
                     string.Format("_demandMode={0} _demandModePose={1}{2}",
                         _demandMode, _demandModePose,
                         ok ? "" : " ← 模式已关但姿势没复位（_demandMode=false 有四处赋值点，有漏的）"));
@@ -8188,17 +8188,17 @@ namespace BurgerShopModder
 
             {
                 int mx = Mathf.Max(1, P3(DemandMaxStacks3));
-                chk("⑱ 段数在范围内", _demandStacks >= 0 && _demandStacks <= mx,
+                chk("(18) 段数在范围内", _demandStacks >= 0 && _demandStacks <= mx,
                     string.Format("段={0} 上限={1}", _demandStacks, mx));
             }
 
-            chk("⑲ 索取欲非负", _demandUrge >= -0.01f,
+            chk("(19) 索取欲非负", _demandUrge >= -0.01f,
                 string.Format("索取欲={0:0.##}%", _demandUrge));
 
             {
                 int poseNow = PoseIdx();
                 bool bad = _demandMode && _demandModePose == 1 && poseNow == 2;
-                soft("⑳ 背榨模式未被坐姿顶替", !bad,
+                soft("(20) 背榨模式未被坐姿顶替", !bad,
                     string.Format("模式入于={0} 当前姿势={1} 段={2}{3}",
                         _demandModePose, poseNow, _demandStacks,
                         bad ? " ← 背榨的模式被切到了坐姿（状态级兜底应当夺回）" : ""));
@@ -8207,18 +8207,18 @@ namespace BurgerShopModder
             {
                 int lim = ChainLimitNow();
                 int now = ChainNow();
-                soft("㉑ 连榨计数未超上限", lim <= 0 || now <= lim,
+                soft("(21) 连榨计数未超上限", lim <= 0 || now <= lim,
                     string.Format("档位={0} 计数={1} 上限={2}", ChainSlotName(), now, lim));
             }
 
-            chk("㉒ 余韵计数非负", _afterglowPending >= 0 && _afterglowRemaining >= 0,
+            chk("(22) 余韵计数非负", _afterglowPending >= 0 && _afterglowRemaining >= 0,
                 string.Format("待发动={0} 进行中={1} 累计={2}", _afterglowPending, _afterglowRemaining, _afterglowTotal));
 
             {
                 bool shouldHave = SitPussyAreaEnabled.Value && PoseIdx() == 2;
                 float qx0, qy0, qx1, qy1;
                 bool got = PussyAreaScreenRect(out qx0, out qy0, out qx1, out qy1);
-                soft("㉓ Manman 区矩形可取", !shouldHave || got,
+                soft("(23) Manman 区矩形可取", !shouldHave || got,
                     shouldHave
                         ? (got ? string.Format("矩形 {0:0}~{1:0} × {2:0}~{3:0}", qx0, qx1, qy0, qy1)
                                : "坐姿 + 已启用，却拿不到矩形（模型包围盒取不到？）")
@@ -8312,8 +8312,8 @@ namespace BurgerShopModder
 
             // 正向量要过两道削弱，都放过自己驱动的写入（_suppressDrive），
             // 否则动摇自己的波形会被吃掉：
-            //   ① 动摇【期间】的攻击削弱 —— 手一软，打进来的量只剩 TremorWeaken%
-            //   ② 动摇结束后的「绝顶适应」—— 一段时间内继续吃不满
+            //   (1) 动摇【期间】的攻击削弱 —— 手一软，打进来的量只剩 TremorWeaken%
+            //   (2) 动摇结束后的「绝顶适应」—— 一段时间内继续吃不满
             //
             // 净效果：削弱压住累积，而游戏的【自然消退】照常按「绝顶下降率」跑，
             // 两者一比就是净下降 —— 下降率高的时候绝顶值会持续走低。
@@ -8724,7 +8724,7 @@ namespace BurgerShopModder
                 {
                     bool same = Mathf.Abs(rt.sizeDelta.x - basev.x) < 0.5f
                              && Mathf.Abs(rt.sizeDelta.y - basev.y) < 0.5f;
-                    mark = same ? "" : "≠基准";
+                    mark = same ? "" : " != 基准";
                 }
                 parts.Add(f.Replace("Gauge", "") + ":" + rt.sizeDelta.x.ToString("0.#") + "x"
                           + rt.sizeDelta.y.ToString("0.#") + mark);
@@ -9014,8 +9014,8 @@ namespace BurgerShopModder
                 }
 
                 // 【去重】Manman 区可能和上面某个 drawable 是【同一块】——
-                //   ① 模型里已有 HitArea_Manman
-                //   ② 或者绑定了某个已被画过的 HitArea* 素材
+                //   (1) 模型里已有 HitArea_Manman
+                //   (2) 或者绑定了某个已被画过的 HitArea* 素材
                 // 这两种情况下再画一次就会出现"两个 Manman 区"。
                 if (SitPussyAreaEnabled.Value)
                 {
@@ -9347,7 +9347,7 @@ namespace BurgerShopModder
 
         // ---- 页 3：对手（吃汉） ----
         /// <summary>「对手」页里的索取模式控制区。</summary>
-        // ══════════════════════════════════════════════════════════════
+        // ==============================================================
         // 面板排版 helper
         //
         // 原来标题有三四种写法（"—— X ——" / "——————" / "—— X"），
@@ -9355,7 +9355,7 @@ namespace BurgerShopModder
         //
         // 现在统一成三个 helper，**间距和格式只有一处定义**。
         // 以后改版式只需要改这里。
-        // ══════════════════════════════════════════════════════════════
+        // ==============================================================
 
         private static GUIStyle _secStyle, _subStyle, _hintStyle;
 
@@ -9384,7 +9384,7 @@ namespace BurgerShopModder
         {
             EnsureStyles();
             GUILayout.Space(10f);
-            GUILayout.Label("▍" + title, _secStyle);
+            GUILayout.Label("" + title, _secStyle);
         }
 
         /// <summary>二级小节。更小、无装饰。</summary>
@@ -9532,7 +9532,7 @@ namespace BurgerShopModder
                         {
                             string nm = all[i];
                             bool cur = (nm == ManmanBindDrawable.Value);
-                            if (GUILayout.Button((cur ? "● " : "    ") + nm))
+                            if (GUILayout.Button((cur ? "(记录) " : "    ") + nm))
                             {
                                 ManmanBindDrawable.Value = cur ? "" : nm;
                                 _snapHint = cur ? "已取消素材绑定" : ("HitArea_Manman_By_Plugins 已绑定到素材：" + nm);
@@ -9927,7 +9927,7 @@ namespace BurgerShopModder
             }
 
             GUILayout.Label("游戏从不启用的素材可以在这里手动开启。");
-            GUILayout.Label("√ = 自然可见（游戏在管）；○ = 已手动强制显示；空 = 隐藏");
+            GUILayout.Label("(自然) = 自然可见（游戏在管）；(手动) = 已手动强制显示；空 = 隐藏");
             GUILayout.Label(string.Format("强制列表：{0} 项   总开关：{1}{2}",
                 _partForceOn.Count,
                 _partOverrideEnabled ? "开" : "关",
@@ -9973,7 +9973,7 @@ namespace BurgerShopModder
                 bool forced = _partForceOn.Contains(n);
 
                 GUILayout.BeginHorizontal();
-                string mark = natural ? "√" : (forced ? "○" : "·");
+                string mark = natural ? "(自然)" : (forced ? "(手动)" : "·");
                 GUILayout.Label(mark + " " + n, GUILayout.Width(190f));
                 bool newForced = GUILayout.Toggle(forced, "强制", GUILayout.Width(60f));
                 if (newForced != forced)
@@ -10072,7 +10072,7 @@ namespace BurgerShopModder
                 bool isNum = float.TryParse(val, System.Globalization.NumberStyles.Float,
                     System.Globalization.CultureInfo.InvariantCulture, out f);
                 bool b = val == "1" || val.Equals("true", StringComparison.OrdinalIgnoreCase);
-                // ════════════════════════════════════════════════════════════════
+                // ================================================================
                 // 【Schema 化 · 第一块】P3 参数走通用路径
                 //
                 // 原来每个"按姿势三份"的参数都要在下面那个 switch 里手写一行 case ——
@@ -10084,7 +10084,7 @@ namespace BurgerShopModder
                 //
                 // 下面那些手写的 P3 case 保留着（无害），但已不会被执行 ——
                 // 删 54 行属纯清理、风险为零收益也为零，留着还能当"这批参数长什么样"的活文档。
-                // ════════════════════════════════════════════════════════════════
+                // ================================================================
                 {{
                     object g;
                     if (_p3ByName.TryGetValue(name, out g))
@@ -10836,14 +10836,14 @@ namespace BurgerShopModder
                 }
                 _snapHint = turningOn ? "已强制显示全部部件（实验）" : "已停止强制显示（并已还原）";
             }
-            if (GUILayout.Button(_autoExport ? "■ 停止连续记录" : "● 连续记录(0.5秒一次)"))
+            if (GUILayout.Button(_autoExport ? "(停止) 停止连续记录" : "(记录) 连续记录(0.5秒一次)"))
             {
                 _autoExport = !_autoExport;
                 if (_autoExport) _autoDir = "";      // 每次开始记录换一个新时间戳目录
                 LogOp("诊断·连续记录", _autoExport ? "开始（每 0.5 秒落一份）" : "停止");
                 _snapHint = _autoExport ? "连续记录中：每次落一个 diag_<时间戳> 目录" : "已停止连续记录";
             }
-            if (GUILayout.Button(ActivityLogger.Running ? "■ 停止活动记录" : "● 开始活动记录"))
+            if (GUILayout.Button(ActivityLogger.Running ? "(停止) 停止活动记录" : "(记录) 开始活动记录"))
             {
                 if (ActivityLogger.Running) ActivityLogger.StopLogging(); else ActivityLogger.StartLogging();
                 _snapHint = ActivityLogger.Running ? "记录中：activity_<时间戳>\\" : "已停止并写出 summary.txt";

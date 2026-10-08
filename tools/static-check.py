@@ -11,13 +11,13 @@
 这里把这类一致性做成可自动检查的规则。
 
 【检查项】
-  ① 每个 BindP3 参数都要有面板控件
-  ② 每个 BindP3 参数都要有 set 命令分支
-  ③ 每个参数都要在说明书里出现（去掉 _Fella/_Osiri/_Sit 后缀比对）
-  ④ 同一目标方法不能被 patch 两次（Harmony 会报 AmbiguousMatch）
-  ⑤ 插件源码里不能有本机绝对路径
-  ⑥ 不该硬编码的三栏用词（"索取"不得出现在共享模板里）
-  ⑦ 挂载数不能少于预期（防"补丁挂了一半"）
+  (1) 每个 BindP3 参数都要有面板控件
+  (2) 每个 BindP3 参数都要有 set 命令分支
+  (3) 每个参数都要在说明书里出现（去掉 _Fella/_Osiri/_Sit 后缀比对）
+  (4) 同一目标方法不能被 patch 两次（Harmony 会报 AmbiguousMatch）
+  (5) 插件源码里不能有本机绝对路径
+  (6) 不该硬编码的三栏用词（"索取"不得出现在共享模板里）
+  (7) 挂载数不能少于预期（防"补丁挂了一半"）
 
 用法：
     python tools/static-check.py [仓库根目录]
@@ -77,7 +77,7 @@ print('== 静态一致性检查 ==\n')
 # ── 收集 BindP3 参数 ──────────────────────────────────────────
 # BindP3("Name", ...) / BindP3Int / BindP3Bool
 p3 = set(re.findall(r'BindP3(?:Int|Bool)?\(\s*"([A-Za-z_][A-Za-z0-9_]*)"', src))
-print(f'① BindP3 参数：{len(p3)} 个')
+print(f'(1) BindP3 参数：{len(p3)} 个')
 
 # 面板控件：SetP3(Name3, ...)
 panel = set(re.findall(r'SetP3\(\s*([A-Za-z_][A-Za-z0-9_]*?)(?:3)\s*,', src))
@@ -91,26 +91,26 @@ miss_panel = sorted(p for p in p3 if p not in have_panel)
 miss_set = sorted(p for p in p3 if p not in setc)
 
 if miss_panel:
-    fail(f'② 这些参数【没有面板控件】：{", ".join(miss_panel[:12])}'
+    fail(f'(2) 这些参数【没有面板控件】：{", ".join(miss_panel[:12])}'
          + (f' …共 {len(miss_panel)} 个' if len(miss_panel) > 12 else ''))
 else:
-    ok(f'② 全部 {len(p3)} 个参数都有面板控件')
+    ok(f'(2) 全部 {len(p3)} 个参数都有面板控件')
 
 if miss_set:
     # set 分支可能在 GameCommandServer 之外，宽松处理
-    warn(f'③ 这些参数【没有 set 命令分支】：{", ".join(miss_set[:12])}'
+    warn(f'(3) 这些参数【没有 set 命令分支】：{", ".join(miss_set[:12])}'
          + (f' …共 {len(miss_set)} 个' if len(miss_set) > 12 else ''))
 else:
-    ok(f'③ 全部 {len(p3)} 个参数都有 set 命令分支')
+    ok(f'(3) 全部 {len(p3)} 个参数都有 set 命令分支')
 
 # ── 说明书覆盖 ────────────────────────────────────────────────
 base = set(re.sub(r'_(Fella|Osiri|Sit)$', '', p) for p in p3)
 miss_doc = sorted(b for b in base if b not in doc)
 if miss_doc:
-    warn(f'④ 说明书中未提及：{", ".join(miss_doc[:12])}'
+    warn(f'(4) 说明书中未提及：{", ".join(miss_doc[:12])}'
          + (f' …共 {len(miss_doc)} 个' if len(miss_doc) > 12 else ''))
 else:
-    ok(f'④ 全部 {len(base)} 个逻辑参数都在说明书里')
+    ok(f'(4) 全部 {len(base)} 个逻辑参数都在说明书里')
 
 # ── Harmony 重复 patch ────────────────────────────────────────
 # TryPatch(pc, "Method", ...) / GetMethod("Method", ...) 后 _harmony.Patch
@@ -125,9 +125,9 @@ for kind, who in prefixes:
     names[f'{kind}_{who}'] += 1
 dups = sorted(k for k, v in names.items() if v > 1)
 if dups:
-    fail(f'⑤ 重复定义的补丁方法：{", ".join(dups)}')
+    fail(f'(5) 重复定义的补丁方法：{", ".join(dups)}')
 else:
-    ok(f'⑤ 补丁方法无重复定义（共 {len(names)} 个）')
+    ok(f'(5) 补丁方法无重复定义（共 {len(names)} 个）')
 
 # ── 本机绝对路径 ──────────────────────────────────────────────
 LEAKS = [r'E:\\DSH', r'D:\\Four Nights', r'NESARFDX', r'E:/DSH', r'C:\\Users\\Administrator']
@@ -144,9 +144,9 @@ for p in list(ROOT.rglob('*.cs')) + list(ROOT.rglob('*.ps1')) + list(ROOT.rglob(
         if re.search(pat, t):
             leak_hits.append(f'{p.relative_to(ROOT)}: {pat}')
 if leak_hits:
-    fail(f'⑥ 源码里有本机绝对路径（{len(leak_hits)} 处）：{leak_hits[0]} …')
+    fail(f'(6) 源码里有本机绝对路径（{len(leak_hits)} 处）：{leak_hits[0]} …')
 else:
-    ok('⑥ 无本机绝对路径')
+    ok('(6) 无本机绝对路径')
 
 # ── 三栏用词（规则已于 v1.0.0 之后作废）────────────────────────
 # 【为什么删掉这条规则】
@@ -160,14 +160,56 @@ else:
 #
 # 【保留注释的理由】下一代人看到"这里本来有条检查"时，
 # 能直接知道它为什么被删 —— 而不是怀疑是被误删的。
-ok('⑦ 三栏用词由 PoseDesc 统一归一（规则已作废，见源码注释）')
+ok('(7) 三栏用词由 PoseDesc 统一归一（规则已作废，见源码注释）')
+
+# ── 装饰符与判定符 ───────────────────────────────────────────
+# 【准则来源】mega-index-map 的三条不变量之一：输出与词汇保持 ASCII。
+# 本项目的例外（有意保留）：
+#   · 中文排版符号    —  ·            （破折号、间隔号）
+#   · 数学符号        ×  ±  −  Δ       （写法标准，换成 ASCII 反而难读）
+#   · 全部面向用户的中文文案、注释、文档
+# 不允许的：纯装饰或充当判定用的符号 ——
+#   ✓ ✗ ✅ ❌ ⚠ ★ (自然) (手动) (记录) (停止)  !=   ═ 以及圈码 (1)(2)(3)
+# 它们没有语义，只在视觉上干扰阅读，而且容易被误当成结论标记。
+# 用【码点构造】而不是字面量 ——
+# 否则一旦有别处对本文档做批量替换，这个表自己就先被改坏了（踩过一次）。
+DECOR_CODEPOINTS = [
+    0x2713, 0x2717, 0x2705, 0x274C, 0x26A0, 0x2605, 0x221A, 0x25CB, 0x25CF, 0x25A0,
+    0x2260, 0x258D, 0x2550, 0x2460, 0x2461, 0x2462, 0x2463, 0x2464, 0x2465, 0x2466,
+    0x2467, 0x2468, 0x2469, 0x246A, 0x246B, 0x246C, 0x246D, 0x246E, 0x246F, 0x2470,
+    0x2471, 0x2472, 0x2473,
+]
+DECOR_BAD = set(chr(c) for c in DECOR_CODEPOINTS)
+SRC_EXT = ('.cs', '.sh', '.ps1', '.py', '.yml', '.cmd', '.md')
+hits = []
+_SELF = pathlib.Path(__file__).resolve()
+for _p in ROOT.rglob('*'):
+    if not _p.is_file() or '.git' in _p.parts:
+        continue
+    if _p.suffix.lower() not in SRC_EXT:
+        continue
+    if _p.resolve() == _SELF:
+        continue          # 跳过自己：表里就写着这些码点
+    try:
+        _t = _p.read_text(encoding='utf-8', errors='ignore')
+    except Exception:
+        continue
+    for _c in DECOR_BAD:
+        if _c in _t:
+            hits.append((str(_p.relative_to(ROOT)), _c, _t.count(_c)))
+if hits:
+    fail('(9) 出现装饰符/判定符：' + '，'.join(f'{f} {c!r} x{n}' for f, c, n in hits[:5])
+         + (f' 共 {len(hits)} 处' if len(hits) > 5 else ''))
+else:
+    ok('(9) 无装饰符与判定符（允许中文排版与数学符号）')
+
 
 # ── 挂载数 ────────────────────────────────────────────────────
 mounts = len(re.findall(r'ok\+\+', src))
 if mounts < 35:
-    warn(f'⑧ 挂载点数偏少（{mounts}）—— 预期 ≥ 35，确认没有补丁被删掉')
+    warn(f'(8) 挂载点数偏少（{mounts}）—— 预期 ≥ 35，确认没有补丁被删掉')
 else:
-    ok(f'⑧ 挂载点 {mounts} 个')
+    ok(f'(8) 挂载点 {mounts} 个')
 
 # ── 汇总 ──────────────────────────────────────────────────────
 print()

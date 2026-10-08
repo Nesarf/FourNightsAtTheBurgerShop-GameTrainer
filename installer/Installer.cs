@@ -763,7 +763,7 @@ namespace BurgerShopInstaller
                 }
                 _bar.Value = 100;
                 Log("");
-                Log("√ 安装完成。");
+                Log("(自然) 安装完成。");
                 Log("  · 游戏里按 F9 打开数值面板");
                 Log("  · 也可以运行「数值修改器.exe」在进游戏前改");
                 Log("  · 想还原就点「卸载还原」或运行「卸载还原.ps1」");
@@ -819,7 +819,7 @@ namespace BurgerShopInstaller
                 if (e.Error != null) { Fail("卸载失败：" + e.Error.Message); return; }
                 _bar.Value = 100;
                 Log("");
-                Log("√ 已还原。游戏现在是原版状态。");
+                Log("(自然) 已还原。游戏现在是原版状态。");
                 _status.Text = "已卸载还原。";
                 _status.ForeColor = Color.FromArgb(60, 130, 90);
                 RefreshButtons();

@@ -2,7 +2,7 @@
 
 ---
 
-## ① 仓库 Description
+## (1) 仓库 Description
 
 （GitHub 仓库右上角 ⚙️ → Description，限 350 字符）
 
@@ -20,7 +20,7 @@ BepInEx 数值修改器 for Four Nights at the Burger Shop。六栏面板（玩�
 
 ---
 
-## ② Topics
+## (2) Topics
 
 （GitHub 仓库右上角 ⚙️ → Topics，小写 + 连字符，最多 20 个）
 
@@ -54,7 +54,7 @@ four-nights-at-the-burger-shop
 
 ---
 
-## ③ Release 文案（v1.0.0）
+## (3) Release 文案（v1.0.0）
 
 **Tag**: `v1.0.0`
 **Release title**: `数值修改器 v1.0.0`
@@ -147,13 +147,13 @@ bash tools/gcmd.sh demand status   # 模式状态
 
 ---
 
-## ④ 顺手可以把 repo 的 "Website" 填上
+## (4) 顺手可以把 repo 的 "Website" 填上
 
 留空也行；如果想指，指向你发布说明的 issue 或干脆留空。
 
 ---
 
-## ⑤ Social preview（可选，但挺有用）
+## (5) Social preview（可选，但挺有用）
 
 仓库 **Settings → Social preview** 上传一张 1280×640 的图。
 
