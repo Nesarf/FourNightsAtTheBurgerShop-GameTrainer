@@ -59,7 +59,7 @@ jobs:
             $bad | ForEach-Object { Write-Host "  $_" }
             exit 1
           }
-          Write-Host "✓ 没有游戏素材、没有游戏程序集、exe/dll 里没有内嵌 moc3"
+          Write-Host "没有游戏素材、没有游戏程序集、exe/dll 里没有内嵌 moc3"
           Write-Host "  共检查 $($files.Count) 个文件"
 
       - name: 确认 dist/ 产物齐全
@@ -83,7 +83,7 @@ jobs:
             $b = [IO.File]::ReadAllBytes($p)
             if ($b[0] -ne 0x4D -or $b[1] -ne 0x5A) { Write-Host "::error::$p 不是有效 PE"; exit 1 }
             $kb = [math]::Round($b.Length / 1KB)
-            Write-Host "  ✓ $p  (${kb} KB)"
+            Write-Host "$p  (${kb} KB)"
           }
 
       - name: 确认安装程序自带了载荷
@@ -95,7 +95,7 @@ jobs:
           foreach ($need in @('payload.zip', 'art.png', 'art.ico')) {
             if ($res -notcontains $need) { Write-Host "::error::安装程序缺少内嵌资源 $need"; exit 1 }
           }
-          Write-Host "✓ 安装程序自包含"
+          Write-Host "安装程序自包含"
 
       - name: 静态一致性检查
         shell: pwsh
@@ -111,7 +111,7 @@ jobs:
             Write-Host "::error::静态一致性检查未通过"
             exit 1
           }
-          Write-Host "✓ 静态一致性检查通过"
+          Write-Host "静态一致性检查通过"
 
       - name: 生成 SHA256
         shell: pwsh
