@@ -9378,8 +9378,8 @@ namespace BurgerShopModder
         // ---- 页 1：玩家 ----
         private void DrawTabPlayer(object player)
         {
-            GUILayout.Label("变化率（按每次实际变化的量缩放）");
-            GUILayout.Label("100% = 原版；0% = 该类变化完全不发生");
+            Section("变化率（按每次实际变化的量缩放）");
+            Hint("100% = 原版；0% = 该类变化完全不发生");
             HpDownRate.Value = SliderF("HP 下降率", HpDownRate.Value, 0f, 200f, "{0:0}%", 5f);
             HpUpRate.Value = SliderF("HP 回复率", HpUpRate.Value, 0f, 200f, "{0:0}%", 5f);
             EcstasyUpRate.Value = SliderF("绝顶上升率", EcstasyUpRate.Value, 0f, 200f, "{0:0}%", 5f);
@@ -9406,7 +9406,7 @@ namespace BurgerShopModder
             EcstasyResist.Value = SliderF("绝顶抗性", EcstasyResist.Value, 0f, 1f, "{0:0.00}", 0.05f);
             MaxBurgerNum.Value = SliderI("连吃汉堡上限", MaxBurgerNum.Value, 0, 200);
             SyaseiCount.Value = SliderI("射精次数", SyaseiCount.Value, 0, 100);
-            GUILayout.Label("射精次数影响每天的具材数，改完回标题重进当天生效。");
+            Hint("射精次数影响每天的具材数，改完回标题重进当天生效。");
 
             DrawTremorSection();
 
@@ -9419,7 +9419,7 @@ namespace BurgerShopModder
                 baseCount < 0 ? "--" : baseCount.ToString(),
                 rel < 0 ? "--" : rel.ToString(),
                 (baseCount < 0 || rel < 0) ? "--" : (baseCount + rel).ToString()));
-            GUILayout.Label("层数 = 基础具材 + 射精次数（作者设计：榨得越多堆越高）");
+            Hint("层数 = 基础具材 + 射精次数（作者设计：榨得越多堆越高）");
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("层数复位（4 层）") && player != null)
             {
@@ -9450,7 +9450,7 @@ namespace BurgerShopModder
         private void DrawTremorSection()
         {
             GUILayout.Space(8f);
-            GUILayout.Label("绝顶动摇（累积时随机触发的衰减正弦波动）");
+            Section("绝顶动摇（累积时随机触发的衰减正弦波动）");
             TremorEnabled.Value = GUILayout.Toggle(TremorEnabled.Value, "  启用动摇");
             if (TremorEnabled.Value)
             {
@@ -9468,7 +9468,7 @@ namespace BurgerShopModder
             }
 
             GUILayout.Space(4f);
-            GUILayout.Label("绝顶适应（动摇结束后，均为临时，结束严格还原）");
+            Section("绝顶适应（动摇结束后，均为临时，结束严格还原）");
             TremorWeaken.Value = SliderF("动摇期间攻击削弱", TremorWeaken.Value, 0f, 100f, "{0:0}%", 5f);
             TremorAdaptTime.Value = SliderF("适应持续", TremorAdaptTime.Value, 0f, 30f, "{0:0.0}s", 0.5f);
             TremorAdaptFactor.Value = SliderF("适应期累积倍率", TremorAdaptFactor.Value, 0f, 100f, "{0:0}%", 5f);
@@ -9521,19 +9521,19 @@ namespace BurgerShopModder
         private void DrawTabCaps(object player)
         {
             Section("上限");
-            GUILayout.Label("游戏机制：被榨取按 3~5% 削 maxHP、1~5% 削 maxEcstasy；");
-            GUILayout.Label("吃汉堡的回血按 maxHP 的百分比算 → 上限被削就越来越难回血。");
+            Hint("游戏机制：被榨取按 3~5% 削 maxHP、1~5% 削 maxEcstasy；");
+            Hint("吃汉堡的回血按 maxHP 的百分比算 → 上限被削就越来越难回血。");
 
             GUILayout.Space(4f);
             LockMaxHp.Value = GUILayout.Toggle(LockMaxHp.Value, "  锁 HP 上限（不再下降）");
             LockMaxEcstasy.Value = GUILayout.Toggle(LockMaxEcstasy.Value, "  锁绝顶值上限");
 
             GUILayout.Space(4f);
-            GUILayout.Label("目标上限（绝对值，每帧平滑逼近）");
+            Section("目标上限（绝对值，每帧平滑逼近）");
             TargetHp.Value = SliderF("HP 上限目标", TargetHp.Value, 0f, 3000f, "{0:0}", 25f);
             TargetEcstasy.Value = SliderF("绝顶上限目标", TargetEcstasy.Value, 0f, 3000f, "{0:0}", 25f);
             CapStepPerSec.Value = SliderF("逼近速度（点/秒）", CapStepPerSec.Value, 1f, 2000f, "{0:0}", 20f);
-            GUILayout.Label("0 = 不启用。这是「设到多少」，不是「加百分之多少」");
+            Hint("0 = 不启用。这是「设到多少」，不是「加百分之多少」");
             Hint("拖滑块只是改目标，不会累乘，绝不会膨胀。");
 
             GUILayout.Space(4f);
@@ -9633,7 +9633,7 @@ namespace BurgerShopModder
             // 这个机制三栏各有叫法：口交=吸取、背榨=索取、正骑=榨取。
             // 本方法被背榨(sitSide=false)与正骑(sitSide=true)调用，所以按参数取名。
             string mw = sitSide ? "榨取" : "索取";
-            GUILayout.Label(sitSide ? "—— 正骑 · 榨取模式 ——" : "—— 背榨 · 索取模式（打屁股触发）——");
+            Section(sitSide ? "正骑 · 榨取模式" : "背榨 · 索取模式（打屁股触发）");
             SetP3(DemandEnabled3, GUILayout.Toggle(P3(DemandEnabled3), sitSide ? "  启用榨取模式" : "  启用索取模式"));
             GUILayout.Space(4f);
             SetP3(SpankSpeedEnabled3, GUILayout.Toggle(P3(SpankSpeedEnabled3), "  打屁股给攻击速度冲量"));
@@ -10152,8 +10152,8 @@ namespace BurgerShopModder
                 RefreshPartList();
             }
 
-            GUILayout.Label("游戏从不启用的素材可以在这里手动开启。");
-            GUILayout.Label("(自然) = 自然可见（游戏在管）；(手动) = 已手动强制显示；空 = 隐藏");
+            Hint("游戏从不启用的素材可以在这里手动开启。");
+            Hint("(自然) = 自然可见（游戏在管）；(手动) = 已手动强制显示；空 = 隐藏");
             GUILayout.Label(string.Format("强制列表：{0} 项   总开关：{1}{2}",
                 _partForceOn.Count,
                 _partOverrideEnabled ? "开" : "关",
@@ -11166,7 +11166,7 @@ namespace BurgerShopModder
             object tabemi = Tabemi();
             if (tabemi == null)
             {
-                GUILayout.Label("未进入店内场景");
+                Hint("未进入店内场景");
                 return;
             }
 
