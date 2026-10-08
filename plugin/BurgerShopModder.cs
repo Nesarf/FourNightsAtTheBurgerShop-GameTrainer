@@ -9417,6 +9417,7 @@ namespace BurgerShopModder
 
         private void DrawTabCaps(object player)
         {
+            Section("上限");
             GUILayout.Label("游戏机制：被榨取按 3~5% 削 maxHP、1~5% 削 maxEcstasy；");
             GUILayout.Label("吃汉堡的回血按 maxHP 的百分比算 → 上限被削就越来越难回血。");
 
