@@ -9662,10 +9662,13 @@ namespace BurgerShopModder
             _secStyle.normal.textColor = new Color(0.85f, 0.88f, 0.96f);
             _secStyle.wordWrap = false;
 
+            // 原来 Sub 和 Section 只差 1px 且都加粗 —— 在面板上【看不出层级】。
+            // 真正看到面板之后才发现：两个标题长得几乎一样。
+            // 现在 Sub 不加粗、颜色更淡，层级才读得出来。
             _subStyle = new GUIStyle(GUI.skin.label);
             _subStyle.fontSize = 11;
-            _subStyle.fontStyle = FontStyle.Bold;
-            _subStyle.normal.textColor = new Color(0.72f, 0.78f, 0.90f);
+            _subStyle.fontStyle = FontStyle.Normal;
+            _subStyle.normal.textColor = new Color(0.66f, 0.72f, 0.84f);
 
             _hintStyle = new GUIStyle(GUI.skin.label);
             _hintStyle.fontSize = 10;
@@ -9728,7 +9731,7 @@ namespace BurgerShopModder
             if (P3(DemandEnabled3))
             {
                 if (!sitSide) GUILayout.Label("  打屁股 → 累积「索取欲」，索取欲的数值就是进入索取模式的概率");
-                SetP3(AttackUrgeChance3, SliderF("涨索取欲的概率(平均)", P3(AttackUrgeChance3), 0f, 100f, "{0:0}%", 1f));
+                SetP3(AttackUrgeChance3, SliderF("涨欲概率·平均", P3(AttackUrgeChance3), 0f, 100f, "{0:0}%", 1f));
                 SetP3(AttackUrgeGain3, SliderF("命中时增加(平均)", P3(AttackUrgeGain3), 0f, 100f, "{0:0}%", 1f));
                 SetP3(AttackUrgeJitter3, SliderF("上面两项的波动幅度", P3(AttackUrgeJitter3), 0f, 90f, "±{0:0}%", 5f));
                 GUILayout.Space(4f);

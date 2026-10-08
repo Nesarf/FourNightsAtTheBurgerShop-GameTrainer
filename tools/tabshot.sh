@@ -61,7 +61,10 @@ read -r X Y W H REST < "$CMD/$NAME.rect"
 echo "面板矩形（插件给的）：x=$X y=$Y w=$W h=$H  $REST"
 
 PY=""
-for c in "E:/DSH/build/burger-shop/.venv-unity/Scripts/python.exe" python3 python; do
+# 不写死路径 —— 写死的话 static-check 规则 (6) 会报本机路径，也就没法进仓库。
+# 先看工作副本自带的 venv，再退回 PATH 上的 python。
+VENV_PY="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/.venv-unity/Scripts/python.exe"
+for c in "$VENV_PY" python3 python; do
   if command -v "$c" >/dev/null 2>&1 || [ -x "$c" ]; then PY="$c"; break; fi
 done
 if [ -z "$PY" ]; then echo "找不到 python，跳过裁切（全屏图仍在）"; exit 0; fi
