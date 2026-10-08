@@ -9592,13 +9592,13 @@ namespace BurgerShopModder
             TremorSafetyGate.Value = SliderF("安全闸", TremorSafetyGate.Value, 50f, 100f, "{0:0}%", 1f);
             Sub("安全闸不能关：绝顶值若永远到不了上限，榨取循环不会收束");
 
+            // 【这里原来有四个连榨上限滑块，已移除】
+            // 原因：背榨栏和正骑栏各自已经画了自己那两个，标签是「骑乘位·常规 连榨上限」
+            // 这种更明确的写法。放在这里等于【同一个设置出现两个滑块】，
+            // 而且这一小节挂在"绝顶动摇"和"绝顶适应"之间，语义上也不属于动摇。
+            // 各栏的连榨上限现在只在各自的栏里出现。
             GUILayout.Space(4f);
-            Section("吸精 · 连榨");
-            Sub("连榨上限（各栏独立：骑乘位/坐姿 × 常规/模式，口交另有一套）");
-            ChainMaxOsiriNormal.Value = SliderI("  骑乘位·常规", ChainMaxOsiriNormal.Value, 0, 50);
-            ChainMaxOsiriDemand.Value = SliderI("  骑乘位·索取模式", ChainMaxOsiriDemand.Value, 0, 50);
-            ChainMaxSitNormal.Value = SliderI("  坐姿·常规", ChainMaxSitNormal.Value, 0, 50);
-            ChainMaxSitDemand.Value = SliderI("  坐姿·榨取模式", ChainMaxSitDemand.Value, 0, 50);
+            Section("吸精");
             Hint("0 = 不限；当前场景：" + ChainSlotName()
                 + "，上限 " + ChainLimitNow() + "，已连 " + ChainNow());
             GUILayout.Label(string.Format("  吸精发生率 {0}%（已修正游戏的整数除法 bug，填多少就是多少）",
