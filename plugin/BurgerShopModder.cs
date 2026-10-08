@@ -213,6 +213,8 @@ namespace BurgerShopModder
         internal static ConfigEntry<bool> FrozenClock;
         internal static ConfigEntry<int> ClockFullTime;
         internal static ConfigEntry<float> GameSpeed;
+        internal static ConfigEntry<float> BurgerTimeAll;
+        internal static ConfigEntry<float> BurgerTimeSpeed;
         internal static ConfigEntry<bool> UnlockAllDays;
 
         private bool _showPanel = true;
@@ -760,6 +762,15 @@ namespace BurgerShopModder
                 new ConfigDescription("一天的总时长（秒），原版 180。", new AcceptableValueRange<int>(60, 3600)));
             GameSpeed = Config.Bind("3-Flow", "GameSpeed", 1f,
                 new ConfigDescription("1 = 原速（时钟也按此速度走）。", new AcceptableValueRange<float>(0.5f, 5f)));
+            // ---- 汉堡制作倒计时 ----
+            // 游戏里 MenuControl 每帧 timeLeft -= Time.deltaTime，归零就 TimeOut。
+            // 每单时长是 timeAll（下单时 timeLeft = timeAll）。
+            BurgerTimeAll = Config.Bind("2-Burger", "BurgerTimeAll", 0f,
+                new ConfigDescription("每单制作时长（秒）。0 = 用游戏原版（10 秒）。",
+                    new AcceptableValueRange<float>(0f, 600f)));
+            BurgerTimeSpeed = Config.Bind("2-Burger", "BurgerTimeSpeed", 100f,
+                new ConfigDescription("倒计时速度（%）。100 = 原速；50 = 慢一半；0 = 冻结（不倒计时）。",
+                    new AcceptableValueRange<float>(0f, 1000f)));
             UnlockAllDays = Config.Bind("3-Flow", "UnlockAllDays", false,
                 "把已通关天数写满，标题画面可选全部日期。写入 PlayerPrefs，重开仍生效。");
 
@@ -6675,6 +6686,53 @@ namespace BurgerShopModder
         /// 为什么需要：正骑的榨取链（连榨 / 余韵）全建立在「人在坐姿」上，
         /// 中途被切走会把整条链断掉。
         /// </summary>
+        // =================================================================
+        // 汉堡制作倒计时
+        //
+        // 游戏侧（MenuControl）：
+        //     private void Timing() {
+        //         if (timing) {
+        //             timeLeft -= Time.deltaTime;
+        //             if (timeLeft <= 0f) { ...TimeOut(); return; }
+        //         }
+        //         countdownText.text = Mathf.CeilToInt(timeLeft).ToString();
+        //     }
+        //     下单时：timeLeft = timeAll;
+        //
+        // 【必须挂前缀，不能挂后缀】
+        // 游戏是「先递减、再判零」。如果放在后缀补时间，
+        // 判零那一步已经跑过、TimeOut 已经触发 —— 冻结和慢速根本拦不住。
+        // 前缀里先把时间补上，游戏再减 dt，净值就等于 dt * 速度 
+        // 而且判零看到的是补过的值 
+        // =================================================================
+
+        private static void Prefix_MenuTiming(object __instance)
+        {
+            try
+            {
+                // (1) 每单时长：写进 timeAll，下单重置时就会用到
+                float all = BurgerTimeAll.Value;
+                if (all > 0.01f) SetField(__instance, "timeAll", all);
+
+                // (2) 倒计时速度
+                float sp = Mathf.Clamp(BurgerTimeSpeed.Value, 0f, 1000f) / 100f;
+                if (Mathf.Abs(sp - 1f) < 0.001f) return;
+
+                // 不在计时中就别动 —— 结算之后的界面不该被改写
+                try
+                {
+                    FieldInfo tf = FieldQuiet(__instance.GetType(), "timing");
+                    if (tf != null && !(bool)tf.GetValue(__instance)) return;
+                }
+                catch { }
+
+                float tl = GetFloat(__instance, "timeLeft");
+                // 把"多减的部分"提前补上：游戏随后减 dt，净值 = dt * sp
+                SetField(__instance, "timeLeft", tl + Time.deltaTime * (1f - sp));
+            }
+            catch { }
+        }
+
         private static bool SitLockActive()
         {
             if (!SitLockEnabled.Value) return false;
@@ -7213,6 +7271,19 @@ namespace BurgerShopModder
                     _harmony.Patch(dd, null, new HarmonyMethod(ddPost), null); ok++;
                     Log.LogInfo("束缚之吻补丁已挂载（DealDamage_SitKiss 后缀：伤害计入回归累积）");
                 }
+            }
+
+            // 汉堡制作倒计时
+            {
+                Type mc = FindType("MenuControl");
+                MethodInfo tm = mc != null ? mc.GetMethod("Timing", AllFlags) : null;
+                MethodInfo tmPre = typeof(Plugin).GetMethod("Prefix_MenuTiming", AllFlags);
+                if (tm != null && tmPre != null)
+                {
+                    _harmony.Patch(tm, new HarmonyMethod(tmPre), null, null); ok++;
+                    Log.LogInfo("倒计时补丁已挂载（MenuControl.Timing 前缀：每单时长 / 速度）");
+                }
+                else Log.LogWarning("倒计时：找不到 MenuControl.Timing");
             }
 
             // 坐姿锁定：两个出口
@@ -10121,6 +10192,8 @@ namespace BurgerShopModder
                     case "LockMaxHp": LockMaxHp.Value = b; break;
                     case "GodMode": GodMode.Value = b; break;
                     case "UnlockAllDays": UnlockAllDays.Value = b; break;
+                    case "BurgerTimeAll": if (!isNum) return "ERR 需要数字"; BurgerTimeAll.Value = f; break;
+                    case "BurgerTimeSpeed": if (!isNum) return "ERR 需要数字"; BurgerTimeSpeed.Value = f; break;
                     case "EcstasyUpRate": if (!isNum) return "ERR 需要数字"; EcstasyUpRate.Value = f; break;
                     case "EcstasyDownRate": if (!isNum) return "ERR 需要数字"; EcstasyDownRate.Value = f; break;
                     case "EcstasyResist": if (!isNum) return "ERR 需要数字"; EcstasyResist.Value = f; break;
@@ -10801,6 +10874,36 @@ namespace BurgerShopModder
             ClockFullTime.Value = SliderI("一天总时长（秒）", ClockFullTime.Value, 60, 3600);
             GameSpeed.Value = SliderF("游戏速度", GameSpeed.Value, 0.5f, 5f, "×{0:0.00}", 0.1f);
             UnlockAllDays.Value = GUILayout.Toggle(UnlockAllDays.Value, "  解锁全部章节");
+
+            // ---- 汉堡制作倒计时 ----
+            Section("汉堡制作倒计时");
+            Hint("下单后限时做出汉堡，超时算失败。这里调的是那个倒计时。");
+            BurgerTimeAll.Value = SliderF("每单时长（秒，0 = 原版）", BurgerTimeAll.Value, 0f, 120f, "{0:0.#}", 0.5f);
+            if (BurgerTimeAll.Value < 0.01f) Hint("当前用游戏原版：10 秒");
+            BurgerTimeSpeed.Value = SliderF("倒计时速度（%）", BurgerTimeSpeed.Value, 0f, 300f, "{0:0}", 5f);
+            if (BurgerTimeSpeed.Value < 1f)
+                Hint("0 = 冻结：倒计时不走，可以慢慢做。");
+            else if (BurgerTimeSpeed.Value < 100f)
+                Hint("慢放：时间过得更慢，等于多给你时间。");
+            else if (BurgerTimeSpeed.Value > 100f)
+                Hint("加速：时间过得更快。");
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("原版（10 秒 / 原速）"))
+            {
+                BurgerTimeAll.Value = 0f; BurgerTimeSpeed.Value = 100f;
+                _snapHint = "倒计时已还原为原版";
+            }
+            if (GUILayout.Button("冻结倒计时"))
+            {
+                BurgerTimeSpeed.Value = 0f;
+                _snapHint = "倒计时已冻结（可慢慢做）";
+            }
+            if (GUILayout.Button("宽松（30 秒 / 半速）"))
+            {
+                BurgerTimeAll.Value = 30f; BurgerTimeSpeed.Value = 50f;
+                _snapHint = "已设为 30 秒 + 半速";
+            }
+            GUILayout.EndHorizontal();
 
             GUILayout.Space(6f);
             Section("取证 / 自检");

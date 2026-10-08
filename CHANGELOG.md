@@ -27,6 +27,14 @@
 - `states` / `manman` / `demand status` / `urgeaudit` / `animlog` 等诊断命令
 - 活动记录器、配置快照与还原、逻辑交叉检查
 
+### 汉堡制作倒计时调节
+
+- `BurgerTimeAll`：每单制作时长（0 = 原版 10 秒）
+- `BurgerTimeSpeed`：倒计时速度（100 = 原速，50 = 慢一半，0 = 冻结）
+- 面板在「玩家」栏，带三个快捷键：原版 / 冻结 / 宽松
+
+挂在 `MenuControl.Timing` 的**前缀**上，因为游戏是「先递减、再判零」。
+
 ### 配置 Schema 化（第一块）
 
 `set` 命令的 54 个手写分支改成**通用路径**（走 `_p3ByName` 索引）：
