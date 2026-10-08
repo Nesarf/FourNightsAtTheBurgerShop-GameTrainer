@@ -9458,13 +9458,13 @@ namespace BurgerShopModder
                 TremorDuration.Value = SliderF("持续时间", TremorDuration.Value, 0.3f, 6f, "{0:0.0}s", 0.1f);
                 TremorAmplitude.Value = SliderF("振幅(占增益)", TremorAmplitude.Value, 0f, 200f, "{0:0}%", 5f);
                 TremorLoss.Value = SliderF("落点损失", TremorLoss.Value, 0f, 150f, "{0:0}%", 5f);
-                GUILayout.Label("  可超过 100% —— 那样落点会压到波动之前的值以下（倒扣）");
+                Sub("可超过 100% —— 那样落点会压到波动之前的值以下（倒扣）");
                 TremorCatch.Value = SliderF("按 R 稳住后损失", TremorCatch.Value, 0f, 90f, "{0:0}%", 1f);
                 TremorCooldown.Value = SliderF("冷却", TremorCooldown.Value, 0f, 20f, "{0:0.0}s", 0.5f);
                 TremorResonate.Value = GUILayout.Toggle(TremorResonate.Value, "  与攻击脉冲共振（攻速快→抖动更细更快）");
                 TremorSlow.Value = SliderF("减速最低值", TremorSlow.Value, 10f, 100f, "{0:0}%", 5f);
                 TremorPattern.Value = SliderI("减速模板(0=随机)", TremorPattern.Value, 0, 5);
-                GUILayout.Label("  1顿挫 2痉挛 3深陷 4迟疑 5潮汐（长短不一）");
+                Sub("1顿挫 2痉挛 3深陷 4迟疑 5潮汐（长短不一）");
             }
 
             GUILayout.Space(4f);
@@ -9476,16 +9476,16 @@ namespace BurgerShopModder
             TremorHpGuard.Value = SliderF("受伤倍率", TremorHpGuard.Value, 0f, 100f, "{0:0}%", 5f);
             TremorHpRegen.Value = SliderF("每秒回复", TremorHpRegen.Value, 0f, 100f, "{0:0}%/s", 1f);
             TremorSafetyGate.Value = SliderF("安全闸(到上限的几个点后不削弱)", TremorSafetyGate.Value, 50f, 100f, "{0:0}%", 1f);
-            GUILayout.Label("  安全闸不能关：绝顶值若永远到不了上限，榨取循环不会收束");
+            Sub("安全闸不能关：绝顶值若永远到不了上限，榨取循环不会收束");
 
             GUILayout.Space(4f);
             Section("吸精 · 连榨");
-            GUILayout.Label("  连榨上限（各栏独立：骑乘位/坐姿 × 常规/模式，口交另有一套）");
+            Sub("连榨上限（各栏独立：骑乘位/坐姿 × 常规/模式，口交另有一套）");
             ChainMaxOsiriNormal.Value = SliderI("  骑乘位·常规", ChainMaxOsiriNormal.Value, 0, 50);
             ChainMaxOsiriDemand.Value = SliderI("  骑乘位·索取模式", ChainMaxOsiriDemand.Value, 0, 50);
             ChainMaxSitNormal.Value = SliderI("  坐姿·常规", ChainMaxSitNormal.Value, 0, 50);
             ChainMaxSitDemand.Value = SliderI("  坐姿·榨取模式", ChainMaxSitDemand.Value, 0, 50);
-            GUILayout.Label("    0 = 不限；当前场景：" + ChainSlotName()
+            Hint("0 = 不限；当前场景：" + ChainSlotName()
                 + "，上限 " + ChainLimitNow() + "，已连 " + ChainNow());
             GUILayout.Label(string.Format("  吸精发生率 {0}%（已修正游戏的整数除法 bug，填多少就是多少）",
                 KyuseiRateNow().ToString("0")));
@@ -9672,8 +9672,8 @@ namespace BurgerShopModder
                 GUILayout.Space(4f);
                 if (sitSide)
 
-                GUILayout.Label("  叠好一层" + mw + "状态所需的" + mw + "欲（两者上限都是 300%）：");
-                GUILayout.Label("    " + mw + "欲攒够对应数值才会叠上那一层");
+                Sub("叠好一层" + mw + "状态所需的" + mw + "欲（两者上限都是 300%）：");
+                Hint("" + mw + "欲攒够对应数值才会叠上那一层");
                 if (GUILayout.Toggle(P3(DemandTriggerMode3) == 1, "    阈值模式（攒够就叠，可预期）"))
                     SetP3(DemandTriggerMode3, 1);
                 if (GUILayout.Toggle(P3(DemandTriggerMode3) == 0, "    概率模式（" + mw + "欲即概率，随机）"))
@@ -9730,7 +9730,7 @@ namespace BurgerShopModder
                             _osiriReturnArmed ? "" : "（未武装：需先从骑乘位回口交）"));
                     }
                 }
-                GUILayout.Label("  门槛原值：第1~4天 = 10/9/8/7，越低骑乘位来得越快");
+                Hint("门槛原值：第1~4天 = 10/9/8/7，越低骑乘位来得越快");
                 GUILayout.Space(4f);
                 SetP3(DemandDurationMin3, SliderF("索取模式最短", P3(DemandDurationMin3), 2f, 300f, "{0:0}s", 1f));
                 SetP3(DemandDurationMax3, SliderF("索取模式最长", P3(DemandDurationMax3), 2f, 300f, "{0:0}s", 1f));
@@ -9742,8 +9742,8 @@ namespace BurgerShopModder
                 // Manman 区」插在叠层门槛之前，读起来是跳的。
                 if (sitSide) DrawSitExtras();
 
-                GUILayout.Label("  余韵 = 基础速度更低、单次持续时间更长的连榨");
-                GUILayout.Label("  只在模式中按射精累积；等最后一段的连榨等活动全部结束才发动");
+                Hint("余韵 = 基础速度更低、单次持续时间更长的连榨");
+                Hint("只在模式中按射精累积；等最后一段的连榨等活动全部结束才发动");
                 GUILayout.Space(4f);
                 Section("余韵 · 累积与发动");
                 SetP3(AfterglowPerSyasei3, SliderI("模式中每射精累积余韵", P3(AfterglowPerSyasei3), 0, 20));
@@ -9751,11 +9751,11 @@ namespace BurgerShopModder
                 SetP3(AfterglowUseDemandGain3, GUILayout.Toggle(P3(AfterglowUseDemandGain3),
                     "  余韵期间仍累积余韵（一般应关：收尾不该自我延长）"));
                 SetP3(AfterglowUrgeScale3, SliderF("余韵期间索取欲增长", P3(AfterglowUrgeScale3), 0f, 100f, "{0:0}%", 5f));
-                GUILayout.Label("    调低它 → 余韵之后有一段干净空档，不会马上又进" + mw + "模式");
+                Hint("调低它 → 余韵之后有一段干净空档，不会马上又进" + mw + "模式");
                 SetP3(AfterglowClearsUrge3, GUILayout.Toggle(P3(AfterglowClearsUrge3),
                     "  余韵清空后把索取欲一并归零"));
-                GUILayout.Label("  手动余韵 = 强制退出" + mw + "模式");
-                GUILayout.Label("    " + mw + "太久导致换不了姿势时，用它把" + mw + "模式清干净");
+                Sub("手动余韵 = 强制退出" + mw + "模式");
+                Hint("" + mw + "太久导致换不了姿势时，用它把" + mw + "模式清干净");
                 GUILayout.Space(4f);
                 Section("余韵 · 调速与波动");
                 SetP3(AfterglowSpeed3, SliderF("余韵动画速度", P3(AfterglowSpeed3), 10f, 400f, "{0:0}%", 5f));
@@ -9765,14 +9765,14 @@ namespace BurgerShopModder
                     P3(AfterglowSpeed3) * (1f - P3(AfterglowSpeedWobble3) / 100f),
                     P3(AfterglowSpeed3) * (1f + P3(AfterglowSpeedWobble3) / 100f)));
                 GUILayout.Space(4f);
-                GUILayout.Label("  余韵 · 绝顶值（与连榨分开的一套）");
+                Sub("余韵 · 绝顶值（与连榨分开的一套）");
                 SetP3(AfterglowSoftCap3, SliderF("余韵绝顶值软上限", P3(AfterglowSoftCap3), 5f, 98f, "{0:0}%", 1f));
                 SetP3(AfterglowEcstasyWobble3, SliderF("到位后波动幅度", P3(AfterglowEcstasyWobble3), 0f, 40f, "±{0:0}%", 1f));
                 GUILayout.Label(string.Format("    绝顶值在 {0:0}% ~ {1:0}% 之间起伏",
                     Mathf.Max(0f, P3(AfterglowSoftCap3) - P3(AfterglowEcstasyWobble3)),
                     P3(AfterglowSoftCap3) + P3(AfterglowEcstasyWobble3)));
                 GUILayout.Space(4f);
-                GUILayout.Label("  （下面两个只在「手动进入余韵」时用，正常流程不用）");
+                Hint("（下面两个只在「手动进入余韵」时用，正常流程不用）");
                 DemandAfterglowMin.Value = SliderI("手动余韵下限", DemandAfterglowMin.Value, 0, 100);
                 DemandAfterglowMax.Value = SliderI("手动余韵上限", DemandAfterglowMax.Value, 0, 100);
             }
@@ -9780,14 +9780,14 @@ namespace BurgerShopModder
             if (GUILayout.Button("手动进入" + mw)) DemandCmd("fire");
             if (GUILayout.Button("手动进入余韵")) DemandCmd("afterglow");
             GUILayout.EndHorizontal();
-            GUILayout.Label("  当前：" + DemandCmd("status"));
+            Hint("当前：" + DemandCmd("status"));
         }
                 // 【正骑专属】从 DrawDemandSection 里抽出来的。
                 // 原来是一大块 if (sitSide) {...}，占了那个方法的三分之二，
                 // 而它和共享逻辑混在一起，读的时候要一直记着"这段只在坐姿下跑"。
                 private void DrawSitExtras()
                 {
-                GUILayout.Label("  正骑 · 榨取模式（坐姿）");
+                Sub("正骑 · 榨取模式（坐姿）");
                 SitClickAlwaysAccumulate.Value = GUILayout.Toggle(SitClickAlwaysAccumulate.Value,
                     "  坐姿点头部随时可累积榨取欲（不限束缚之吻）");
                 SitSyaseiToDrainChance.Value = SliderF("坐姿射精→进榨取的概率",
@@ -9833,8 +9833,8 @@ namespace BurgerShopModder
                 SitPussyAreaShowRect.Value = GUILayout.Toggle(SitPussyAreaShowRect.Value,
                     "  跟着总开关一起画（粉色）—— 总开关在下面「实验性高亮」那个");
                 GUILayout.Space(4f);
-                GUILayout.Label("  素材绑定（比手拖更贴合，跟着网格形变走）");
-                GUILayout.Label("    当前绑定：" + (string.IsNullOrEmpty(ManmanBindDrawable.Value)
+                Sub("素材绑定（比手拖更贴合，跟着网格形变走）");
+                Hint("当前绑定：" + (string.IsNullOrEmpty(ManmanBindDrawable.Value)
                     ? "（无，用手拖的矩形）" : ManmanBindDrawable.Value));
                 if (GUILayout.Button("清除绑定（回到手拖矩形）"))
                     ManmanBindDrawable.Value = "";
@@ -9924,8 +9924,8 @@ namespace BurgerShopModder
                                     src = "素材绑定：" + ManmanBindDrawable.Value;
                             }
                             catch { }
-                            GUILayout.Label("    当前来源：" + src);
-                            GUILayout.Label("    鼠标在区内：" + (inRect ? "是" : "否")
+                            Hint("当前来源：" + src);
+                            Hint("鼠标在区内：" + (inRect ? "是" : "否")
                                 + "   游戏当前命中：" + pointing);
                         }
                         else Hint("注意： 拿不到模型包围盒（人物不在场？）");
@@ -9999,10 +9999,10 @@ namespace BurgerShopModder
         private void DrawCopyRow(string self, string[] others)
         {
             GUILayout.Space(4f);
-            GUILayout.Label("  本栏的设置与另外两栏【相互独立】，改一个不影响其他");
-            GUILayout.Label("  （按姿势各存一份：_Fella / _Osiri / _Sit）");
+            Hint("本栏的设置与另外两栏【相互独立】，改一个不影响其他");
+            Hint("（按姿势各存一份：_Fella / _Osiri / _Sit）");
             GUILayout.BeginHorizontal();
-            GUILayout.Label("  拷贝自：", GUILayout.Width(56f));
+            GUILayout.Label("拷贝自：", GUILayout.Width(56f));
             foreach (string o in others)
             {
                 if (GUILayout.Button(o))
