@@ -15,7 +15,7 @@ namespace BurgerShopInstaller
     internal static class Program
     {
         internal const string AppTitle = "汉堡店 数值修改器 · 安装程序";
-        internal const string Version = "1.0.0";
+        internal const string Version = "1.0.1";
         internal const string GameExe = "Four Nights at the Burger Shop.exe";
         internal const string GameFolderName = "Four Nights at the Burger Shop ～ハンバーガー食べながら食べられるミニゲーム～";
         internal const string PayloadResource = "payload.zip";
