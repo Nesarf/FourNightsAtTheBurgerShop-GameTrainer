@@ -30,7 +30,7 @@ echo "  等 8 秒，确认没有别的东西在写（你现在别动修改器）
 sleep 8
 after_mtime=$(stat -c %Y "$CFG" 2>/dev/null || stat -f %m "$CFG")
 if [ "$before_mtime" != "$after_mtime" ]; then
-  echo "  ⚠ 配置这 8 秒内被改过 —— 有别的写入者在活动。"
+  echo "   配置这 8 秒内被改过 —— 有别的写入者在活动。"
   echo "    请【关掉修改器面板 / 停止调参】后重跑。"
   exit 2
 fi

@@ -456,7 +456,7 @@ GetTouchTargetName()       → Live2D_HitAreaCheck（不是 HitAreaCheck）
 出问题时会是：
 
 ```
-[绑定] ★挂错类：Event_SitKissSyaseiOnEnd 不在 TabemiControl，而是在 Live2D_Animation_SitOsiri
+[绑定] 挂错类：Event_SitKissSyaseiOnEnd 不在 TabemiControl，而是在 Live2D_Animation_SitOsiri
 [绑定] 有 1 个方法挂错了类 —— 这些补丁不会生效，功能静默失效
 ```
 
@@ -470,9 +470,9 @@ GetTouchTargetName()       → Live2D_HitAreaCheck（不是 HitAreaCheck）
 新增的 `bindings` 命令可以随时打出全表：
 
 ```
-[OK]   TabemiControl.ShowCenterGirlOsiri   — ★ 方法体内直接赋值 centerGirlState
-[OK]   Live2D_Animation_SitOsiri.Event_SitKissSyaseiOnEnd   — ★ 不在 TabemiControl
-[OK]   Live2D_HitAreaCheck.GetTouchTargetName   — ★ 类名是 Live2D_HitAreaCheck
+[通过]   TabemiControl.ShowCenterGirlOsiri   —  方法体内直接赋值 centerGirlState
+[通过]   Live2D_Animation_SitOsiri.Event_SitKissSyaseiOnEnd   —  不在 TabemiControl
+[通过]   Live2D_HitAreaCheck.GetTouchTargetName   —  类名是 Live2D_HitAreaCheck
 ```
 
 **排错时不用再去翻反编译代码找"这个方法到底属于谁"**

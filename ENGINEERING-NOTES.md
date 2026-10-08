@@ -1085,7 +1085,7 @@ set AttackUrgeChance 33（人在口交）
 
 ---
 
-## 24. ★ HitArea_Manman 只接了「触摸」那条路，鼠标点击根本没经过它
+## 24.  HitArea_Manman 只接了「触摸」那条路，鼠标点击根本没经过它
 
 **状态：已修（2026-10-07）—— 用户提醒"记得确认 manman 和榨取欲的交互成立"**
 
@@ -1158,7 +1158,7 @@ private static void Postfix_HitAreaCheckWindows()
 
 ---
 
-## 25. ★ HitArea_Manman 不能冒充 HitArea_Head_Sit（功能会串）
+## 25.  HitArea_Manman 不能冒充 HitArea_Head_Sit（功能会串）
 
 **状态：已修（2026-10-07）—— 用户指出**
 
@@ -1276,7 +1276,7 @@ foreach (string mn in mixerNames) { ... if (IsPlaying) { SetValue(EffectiveSpeed
 
 ---
 
-## 27. ★★ 坐姿榨取欲一满就跳到 Osiri（三个症状一个根因）
+## 27.  坐姿榨取欲一满就跳到 Osiri（三个症状一个根因）
 
 **状态：已修（2026-10-07）—— 用户报告**
 
@@ -1665,13 +1665,13 @@ grep "绝顶骤降" BepInEx/LogOutput.log
 **实测全过**
 
 ```
-[OK] ⑰ _demandMode=False _demandModePose=-1
-[OK] ⑱ 段=0 上限=5
-[OK] ⑲ 索取欲=33.66%
-[OK] ⑳ 模式入于=-1 当前姿势=2
-[OK] ㉑ 档位=坐姿·正骑·榨取 计数=0 上限=16
-[OK] ㉒ 待发动=0 进行中=0 累计=0
-[OK] ㉓ 矩形 754~1194 × -164~33
+[通过] ⑰ _demandMode=False _demandModePose=-1
+[通过] ⑱ 段=0 上限=5
+[通过] ⑲ 索取欲=33.66%
+[通过] ⑳ 模式入于=-1 当前姿势=2
+[通过] ㉑ 档位=坐姿·正骑·榨取 计数=0 上限=16
+[通过] ㉒ 待发动=0 进行中=0 累计=0
+[通过] ㉓ 矩形 754~1194 × -164~33
 结论：无硬性矛盾，无提醒
 ```
 

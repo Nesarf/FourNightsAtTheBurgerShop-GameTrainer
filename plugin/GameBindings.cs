@@ -9,7 +9,7 @@ namespace BurgerShopModder
     /// 【游戏绑定层】
     ///
     /// 这个插件通过 Harmony 按**方法名**给游戏打补丁。而游戏里同一个方法名
-    /// 可能属于不同的类 —— 挂错了**不会有任何报错**，Harmony 只是静静地不生效 
+    /// 可能属于不同的类 —— 挂错了**不会有任何报错**，Harmony 只是静静地不生效
     ///
     /// 这个坑在这个项目里踩了【五次】：
     ///
@@ -23,7 +23,7 @@ namespace BurgerShopModder
     /// 启动时逐条确认 —— 方法在不在它该在的类上；
     /// 如果它其实在**另一个**已知的游戏类上，就**大声报出来**。
     ///
-    /// 于是"挂错类"从静默失败变成启动日志里的一条 WARN 
+    /// 于是"挂错类"从静默失败变成启动日志里的一条 WARN
     ///
     /// 用法：
     ///     GameBindings.VerifyAll(FindType);   // 启动时调一次
@@ -69,17 +69,17 @@ namespace BurgerShopModder
             new Bind("DealDamage_Fella",           T_Tabemi),
             new Bind("DealDamage_SitKiss",         T_Tabemi),
             new Bind("ShowCenterGirlFella",        T_Tabemi,       "Osiri解除() 也走这里"),
-            new Bind("ShowCenterGirlOsiri",        T_Tabemi,       "★ 方法体内直接赋值 centerGirlState"),
+            new Bind("ShowCenterGirlOsiri",        T_Tabemi,       " 方法体内直接赋值 centerGirlState"),
             new Bind("Show_CenterGirlSit",         T_Tabemi),
 
-            new Bind("Event_SitKissSyaseiOnEnd",   T_AnimSitOsiri, "★ 不在 TabemiControl"),
+            new Bind("Event_SitKissSyaseiOnEnd",   T_AnimSitOsiri, " 不在 TabemiControl"),
             new Bind("Play_SitKissSyasei",         T_AnimSitOsiri),
             new Bind("Even_SitKiss吸精OnEnd",      T_AnimSitOsiri, "名字里 Even_ 是游戏的笔误"),
             new Bind("Event_SitKiss吸精1",         T_AnimSitOsiri),
             new Bind("Event_SitKissSyaseiStart",   T_AnimSitOsiri),
             new Bind("Event_SitKissSyasei1",       T_AnimSitOsiri),
             new Bind("Event_SitKissSyasei2",       T_AnimSitOsiri),
-            new Bind("Event_OsiriSyaseiStart",     T_AnimSitOsiri, "★ 不在 Live2D_AnimationControl"),
+            new Bind("Event_OsiriSyaseiStart",     T_AnimSitOsiri, " 不在 Live2D_AnimationControl"),
             new Bind("Event_OsiriSyaseiOnEnd",     T_AnimSitOsiri),
             new Bind("Event_Osiri吸精End",         T_AnimSitOsiri, "用硬编码 Random<0.9，不读 KyuseiRate"),
             new Bind("Event_Osiri吸精Damage",      T_AnimSitOsiri, "只扣血，不产生绝顶值增量"),
@@ -91,7 +91,7 @@ namespace BurgerShopModder
             new Bind("Event_Fella吸精",            T_AnimFella),
             new Bind("Event_FellaSyaseiOnEnd",     T_AnimFella),
 
-            new Bind("GetTouchTargetName",         T_HitArea,      "★ 类名是 Live2D_HitAreaCheck"),
+            new Bind("GetTouchTargetName",         T_HitArea,      " 类名是 Live2D_HitAreaCheck"),
             new Bind("HitAreaCheckWindows",        T_HitArea,      "鼠标路径：每帧算静态 mousePointing"),
         };
 
@@ -137,7 +137,7 @@ namespace BurgerShopModder
                 if (elsewhere.Count > 0)
                 {
                     _misplaced++;
-                    warn(string.Format("[绑定] ★挂错类：{0} 不在 {1}，而是在 {2}{3}",
+                    warn(string.Format("[绑定] 挂错类：{0} 不在 {1}，而是在 {2}{3}",
                         b.Method, b.Owner, string.Join(" / ", elsewhere),
                         string.IsNullOrEmpty(b.Note) ? "" : "（" + b.Note + "）"));
                 }
@@ -175,7 +175,7 @@ namespace BurgerShopModder
             {
                 Type owner = findType(b.Owner);
                 bool here = owner != null && owner.GetMethod(b.Method, Plugin.AllFlags) != null;
-                sb.Append(here ? "  [OK]   " : "  [FAIL] ")
+                sb.Append(here ? "  [通过]   " : "  [失败] ")
                   .Append(b.Owner).Append('.').Append(b.Method);
                 if (!string.IsNullOrEmpty(b.Note)) sb.Append("   — ").Append(b.Note);
                 sb.Append((char)10);
