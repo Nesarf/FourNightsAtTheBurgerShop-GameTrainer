@@ -9102,15 +9102,22 @@ namespace BurgerShopModder
         // 单独一个样式，不复用 Hint() 的那个 —— 复用会把所有 Hint 的颜色一起改掉
         private static GUIStyle _statusStyle;
 
+        /// <summary>
+        /// 告警等级色。取用户指定的四色（Ant Design 调色板）：
+        ///     蓝 #1890FF   绿 #52C41A   黄 #FAAD14   红 #FF4D4F
+        /// 白（无问题）用 Color.white。
+        ///
+        /// 十六进制留在这里，方便以后核对是不是被谁改动了。
+        /// </summary>
         internal static Color SevColor(Sev s)
         {
             switch (s)
             {
-                case Sev.Blue:   return new Color(0.45f, 0.72f, 1.00f);
-                case Sev.Green:  return new Color(0.45f, 0.90f, 0.50f);
-                case Sev.Yellow: return new Color(1.00f, 0.85f, 0.35f);
-                case Sev.Red:    return new Color(1.00f, 0.45f, 0.45f);
-                default:         return Color.white;      // 无问题
+                case Sev.Blue: return new Color(24f / 255f, 144f / 255f, 255f / 255f);   // #1890FF 蓝·提示
+                case Sev.Green: return new Color(82f / 255f, 196f / 255f, 26f / 255f);   // #52C41A 绿·注意
+                case Sev.Yellow: return new Color(250f / 255f, 173f / 255f, 20f / 255f);   // #FAAD14 黄·异常
+                case Sev.Red: return new Color(255f / 255f, 77f / 255f, 79f / 255f);   // #FF4D4F 红·严重
+                default:         return Color.white;                     // 无问题
             }
         }
 
