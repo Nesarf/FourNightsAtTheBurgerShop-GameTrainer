@@ -5212,11 +5212,26 @@ namespace BurgerShopModder
             float mx0, my0, mx1, my1;
             if (!ModelRectCached(out mx0, out my0, out mx1, out my1)) return false;
             float mw = mx1 - mx0, mh = my1 - my0;
+            
+            // (1) 退化检测
+            // 模型不在场时 ModelRectCached 可能给出 0 或负的宽高，推出来的矩形是垃圾值。
+            if (mw < 1f || mh < 1f) return false;
+            
             float cx = mx0 + SitPussyAreaCX.Value * mw;
             float cy = my0 + SitPussyAreaCY.Value * mh;
             float hw = SitPussyAreaW.Value * mw * 0.5f;
             float hh = SitPussyAreaH.Value * mh * 0.5f;
             x0 = cx - hw; y0 = cy - hh; x1 = cx + hw; y1 = cy + hh;
+            
+            // (2) 与屏幕求交
+            // 实测出现过 y 为负、整块跑到屏幕外：矩形 754~1194 x -114~82。
+            // 那种矩形"取得出来"，但一个像素都点不到 ——
+            // 而不变量当时只检查"矩形可取"，所以放过了它。
+            float sx0 = Mathf.Max(x0, 0f), sy0 = Mathf.Max(y0, 0f);
+            float sx1 = Mathf.Min(x1, Screen.width), sy1 = Mathf.Min(y1, Screen.height);
+            if (sx1 - sx0 < 4f || sy1 - sy0 < 4f) return false;   // 屏幕内不足 4px，等于不可用
+            
+            x0 = sx0; y0 = sy0; x1 = sx1; y1 = sy1;
             return true;
         }
 
