@@ -12,10 +12,14 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $gamePathFile = Join-Path $repoRoot 'tools\gamepath.txt'
 if (-not (Test-Path $gamePathFile)) { throw '找不到 tools/gamepath.txt —— 先写一行游戏目录进去' }
 $game = (Get-Content $gamePathFile -Raw).Trim()
-$bepSrc    = Join-Path $env:TEMP 'BepInEx_clean'
+# 【磁盘守护】临时文件不放 C 盘。$env:TEMP 在 C:\Users\...\Temp，
+# 政策明令禁止。默认用仓库内的 _tmp（机器无关），也可用环境变量覆盖。
+$cacheTmp = if ($env:DSH_CACHE_TMP) { $env:DSH_CACHE_TMP } else { Join-Path $build '_tmp' }
+New-Item -ItemType Directory -Force -Path $cacheTmp | Out-Null
+$bepSrc    = Join-Path $cacheTmp 'BepInEx_clean'
 
 # 1) 从官方压缩包重新解出干净的 BepInEx（不用游戏目录里那份，避免带入运行缓存）
-$zip = Join-Path $env:TEMP 'BepInEx_win_x64.zip'
+$zip = Join-Path $cacheTmp 'BepInEx_win_x64.zip'
 if (-not (Test-Path $zip)) {
     Write-Host '下载 BepInEx 5.4.23.5 ...'
     Invoke-WebRequest -Uri 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip' -OutFile $zip

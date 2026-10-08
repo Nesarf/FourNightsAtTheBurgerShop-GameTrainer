@@ -9130,6 +9130,9 @@ namespace BurgerShopModder
         internal void RequestTabShot(int tab, string name)
         {
             if (tab >= 0 && tab < TabNames.Length) _tab = tab;
+            // 把滚动重置到顶部 —— 否则截的是上一次留下的滚动位置，
+            // 前后对比就没法复现（踩过：同一栏两次截图内容不一样）。
+            _scroll = Vector2.zero;
             _pendingShotName = name;
             _pendingShotTab = tab;
         }
@@ -9603,7 +9606,10 @@ namespace BurgerShopModder
             // 各栏的连榨上限现在只在各自的栏里出现。
             GUILayout.Space(4f);
             Section("吸精");
-            Hint("0 = 不限；当前场景：" + ChainSlotName()
+            // 原来这里写的是"0 = 不限；当前场景：…"，但那句"0 = 不限"指的是
+            // 连榨上限滑块 —— 它们已经挪到各栏自己的专属区了。
+            // 留着一句指向不存在滑块的提示会误导，所以只保留当前场景信息。
+            Hint("当前场景：" + ChainSlotName()
                 + "，上限 " + ChainLimitNow() + "，已连 " + ChainNow());
             GUILayout.Label(string.Format("  吸精发生率 {0}%（已修正游戏的整数除法 bug，填多少就是多少）",
                 KyuseiRateNow().ToString("0")));
