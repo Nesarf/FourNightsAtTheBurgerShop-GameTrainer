@@ -295,7 +295,9 @@ namespace BurgerShopModder
                         if (a2.Length == 0) { Say(Plugin.DumpTabsPublic()); break; }
                         string[] names = Plugin.TabNamesPublic();
                         int idx = -1;
-                        int.TryParse(a2, out idx);
+                        // 注意：TryParse 失败会把 idx 置 0，而 0 是合法页签 ——
+                        // 必须看返回值，不能只看结果值（踩过：tab 正骑 切到了玩家）
+                        if (!int.TryParse(a2, out idx)) idx = -1;
                         if (idx < 0 || idx >= names.Length)
                         {
                             for (int i = 0; i < names.Length; i++)
