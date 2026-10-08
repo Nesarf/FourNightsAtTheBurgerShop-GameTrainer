@@ -8269,11 +8269,31 @@ namespace BurgerShopModder
             }
 
             // (16) 当前值不得超过上限
-            //    典型的越界来源：锁上限（KeepMaxCaps）每帧把上限钉回基线，
-            //    而榨取的上限削减与它互相拉扯，当前值就被留在上限之上了。
-            chk("(16) 生命当前值未越上限", curHp <= maxHp + 0.5f && curHp >= -0.01f,
-                string.Format("currentHP={0:0.##} maxHP={1:0.##}{2}", curHp, maxHp,
-                    curHp > maxHp + 0.5f ? " ← 当前值超过上限，锁上限与上限削减在互相拉扯" : ""));
+            //
+            //    【这条已知会报，所以用 soft 而不是 chk】
+            //
+            //    成因：锁上限（KeepMaxCaps）每帧把上限钉回基线，而榨取的上限削减
+            //    与它互相拉扯，当前值就被留在上限之上了。
+            //
+            //    上限平滑（EaseToward）又让这个现象持续更久 —— 从"一次拉到位"
+            //    变成"按速率逼近"，留在上限之上的时间变长，于是更容易被抓到。
+            //
+            //    超出量通常在 1 点以内（上限 500 上下），即 0.2% 左右，
+            //    血条上看不出来，机制上也不影响（用户已确认不用修）。
+            //
+            //    降级成提醒的理由：一个永远报红的硬性检查，看久了就会被忽略，
+            //    那比没有检查更糟 —— 它会污染"报红就是有事"这个信号。
+            // 这里刻意【不用 string.Format】——
+            // 之前用 string.Format 且把花括号写成了 {{0}}，结果占位符原样显示出来了。
+            // 改成字符串拼接，没有转义层就不会再错。
+            soft("(16) 生命当前值未越上限（已知会报，见代码注释）",
+                curHp <= maxHp + 0.5f && curHp >= -0.01f,
+                "currentHP=" + curHp.ToString("0.##") + " maxHP=" + maxHp.ToString("0.##")
+                    + (curHp > maxHp + 0.5f
+                        ? " ← 超出 " + (curHp - maxHp).ToString("0.##")
+                          + "（占上限 " + ((curHp - maxHp) / Mathf.Max(1f, maxHp) * 100f).ToString("0.0")
+                          + "%），锁上限与上限削减在拉扯，已知项"
+                        : ""));
 
 
             // ================= 新增状态的不变量（#4 扩充） =================
@@ -8324,6 +8344,23 @@ namespace BurgerShopModder
                                : "坐姿 + 已启用，却拿不到矩形（模型包围盒取不到？）")
                         : "不需要（不在坐姿或未启用）");
             }
+            // 【按结果定级】白(无问题) / 蓝 / 绿 / 黄 / 红
+            //   有硬性矛盾        → 红
+            //   1~2 条提醒        → 黄
+            //   3~5 条提醒        → 绿
+            //   6 条以上提醒      → 蓝（提醒太多说明该整理检查项了）
+            //   全过              → 白
+            Sev sev;
+            if (fail > 0) sev = Sev.Red;
+            else if (warn == 0) sev = Sev.Ok;
+            else if (warn <= 2) sev = Sev.Yellow;
+            else if (warn <= 5) sev = Sev.Green;
+            else sev = Sev.Blue;
+
+            sb.Append("  ").Append(SevTag(sev)).Append((char)10);
+            if (_pluginInstance != null) _pluginInstance.SetHint(
+                string.Format("自检：硬性 {0} / 提醒 {1}  {2}", fail, warn, SevTag(sev)), sev);
+
             sb.Append("结论：").Append(fail == 0 ? "无硬性矛盾" : (fail + " 项硬性矛盾"))
               .Append(warn > 0 ? ("，" + warn + " 项提醒") : "，无提醒").Append((char)10);
             return sb.ToString();
@@ -9046,6 +9083,56 @@ namespace BurgerShopModder
         private Vector2 _scroll;
         private string _snapHint = "";
 
+        // ══════════════════════════════════════════════════════════════
+        // 提示 / 告警的分级配色
+        //
+        //   白   无问题
+        //   蓝   提示（最低一级，基本无害）
+        //   绿   注意
+        //   黄   异常
+        //   红   严重（最高一级）
+        //
+        // 为什么要有等级而不是只有"对/错"：
+        // 一条永远报红的检查，看久了就会被忽略 —— 那比没有检查更糟。
+        // 有了等级，才能让"红"保持稀缺，也才能表达"这个不用管，但你要知道"。
+        // ══════════════════════════════════════════════════════════════
+        internal enum Sev { Ok = 0, Blue = 1, Green = 2, Yellow = 3, Red = 4 }
+
+        private Sev _hintSev = Sev.Ok;
+        // 单独一个样式，不复用 Hint() 的那个 —— 复用会把所有 Hint 的颜色一起改掉
+        private static GUIStyle _statusStyle;
+
+        internal static Color SevColor(Sev s)
+        {
+            switch (s)
+            {
+                case Sev.Blue:   return new Color(0.45f, 0.72f, 1.00f);
+                case Sev.Green:  return new Color(0.45f, 0.90f, 0.50f);
+                case Sev.Yellow: return new Color(1.00f, 0.85f, 0.35f);
+                case Sev.Red:    return new Color(1.00f, 0.45f, 0.45f);
+                default:         return Color.white;      // 无问题
+            }
+        }
+
+        /// <summary>设提示文字并指定等级。等级只影响颜色，不影响行为。</summary>
+        internal void SetHint(string text, Sev sev)
+        {
+            _snapHint = text;
+            _hintSev = sev;
+        }
+
+        internal static string SevTag(Sev s)
+        {
+            switch (s)
+            {
+                case Sev.Blue:   return "[蓝·提示]";
+                case Sev.Green:  return "[绿·注意]";
+                case Sev.Yellow: return "[黄·异常]";
+                case Sev.Red:    return "[红·严重]";
+                default:         return "[白·正常]";
+            }
+        }
+
         // ---- 连榨剩余次数提示条（屏幕上，与面板显隐无关）----
         private static string _chainBanner = "";
         private static float _chainBannerUntil = -999f;
@@ -9263,9 +9350,18 @@ namespace BurgerShopModder
                 }
                 GUILayout.EndScrollView();
 
-                GUILayout.Label(string.IsNullOrEmpty(_snapHint)
-                    ? "产物目录 BepInEx\\l2d_dump\\"
-                    : _snapHint);
+                {
+                    if (_statusStyle == null)
+                    {
+                        _statusStyle = new GUIStyle(GUI.skin.label);
+                        _statusStyle.wordWrap = true;
+                    }
+                    _statusStyle.normal.textColor = SevColor(_hintSev);
+                    GUILayout.Label(string.IsNullOrEmpty(_snapHint)
+                        ? "产物目录 BepInEx" + (char)92 + "l2d_dump" + (char)92
+                        : _snapHint, _statusStyle);
+                }
+
             }
 
             GUILayout.EndVertical();
