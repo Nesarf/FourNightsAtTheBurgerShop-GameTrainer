@@ -9514,7 +9514,7 @@ namespace BurgerShopModder
             GUILayout.EndHorizontal();
 
             GUILayout.Space(6f);
-            Section("快捷开关");
+            Section("快捷设置");
             GodMode.Value = GUILayout.Toggle(GodMode.Value, "  无敌（HP 每帧补满）");
             NoEcstasy.Value = GUILayout.Toggle(NoEcstasy.Value, "  绝顶值归零（不被吸精）");
             EcstasyResist.Value = SliderF("绝顶抗性", EcstasyResist.Value, 0f, 1f, "{0:0.00}", 0.05f);
@@ -9550,6 +9550,10 @@ namespace BurgerShopModder
             }
             GUILayout.EndHorizontal();
 
+            // 【归置】这两个是通用快捷操作，原来挂在「汉堡层数」名下，名不副实。
+            // 它们目前没有更合适的地方可去，所以就地单开一个小节 ——
+            // 这样在阅读上它们不再属于「汉堡层数」。
+            Section("快捷操作");
             GUILayout.Space(6f);
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("HP 回满") && player != null)
@@ -9857,7 +9861,9 @@ namespace BurgerShopModder
                 // 【顺序】共享内容全部跑完，最后才是正骑专属的那些。
                 // 原来这个调用夹在共享内容中间，导致坐姿栏里「束缚之吻 / 坐姿锁定 /
                 // Manman 区」插在叠层门槛之前，读起来是跳的。
-                if (sitSide) DrawSitExtras();
+                // 【对称】两栏的专属内容在同一处调用。
+                // 原来正骑的在这里、背榨的散在 DrawTabOsiri 里、位置还靠后，读起来不对称。
+                if (sitSide) DrawSitExtras(); else DrawOsiriExtras();
 
                 Hint("余韵 = 基础速度更低、单次持续时间更长的连榨");
                 Hint("只在模式中按射精累积；等最后一段的连榨等活动全部结束才发动");
@@ -9902,7 +9908,20 @@ namespace BurgerShopModder
                 // 【正骑专属】从 DrawDemandSection 里抽出来的。
                 // 原来是一大块 if (sitSide) {...}，占了那个方法的三分之二，
                 // 而它和共享逻辑混在一起，读的时候要一直记着"这段只在坐姿下跑"。
-                private void DrawSitExtras()
+                /// <summary>
+        /// 背榨专属。与 DrawSitExtras() 对称 —— 两栏的专属内容都在
+        /// DrawDemandSection 里同一处调用，读完一栏再看另一栏，结构是一样的。
+        /// </summary>
+        private void DrawOsiriExtras()
+        {
+            Section("背榨 · 骑乘");
+            SitSpeedPlus.Value = SliderF("骑乘速度加成", SitSpeedPlus.Value, 0f, 1f, "{0:0.00}", 0.05f);
+            Section("连榨上限");
+            ChainMaxOsiriNormal.Value = SliderI("骑乘位·常规", ChainMaxOsiriNormal.Value, 0, 50);
+            ChainMaxOsiriDemand.Value = SliderI("骑乘位·索取模式", ChainMaxOsiriDemand.Value, 0, 50);
+        }
+
+        private void DrawSitExtras()
                 {
                 Sub("正骑 · 榨取模式（坐姿）");
                 SitClickAlwaysAccumulate.Value = GUILayout.Toggle(SitClickAlwaysAccumulate.Value,
@@ -10165,11 +10184,6 @@ namespace BurgerShopModder
                 "  连榨撞击声固定用第 3、4 档（其余状态按速度分档）");
             DrawDemandSection(false);
             GUILayout.Space(6f);
-            SitSpeedPlus.Value = SliderF("骑乘速度加成", SitSpeedPlus.Value, 0f, 1f, "{0:0.00}", 0.05f);
-            GUILayout.Space(4f);
-            ChainMaxOsiriNormal.Value = SliderI("骑乘位·常规 连榨上限", ChainMaxOsiriNormal.Value, 0, 50);
-            ChainMaxOsiriDemand.Value = SliderI("骑乘位·索取 连榨上限", ChainMaxOsiriDemand.Value, 0, 50);
-            GUILayout.Space(4f);
             HighlightHitAreas.Value = GUILayout.Toggle(HighlightHitAreas.Value,
                 "  【实验性】高亮可点击区域（三栏共用）");
             DrawCopyRow("背榨", new string[] { "口交", "正骑" });
