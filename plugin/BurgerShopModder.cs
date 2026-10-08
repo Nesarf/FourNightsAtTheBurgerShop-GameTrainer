@@ -9070,6 +9070,15 @@ namespace BurgerShopModder
         private int _tab;
 
         /// <summary>供命令通道切栏（截图验证布局时用）。</summary>
+        /// <summary>供命令通道用：切栏 + 本帧末尾截图。</summary>
+        internal static string TabShotPublic(int tab, string name)
+        {
+            if (_pluginInstance == null) return "ERR 插件实例不存在";
+            if (tab < 0 || tab >= TabNames.Length) return "ERR 没有这个页签：" + tab;
+            _pluginInstance.RequestTabShot(tab, name);
+            return "已请求截图 [" + tab + "] " + TabNames[tab] + " -> " + name + ".png（本帧末尾执行）";
+        }
+
         internal static void SetTabPublic(int i) { if (_pluginInstance != null) _pluginInstance._tab = i; }
         internal static string[] TabNamesPublic() { return TabNames; }
         internal static string DumpTabsPublic()
@@ -9082,6 +9091,48 @@ namespace BurgerShopModder
         private bool _collapsed;
         private Vector2 _scroll;
         private string _snapHint = "";
+
+        // ---- tabshot：切栏 + 同帧截图 ----
+        private string _pendingShotName;
+        private int _pendingShotTab = -1;
+
+        /// <summary>
+        /// 切到指定页签，并在本帧 OnGUI 画完之后截图。
+        ///
+        /// 【必须在 OnGUI 末尾做】—— 那样保证画的是切换后的新页签，
+        /// 而且 ImGui 已经重绘完成。分两个命令发的话时机对不上（踩过三次）。
+        /// </summary>
+        private System.Collections.IEnumerator CaptureAfterFrame(string name, string rectTxt, int tabNo,
+                                              int ix, int iy, int iw, int ih)
+        {
+            // 等到这一帧真正画完再读像素 —— 否则拿不到 ImGui 的面板
+            yield return new WaitForEndOfFrame();
+            try
+            {
+                string dir = System.IO.Path.Combine(Paths.GameRootPath, "BepInEx", "l2d_dump", "cmd");
+                System.IO.Directory.CreateDirectory(dir);
+
+                Texture2D tex = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
+                tex.ReadPixels(new Rect(0f, 0f, Screen.width, Screen.height), 0, 0);
+                tex.Apply();
+                byte[] png = tex.EncodeToPNG();
+                UnityEngine.Object.Destroy(tex);
+                System.IO.File.WriteAllBytes(System.IO.Path.Combine(dir, name + ".png"), png);
+                System.IO.File.WriteAllText(System.IO.Path.Combine(dir, name + ".rect"), rectTxt);
+
+                _snapHint = string.Format("tabshot [{0}] {1} -> {2}.png  面板 {3},{4} {5}x{6}",
+                    tabNo, TabNames[tabNo], name, ix, iy, iw, ih);
+                Log.LogInfo("[tabshot] " + _snapHint);
+            }
+            catch (Exception e) { Log.LogWarning("[tabshot] 失败: " + e.Message); }
+        }
+
+        internal void RequestTabShot(int tab, string name)
+        {
+            if (tab >= 0 && tab < TabNames.Length) _tab = tab;
+            _pendingShotName = name;
+            _pendingShotTab = tab;
+        }
 
         // ==============================================================
         // 提示 / 告警的分级配色
@@ -9373,6 +9424,34 @@ namespace BurgerShopModder
 
             GUILayout.EndVertical();
             GUI.DragWindow();
+
+            // ---- tabshot：在本帧画完之后捕获 ----
+            // 放在这里的原因：此时新页签的内容已经画完，
+            // 而且 _win 的宽高已经由 ImGui 按实际内容定好，裁切坐标是准的。
+            if (_pendingShotName != null)
+            {
+                string nm = _pendingShotName;
+                _pendingShotName = null;
+
+                // 【为什么不能在这里直接 ReadPixels】
+                // OnGUI 里读的是 backbuffer，而 ImGui 的绘制这时还没合成进去 ——
+                // 实测截出来的图里【完全没有面板】，只有游戏画面。
+                // 正解是等这一帧结束，用 WaitForEndOfFrame 协程。
+                //
+                // 这里只做两件事：把面板矩形算好（此时 _win 已是本帧的实际值），
+                // 然后起协程去截。
+                int ix = Mathf.RoundToInt(_win.x);
+                // 【不要翻转 y】
+                // OnGUI 里的坐标是【左上原点】（GUI 空间），和 Input.mousePosition
+                // 的左下原点不是一回事。我一开始按左下原点做了翻转，结果裁到了面板下方。
+                // 判据：_win 的初始值是 new Rect(24f, 90f, ...)，那个 90 就是"距顶部 90"。
+                int iy = Mathf.RoundToInt(_win.y);
+                int iw = Mathf.RoundToInt(_win.width);
+                int ih = Mathf.RoundToInt(_win.height);
+                string rectTxt = string.Format("{0} {1} {2} {3} tab={4}", ix, iy, iw, ih, _tab);
+                int shotTab = _pendingShotTab; _pendingShotTab = -1;
+                StartCoroutine(CaptureAfterFrame(nm, rectTxt, shotTab, ix, iy, iw, ih));
+            }
         }
 
         // ---- 页 1：玩家 ----

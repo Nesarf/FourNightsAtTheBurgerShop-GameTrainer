@@ -286,6 +286,22 @@ namespace BurgerShopModder
                     Plugin.SetSitLockPublic(true);
                     Say("[坐姿锁定] 已锁上 —— 进入坐姿后不会再被切走");
                     break;
+                case "tabshot":
+                    {
+                        // tabshot <页签> <名字>
+                        // 切栏与截图在同一帧完成，并写出面板矩形供精确裁切。
+                        if (a.Length < 3) { Say("ERR tabshot <页签> <名字>"); break; }
+                        int ti = -1;
+                        if (!int.TryParse(a[1], out ti))
+                        {
+                            string[] nm2 = Plugin.TabNamesPublic();
+                            ti = -1;
+                            for (int i2 = 0; i2 < nm2.Length; i2++)
+                                if (nm2[i2] == a[1] || nm2[i2].Contains(a[1])) { ti = i2; break; }
+                        }
+                        Say(Plugin.TabShotPublic(ti, a[2]));
+                        break;
+                    }
                 case "tab":
                     {
                         // tab          -> 列出页签
