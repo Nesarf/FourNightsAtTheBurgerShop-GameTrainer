@@ -9541,156 +9541,7 @@ namespace BurgerShopModder
                     "  角色攻击也参与叠层判定（关掉则只有打屁股能叠）"));
                 GUILayout.Space(4f);
                 if (sitSide)
-                {
-                    GUILayout.Label("  —— 正骑 · 榨取模式（坐姿）——");
-                    SitClickAlwaysAccumulate.Value = GUILayout.Toggle(SitClickAlwaysAccumulate.Value,
-                        "  坐姿点头部随时可累积榨取欲（不限束缚之吻）");
-                    SitSyaseiToDrainChance.Value = SliderF("坐姿射精→进榨取的概率",
-                        SitSyaseiToDrainChance.Value, 0f, 100f, "{0:0}%", 5f);
-                    Hint("坐姿挂起超时见下方「余韵」区");
-                    GUILayout.Space(4f);
-                    GUILayout.Label("  —— 正骑 · 束缚之吻 ——");
-                    Hint("正骑的连榨/余韵【只有进入束缚之吻才会发生】");
-                    GUILayout.Label("    本栏下面那些滑块（攻击力/倍速/连榨…）都已绑定到束缚之吻：");
-                    Hint("进入吻或榨取状态时才会生效，退出即失效");
-                    SitKissAutoPrepare.Value = GUILayout.Toggle(SitKissAutoPrepare.Value, "  自动进入束缚之吻（不用按 X）");
-                    GUILayout.Space(4f);
-                    GUILayout.Label("    坐姿锁定：进去就出不来（自动切换全拦）");
-                    SitLockEnabled.Value = GUILayout.Toggle(SitLockEnabled.Value,
-                        "  启用坐姿锁定");
-                    if (SitLockEnabled.Value)
-                    {
-                        if (GUILayout.Button("解锁一次（让游戏能切走）"))
-                        {
-                            SitLockEnabled.Value = false;
-                            _snapHint = "已解锁 —— 游戏下次尝试切换就会成功；要再锁上请重新勾选";
-                            Log.LogInfo("[坐姿锁定] 手动解锁（逃生口）");
-                        }
-                    }
-                    if (SitKissAutoPrepare.Value)
-                        SitKissAutoInterval.Value = SliderF("自动进入间隔", SitKissAutoInterval.Value, 1f, 60f, "{0:0}s", 1f);
-                    SitKissNoDecay.Value = GUILayout.Toggle(SitKissNoDecay.Value, "  阻止窗口越玩越短（原版每次 *=0.9）");
-                    SitKissWindowMul.Value = SliderF("窗口长度倍数", SitKissWindowMul.Value, 50f, 1000f, "{0:0}%", 25f);
-                    GUILayout.Space(4f);
-                    Hint("接吻中但还没进榨取时，单独用这一套速度：");
-                    KissSpeedEnabled.Value = GUILayout.Toggle(KissSpeedEnabled.Value, "  束缚之吻单独调速");
-                    if (KissSpeedEnabled.Value)
-                    {
-                        KissSpeedMul.Value = SliderF("接吻动画速度", KissSpeedMul.Value, 10f, 400f, "{0:0}%", 5f);
-                        KissSpeedWobble.Value = SliderF("速度波动幅度", KissSpeedWobble.Value, 0f, 90f, "±{0:0}%", 5f);
-                        if (KissSpeedWobble.Value > 0.01f)
-                            KissSpeedHz.Value = SliderF("波动频率", KissSpeedHz.Value, 0.02f, 4f, "{0:0.00}Hz", 0.05f);
-                    }
-                    GUILayout.Space(4f);
-                    GUILayout.Label("  —— 正骑 · HitArea_Manman_By_Plugins ——");
-                    Hint("点击 = 坐姿版的「打屁股」：涨榨取欲 + 给坐姿动作一个速度冲量");
-                    Hint("判定按【人物模型包围盒】算 → 跟着人物走，换分辨率也不跑偏");
-                    SitPussyAreaShowRect.Value = GUILayout.Toggle(SitPussyAreaShowRect.Value,
-                        "  跟着总开关一起画（粉色）—— 总开关在下面「实验性高亮」那个");
-                    GUILayout.Space(4f);
-                    GUILayout.Label("  —— 素材绑定（比手拖更贴合，跟着网格形变走）——");
-                    GUILayout.Label("    当前绑定：" + (string.IsNullOrEmpty(ManmanBindDrawable.Value)
-                        ? "（无，用手拖的矩形）" : ManmanBindDrawable.Value));
-                    if (GUILayout.Button("清除绑定（回到手拖矩形）"))
-                        ManmanBindDrawable.Value = "";
-                    Hint("点下面任一素材名即可绑定，它的大小位置就是判定区");
-                    GUILayout.Label("    （绑定到非 HitArea 的美术素材才有意义 —— 那 5 个 HitArea 本身就能点）");
-                    GUILayout.Label("    筛选（子串）：");
-                    ManmanDrawableFilter.Value = GUILayout.TextField(ManmanDrawableFilter.Value ?? "", 24);
-                    {
-                        List<string> all = AllDrawableNames(ManmanDrawableFilter.Value);
-                        const int PER = 40;
-                        int pages = Mathf.Max(1, (all.Count + PER - 1) / PER);
-                        int pg = Mathf.Clamp(ManmanDrawablePage.Value, 0, pages - 1);
-                        ManmanDrawablePage.Value = pg;
 
-                        GUILayout.Label(string.Format("    共 {0} 个素材，第 {1}/{2} 页", all.Count, pg + 1, pages));
-                        GUILayout.BeginHorizontal();
-                        if (GUILayout.Button("上一页") && pg > 0) ManmanDrawablePage.Value = pg - 1;
-                        if (GUILayout.Button("下一页") && pg < pages - 1) ManmanDrawablePage.Value = pg + 1;
-                        if (GUILayout.Button("HitArea 筛选")) ManmanDrawableFilter.Value = "HitArea";
-                        if (GUILayout.Button("清空筛选")) ManmanDrawableFilter.Value = "";
-                        GUILayout.EndHorizontal();
-
-                        int from = pg * PER;
-                        for (int i = from; i < Mathf.Min(from + PER, all.Count); i++)
-                        {
-                            string nm = all[i];
-                            bool cur = (nm == ManmanBindDrawable.Value);
-                            if (GUILayout.Button((cur ? "(记录) " : "    ") + nm))
-                            {
-                                ManmanBindDrawable.Value = cur ? "" : nm;
-                                _snapHint = cur ? "已取消素材绑定" : ("HitArea_Manman_By_Plugins 已绑定到素材：" + nm);
-                                Log.LogInfo("[HitArea_Manman_By_Plugins] 绑定切换 → " + (cur ? "(清除)" : nm));
-                            }
-                        }
-                    }
-                    SitPussyAreaEnabled.Value = GUILayout.Toggle(SitPussyAreaEnabled.Value, "  启用 HitArea_Manman_By_Plugins");
-                    if (SitPussyAreaEnabled.Value)
-                    {
-                        SitPussyAreaCX.Value = SliderF("中心 X(模型宽%)", SitPussyAreaCX.Value, 0f, 1f, "{0:0.000}", 0.005f);
-                        SitPussyAreaCY.Value = SliderF("中心 Y(模型高%)", SitPussyAreaCY.Value, 0f, 1f, "{0:0.000}", 0.005f);
-                        SitPussyAreaW.Value = SliderF("宽(模型宽%)", SitPussyAreaW.Value, 0.01f, 0.6f, "{0:0.000}", 0.005f);
-                        SitPussyAreaH.Value = SliderF("高(模型高%)", SitPussyAreaH.Value, 0.01f, 0.6f, "{0:0.000}", 0.005f);
-                        ManmanDragMode.Value = GUILayout.Toggle(ManmanDragMode.Value,
-                            "  拖动模式（判定区中心实时跟随鼠标）");
-                        if (ManmanDragMode.Value)
-                            Hint("开着时框会跟着鼠标跑；对准位置后点下面的「绑定」");
-                        if (GUILayout.Button(ManmanDragMode.Value ? "绑定到此位置（并退出拖动）" : "把中心设为当前鼠标位置"))
-                        {
-                            float rx, ry;
-                            if (ScreenToModelRel(Input.mousePosition, out rx, out ry))
-                            {
-                                SitPussyAreaCX.Value = rx;
-                                SitPussyAreaCY.Value = ry;
-                                ManmanDragMode.Value = false;
-                                _snapHint = string.Format("HitArea_Manman_By_Plugins 中心已绑定到模型相对位置 ({0:0.000}, {1:0.000})", rx, ry);
-                                Log.LogInfo(string.Format("[HitArea_Manman_By_Plugins] 中心绑定到模型相对位置 ({0:0.000}, {1:0.000})", rx, ry));
-                            }
-                            else
-                            {
-                                _snapHint = "绑定失败：拿不到模型包围盒（人物不在场？）";
-                            }
-                        }
-                        // 实时诊断：鼠标在不在区内、游戏的静态命中值是什么
-                        {
-                            float dx0, dy0, dx1, dy1;
-                            if (PussyAreaScreenRect(out dx0, out dy0, out dx1, out dy1))
-                            {
-                                Vector3 mp = Input.mousePosition;
-                                bool inRect = (mp.x >= dx0 && mp.x <= dx1 && mp.y >= dy0 && mp.y <= dy1);
-                                string pointing = "?";
-                                try
-                                {
-                                    Type hcT2 = FindType("Live2D_HitAreaCheck");
-                                    FieldInfo pf2 = hcT2 != null ? FieldQuiet(hcT2, "mousePointing") : null;
-                                    if (pf2 != null) pointing = (pf2.GetValue(null) as string) ?? "(空)";
-                                }
-                                catch { }
-                                GUILayout.Label(string.Format("    屏幕矩形：{0:0}~{1:0} × {2:0}~{3:0}",
-                                    dx0, dx1, dy0, dy1));
-                                string src = "插件自建矩形";
-                                try
-                                {
-                                    float t0, t1, t2, t3;
-                                    if (TryGetDrawableScreenRect("HitArea_Manman", out t0, out t1, out t2, out t3))
-                                        src = "模型里的 HitArea_Manman";
-                                    else if (!string.IsNullOrEmpty(ManmanBindDrawable.Value))
-                                        src = "素材绑定：" + ManmanBindDrawable.Value;
-                                }
-                                catch { }
-                                GUILayout.Label("    当前来源：" + src);
-                                GUILayout.Label("    鼠标在区内：" + (inRect ? "是" : "否")
-                                    + "   游戏当前命中：" + pointing);
-                            }
-                            else GUILayout.Label("    注意： 拿不到模型包围盒（人物不在场？）");
-                        }
-                        GUILayout.Label(string.Format("    当前矩形：x {0:0.000}~{1:0.000}  y {2:0.000}~{3:0.000}（屏幕比例）",
-                            SitPussyAreaCX.Value - SitPussyAreaW.Value / 2f, SitPussyAreaCX.Value + SitPussyAreaW.Value / 2f,
-                            SitPussyAreaCY.Value - SitPussyAreaH.Value / 2f, SitPussyAreaCY.Value + SitPussyAreaH.Value / 2f));
-                    }
-                    GUILayout.Space(4f);
-                }
                 GUILayout.Label("  叠好一层" + mw + "状态所需的" + mw + "欲（两者上限都是 300%）：");
                 GUILayout.Label("    " + mw + "欲攒够对应数值才会叠上那一层");
                 if (GUILayout.Toggle(P3(DemandTriggerMode3) == 1, "    阈值模式（攒够就叠，可预期）"))
@@ -9791,11 +9642,172 @@ namespace BurgerShopModder
                 DemandAfterglowMax.Value = SliderI("手动余韵上限", DemandAfterglowMax.Value, 0, 100);
             }
             GUILayout.BeginHorizontal();
+            // 【顺序】共享内容全部跑完，最后才是正骑专属的那些。
+            // 原来这个调用夹在共享内容中间，导致坐姿栏里「束缚之吻 / 坐姿锁定 /
+            // Manman 区」插在叠层门槛之前，读起来是跳的。
+            if (sitSide) DrawSitExtras();
+
             if (GUILayout.Button("手动进入" + mw)) DemandCmd("fire");
             if (GUILayout.Button("手动进入余韵")) DemandCmd("afterglow");
             GUILayout.EndHorizontal();
             GUILayout.Label("  当前：" + DemandCmd("status"));
         }
+                // 【正骑专属】从 DrawDemandSection 里抽出来的。
+                // 原来是一大块 if (sitSide) {...}，占了那个方法的三分之二，
+                // 而它和共享逻辑混在一起，读的时候要一直记着"这段只在坐姿下跑"。
+                private void DrawSitExtras()
+                {
+                GUILayout.Label("  —— 正骑 · 榨取模式（坐姿）——");
+                SitClickAlwaysAccumulate.Value = GUILayout.Toggle(SitClickAlwaysAccumulate.Value,
+                    "  坐姿点头部随时可累积榨取欲（不限束缚之吻）");
+                SitSyaseiToDrainChance.Value = SliderF("坐姿射精→进榨取的概率",
+                    SitSyaseiToDrainChance.Value, 0f, 100f, "{0:0}%", 5f);
+                Hint("坐姿挂起超时见下方「余韵」区");
+                GUILayout.Space(4f);
+                GUILayout.Label("  —— 正骑 · 束缚之吻 ——");
+                Hint("正骑的连榨/余韵【只有进入束缚之吻才会发生】");
+                GUILayout.Label("    本栏下面那些滑块（攻击力/倍速/连榨…）都已绑定到束缚之吻：");
+                Hint("进入吻或榨取状态时才会生效，退出即失效");
+                SitKissAutoPrepare.Value = GUILayout.Toggle(SitKissAutoPrepare.Value, "  自动进入束缚之吻（不用按 X）");
+                GUILayout.Space(4f);
+                GUILayout.Label("    坐姿锁定：进去就出不来（自动切换全拦）");
+                SitLockEnabled.Value = GUILayout.Toggle(SitLockEnabled.Value,
+                    "  启用坐姿锁定");
+                if (SitLockEnabled.Value)
+                {
+                    if (GUILayout.Button("解锁一次（让游戏能切走）"))
+                    {
+                        SitLockEnabled.Value = false;
+                        _snapHint = "已解锁 —— 游戏下次尝试切换就会成功；要再锁上请重新勾选";
+                        Log.LogInfo("[坐姿锁定] 手动解锁（逃生口）");
+                    }
+                }
+                if (SitKissAutoPrepare.Value)
+                    SitKissAutoInterval.Value = SliderF("自动进入间隔", SitKissAutoInterval.Value, 1f, 60f, "{0:0}s", 1f);
+                SitKissNoDecay.Value = GUILayout.Toggle(SitKissNoDecay.Value, "  阻止窗口越玩越短（原版每次 *=0.9）");
+                SitKissWindowMul.Value = SliderF("窗口长度倍数", SitKissWindowMul.Value, 50f, 1000f, "{0:0}%", 25f);
+                GUILayout.Space(4f);
+                Hint("接吻中但还没进榨取时，单独用这一套速度：");
+                KissSpeedEnabled.Value = GUILayout.Toggle(KissSpeedEnabled.Value, "  束缚之吻单独调速");
+                if (KissSpeedEnabled.Value)
+                {
+                    KissSpeedMul.Value = SliderF("接吻动画速度", KissSpeedMul.Value, 10f, 400f, "{0:0}%", 5f);
+                    KissSpeedWobble.Value = SliderF("速度波动幅度", KissSpeedWobble.Value, 0f, 90f, "±{0:0}%", 5f);
+                    if (KissSpeedWobble.Value > 0.01f)
+                        KissSpeedHz.Value = SliderF("波动频率", KissSpeedHz.Value, 0.02f, 4f, "{0:0.00}Hz", 0.05f);
+                }
+                GUILayout.Space(4f);
+                GUILayout.Label("  —— 正骑 · HitArea_Manman_By_Plugins ——");
+                Hint("点击 = 坐姿版的「打屁股」：涨榨取欲 + 给坐姿动作一个速度冲量");
+                Hint("判定按【人物模型包围盒】算 → 跟着人物走，换分辨率也不跑偏");
+                SitPussyAreaShowRect.Value = GUILayout.Toggle(SitPussyAreaShowRect.Value,
+                    "  跟着总开关一起画（粉色）—— 总开关在下面「实验性高亮」那个");
+                GUILayout.Space(4f);
+                GUILayout.Label("  —— 素材绑定（比手拖更贴合，跟着网格形变走）——");
+                GUILayout.Label("    当前绑定：" + (string.IsNullOrEmpty(ManmanBindDrawable.Value)
+                    ? "（无，用手拖的矩形）" : ManmanBindDrawable.Value));
+                if (GUILayout.Button("清除绑定（回到手拖矩形）"))
+                    ManmanBindDrawable.Value = "";
+                Hint("点下面任一素材名即可绑定，它的大小位置就是判定区");
+                GUILayout.Label("    （绑定到非 HitArea 的美术素材才有意义 —— 那 5 个 HitArea 本身就能点）");
+                GUILayout.Label("    筛选（子串）：");
+                ManmanDrawableFilter.Value = GUILayout.TextField(ManmanDrawableFilter.Value ?? "", 24);
+                {
+                    List<string> all = AllDrawableNames(ManmanDrawableFilter.Value);
+                    const int PER = 40;
+                    int pages = Mathf.Max(1, (all.Count + PER - 1) / PER);
+                    int pg = Mathf.Clamp(ManmanDrawablePage.Value, 0, pages - 1);
+                    ManmanDrawablePage.Value = pg;
+
+                    GUILayout.Label(string.Format("    共 {0} 个素材，第 {1}/{2} 页", all.Count, pg + 1, pages));
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("上一页") && pg > 0) ManmanDrawablePage.Value = pg - 1;
+                    if (GUILayout.Button("下一页") && pg < pages - 1) ManmanDrawablePage.Value = pg + 1;
+                    if (GUILayout.Button("HitArea 筛选")) ManmanDrawableFilter.Value = "HitArea";
+                    if (GUILayout.Button("清空筛选")) ManmanDrawableFilter.Value = "";
+                    GUILayout.EndHorizontal();
+
+                    int from = pg * PER;
+                    for (int i = from; i < Mathf.Min(from + PER, all.Count); i++)
+                    {
+                        string nm = all[i];
+                        bool cur = (nm == ManmanBindDrawable.Value);
+                        if (GUILayout.Button((cur ? "(记录) " : "    ") + nm))
+                        {
+                            ManmanBindDrawable.Value = cur ? "" : nm;
+                            _snapHint = cur ? "已取消素材绑定" : ("HitArea_Manman_By_Plugins 已绑定到素材：" + nm);
+                            Log.LogInfo("[HitArea_Manman_By_Plugins] 绑定切换 → " + (cur ? "(清除)" : nm));
+                        }
+                    }
+                }
+                SitPussyAreaEnabled.Value = GUILayout.Toggle(SitPussyAreaEnabled.Value, "  启用 HitArea_Manman_By_Plugins");
+                if (SitPussyAreaEnabled.Value)
+                {
+                    SitPussyAreaCX.Value = SliderF("中心 X(模型宽%)", SitPussyAreaCX.Value, 0f, 1f, "{0:0.000}", 0.005f);
+                    SitPussyAreaCY.Value = SliderF("中心 Y(模型高%)", SitPussyAreaCY.Value, 0f, 1f, "{0:0.000}", 0.005f);
+                    SitPussyAreaW.Value = SliderF("宽(模型宽%)", SitPussyAreaW.Value, 0.01f, 0.6f, "{0:0.000}", 0.005f);
+                    SitPussyAreaH.Value = SliderF("高(模型高%)", SitPussyAreaH.Value, 0.01f, 0.6f, "{0:0.000}", 0.005f);
+                    ManmanDragMode.Value = GUILayout.Toggle(ManmanDragMode.Value,
+                        "  拖动模式（判定区中心实时跟随鼠标）");
+                    if (ManmanDragMode.Value)
+                        Hint("开着时框会跟着鼠标跑；对准位置后点下面的「绑定」");
+                    if (GUILayout.Button(ManmanDragMode.Value ? "绑定到此位置（并退出拖动）" : "把中心设为当前鼠标位置"))
+                    {
+                        float rx, ry;
+                        if (ScreenToModelRel(Input.mousePosition, out rx, out ry))
+                        {
+                            SitPussyAreaCX.Value = rx;
+                            SitPussyAreaCY.Value = ry;
+                            ManmanDragMode.Value = false;
+                            _snapHint = string.Format("HitArea_Manman_By_Plugins 中心已绑定到模型相对位置 ({0:0.000}, {1:0.000})", rx, ry);
+                            Log.LogInfo(string.Format("[HitArea_Manman_By_Plugins] 中心绑定到模型相对位置 ({0:0.000}, {1:0.000})", rx, ry));
+                        }
+                        else
+                        {
+                            _snapHint = "绑定失败：拿不到模型包围盒（人物不在场？）";
+                        }
+                    }
+                    // 实时诊断：鼠标在不在区内、游戏的静态命中值是什么
+                    {
+                        float dx0, dy0, dx1, dy1;
+                        if (PussyAreaScreenRect(out dx0, out dy0, out dx1, out dy1))
+                        {
+                            Vector3 mp = Input.mousePosition;
+                            bool inRect = (mp.x >= dx0 && mp.x <= dx1 && mp.y >= dy0 && mp.y <= dy1);
+                            string pointing = "?";
+                            try
+                            {
+                                Type hcT2 = FindType("Live2D_HitAreaCheck");
+                                FieldInfo pf2 = hcT2 != null ? FieldQuiet(hcT2, "mousePointing") : null;
+                                if (pf2 != null) pointing = (pf2.GetValue(null) as string) ?? "(空)";
+                            }
+                            catch { }
+                            GUILayout.Label(string.Format("    屏幕矩形：{0:0}~{1:0} × {2:0}~{3:0}",
+                                dx0, dx1, dy0, dy1));
+                            string src = "插件自建矩形";
+                            try
+                            {
+                                float t0, t1, t2, t3;
+                                if (TryGetDrawableScreenRect("HitArea_Manman", out t0, out t1, out t2, out t3))
+                                    src = "模型里的 HitArea_Manman";
+                                else if (!string.IsNullOrEmpty(ManmanBindDrawable.Value))
+                                    src = "素材绑定：" + ManmanBindDrawable.Value;
+                            }
+                            catch { }
+                            GUILayout.Label("    当前来源：" + src);
+                            GUILayout.Label("    鼠标在区内：" + (inRect ? "是" : "否")
+                                + "   游戏当前命中：" + pointing);
+                        }
+                        else GUILayout.Label("    注意： 拿不到模型包围盒（人物不在场？）");
+                    }
+                    GUILayout.Label(string.Format("    当前矩形：x {0:0.000}~{1:0.000}  y {2:0.000}~{3:0.000}（屏幕比例）",
+                        SitPussyAreaCX.Value - SitPussyAreaW.Value / 2f, SitPussyAreaCX.Value + SitPussyAreaW.Value / 2f,
+                        SitPussyAreaCY.Value - SitPussyAreaH.Value / 2f, SitPussyAreaCY.Value + SitPussyAreaH.Value / 2f));
+                }
+                GUILayout.Space(4f);
+            
+                }
+
 
         // =================================================================
         // 「对手」拆成三栏：口交 / 背榨（背面骑乘·索取模式）/ 正骑（坐姿·榨取模式）
