@@ -9153,6 +9153,34 @@ namespace BurgerShopModder
         // 单独一个样式，不复用 Hint() 的那个 —— 复用会把所有 Hint 的颜色一起改掉
         private static GUIStyle _statusStyle;
 
+        // ---- 面板背景 ----
+        // 默认皮肤的窗口是半透明的，压在花哨的游戏画面上时文字读不清。
+        // 自己做一张近乎不透明的深色底 —— 纯色背景必须用 Texture2D，
+        // 默认皮肤用的是九宫格精灵，改颜色改不出实底。
+        private static GUIStyle _winStyle;
+        private static Texture2D _winBg;
+
+        private static void EnsureWinStyle()
+        {
+            if (_winStyle != null) return;
+            _winBg = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+            _winBg.SetPixel(0, 0, new Color(0.07f, 0.08f, 0.11f, 0.95f));
+            _winBg.Apply();
+            _winBg.hideFlags = HideFlags.HideAndDontSave;
+
+            _winStyle = new GUIStyle(GUI.skin.window);
+            _winStyle.normal.background = _winBg;
+            _winStyle.onNormal.background = _winBg;
+            _winStyle.hover.background = _winBg;
+            _winStyle.active.background = _winBg;
+            _winStyle.focused.background = _winBg;
+            _winStyle.onFocused.background = _winBg;
+            _winStyle.normal.textColor = new Color(0.86f, 0.89f, 0.97f);
+            _winStyle.fontSize = 12;
+            _winStyle.fontStyle = FontStyle.Bold;
+            _winStyle.padding = new RectOffset(10, 10, 22, 8);
+        }
+
         /// <summary>
         /// 告警等级色。取用户指定的四色（Ant Design 调色板）：
         ///     蓝 #1890FF   绿 #52C41A   黄 #FAAD14   红 #FF4D4F
@@ -9345,9 +9373,16 @@ namespace BurgerShopModder
             if (!_showPanel) return;
 
             float w = _collapsed ? 200f : 540f;   // 540 而不是 452 —— 原来标签会被挤到贴边
+            EnsureWinStyle();
+            // 临时换掉皮肤里的窗口样式，让面板有不透明底。
+            // GUILayout.Window 带标题的那个重载不接受 GUIStyle 参数，
+            // 所以只能用换 skin 的办法。
+            GUIStyle prevWin = GUI.skin.window;
+            GUI.skin.window = _winStyle;
             _win = GUILayout.Window(0x0717, _win, DrawWindow,
                 _collapsed ? "修改器（F9）" : "数值修改器 · F9 隐藏",
                 GUILayout.Width(w));
+            GUI.skin.window = prevWin;
             _win.width = w;
         }
 
