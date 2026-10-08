@@ -5,8 +5,8 @@
 # 【为什么需要这个脚本】
 #
 # 这个项目有两棵树：
-#     E:\DSH\build\burger-shop          工作副本（编译在这里）
-#     E:\DSH\build\burger-shop-publish  发布副本（git 仓库在这里）
+#     <仓库上级>/burger-shop          工作副本（编译在这里）
+#     <仓库上级>/burger-shop-publish  发布副本（git 仓库在这里）
 #
 # 它们的流向【不是单向的】—— 按文件类别分：
 #
@@ -36,8 +36,10 @@
 # ============================================================================
 set -u
 
-WORK="E:/DSH/build/burger-shop"
-PUB="E:/DSH/build/burger-shop-publish"
+# 从脚本自身位置推，不写死绝对路径 ——
+# 写死的话 static-check 的规则 (6) 会（正确地）报本机路径，也就没法进仓库了。
+WORK="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PUB="$(cd "$WORK/../burger-shop-publish" && pwd)"
 
 # 代码与工具：工作 → 发布
 CODE=(
@@ -117,10 +119,10 @@ do_check() {
 }
 
 # 本机路径：发布副本里必须一个都没有。
-# 踩过好几次：工作副本的 installer / 说明书里带着 E:\DSH\...，
+# 踩过好几次：工作副本的 installer / 说明书里带着本机路径，
 # 一同步就把清理过的发布副本又弄脏了。
 # 注意：这里是【文件里的字面量】，ERE 里两个反斜杠才表示一个反斜杠。
-# 写成 'E:\+DSH' 的话 \+ 是字面加号，永远匹配不到（踩过一次）。
+# 写成少了转义层的那个写法的话 \+ 是字面加号，永远匹配不到（踩过一次）。
 LEAKPAT='E:\+DSH|D:\+Four Nights|NESARFDX'
 
 has_leak() {
