@@ -1986,3 +1986,43 @@ private static string PoseDesc(int i, string desc)
 
 > **教训**：**"做完了但状态没更新"和"没做"在账面上是一样的。**
 > 盘点时会把它当成待办，浪费一次排查。
+
+---
+
+## 附：视角拖动（游戏机制，非缺陷）
+
+**用户提示**：「鼠标上下移动到一定的区域可以移动视角」
+
+游戏里 `GetMoveVector()` 只看**鼠标 Y 坐标**：
+
+```csharp
+private float edgeRatio = 0.05f;
+
+private float GetMoveVector()
+{
+    float num = Input.mousePosition.y;
+    if (num >= screenHeight * (1f - edgeRatio))    // 顶部 5%
+        return -1f * (num - screenHeight * (1f - edgeRatio)) / (screenHeight * edgeRatio);
+    if (num <= screenHeight * edgeRatio)           // 底部 5%
+        return  1f * ((screenHeight * edgeRatio - num) / (screenHeight * edgeRatio));
+    ...
+}
+```
+
+1080 高的话：
+
+```
+顶部拖动带：y 1026 ~ 1080
+底部拖动带：y    0 ~   54
+```
+
+**这对判定区的影响**：`HitArea_Manman_By_Plugins` 的矩形如果落进这两条带，
+点它就会变成拖视角，而不是点击。
+
+**实测当时的判定区**：`742~1208 × 187~394` —— 离两条带都远，**不冲突**。
+
+**但 CY 滑块可以把它拉进去**。这不是缺陷，是机制约束 ——
+以后如果有人报告「Manman 区时灵时不灵」，先看它的 y 是不是进了 0~54 或 1026~1080。
+
+**教训**：写覆盖层判定时，要确认游戏自己没有占用同一块屏幕区域。
+这块区域不是从代码结构里看得出来的，得从「游戏怎么读鼠标」反推。
