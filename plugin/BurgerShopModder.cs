@@ -9431,7 +9431,7 @@ namespace BurgerShopModder
             TargetEcstasy.Value = SliderF("绝顶上限目标", TargetEcstasy.Value, 0f, 3000f, "{0:0}", 25f);
             CapStepPerSec.Value = SliderF("逼近速度（点/秒）", CapStepPerSec.Value, 1f, 2000f, "{0:0}", 20f);
             GUILayout.Label("0 = 不启用。这是「设到多少」，不是「加百分之多少」");
-            Section("拖滑块只是改目标，不会累乘，绝不会膨胀。");
+            Hint("拖滑块只是改目标，不会累乘，绝不会膨胀。");
 
             GUILayout.Space(4f);
             GUILayout.BeginHorizontal();
