@@ -9535,14 +9535,14 @@ namespace BurgerShopModder
             {
                 TremorChance.Value = SliderF("触发概率", TremorChance.Value, 0f, 100f, "{0:0}%", 1f);
                 TremorDuration.Value = SliderF("持续时间", TremorDuration.Value, 0.3f, 6f, "{0:0.0}s", 0.1f);
-                TremorAmplitude.Value = SliderF("振幅(占增益)", TremorAmplitude.Value, 0f, 200f, "{0:0}%", 5f);
+                TremorAmplitude.Value = SliderF("振幅", TremorAmplitude.Value, 0f, 200f, "{0:0}%", 5f);
                 TremorLoss.Value = SliderF("落点损失", TremorLoss.Value, 0f, 150f, "{0:0}%", 5f);
                 Sub("可超过 100% —— 那样落点会压到波动之前的值以下（倒扣）");
                 TremorCatch.Value = SliderF("按 R 稳住后损失", TremorCatch.Value, 0f, 90f, "{0:0}%", 1f);
                 TremorCooldown.Value = SliderF("冷却", TremorCooldown.Value, 0f, 20f, "{0:0.0}s", 0.5f);
                 TremorResonate.Value = GUILayout.Toggle(TremorResonate.Value, "  与攻击脉冲共振（攻速快→抖动更细更快）");
                 TremorSlow.Value = SliderF("减速最低值", TremorSlow.Value, 10f, 100f, "{0:0}%", 5f);
-                TremorPattern.Value = SliderI("减速模板(0=随机)", TremorPattern.Value, 0, 5);
+                TremorPattern.Value = SliderI("减速模板", TremorPattern.Value, 0, 5);
                 Sub("1顿挫 2痉挛 3深陷 4迟疑 5潮汐（长短不一）");
             }
 
@@ -9554,7 +9554,7 @@ namespace BurgerShopModder
             TremorHpMaxBonus.Value = SliderF("生命上限提升", TremorHpMaxBonus.Value, 0f, 200f, "{0:0}%", 5f);
             TremorHpGuard.Value = SliderF("受伤倍率", TremorHpGuard.Value, 0f, 100f, "{0:0}%", 5f);
             TremorHpRegen.Value = SliderF("每秒回复", TremorHpRegen.Value, 0f, 100f, "{0:0}%/s", 1f);
-            TremorSafetyGate.Value = SliderF("安全闸(到上限的几个点后不削弱)", TremorSafetyGate.Value, 50f, 100f, "{0:0}%", 1f);
+            TremorSafetyGate.Value = SliderF("安全闸", TremorSafetyGate.Value, 50f, 100f, "{0:0}%", 1f);
             Sub("安全闸不能关：绝顶值若永远到不了上限，榨取循环不会收束");
 
             GUILayout.Space(4f);
@@ -9732,14 +9732,14 @@ namespace BurgerShopModder
             {
                 if (!sitSide) GUILayout.Label("  打屁股 → 累积「索取欲」，索取欲的数值就是进入索取模式的概率");
                 SetP3(AttackUrgeChance3, SliderF("涨欲概率·平均", P3(AttackUrgeChance3), 0f, 100f, "{0:0}%", 1f));
-                SetP3(AttackUrgeGain3, SliderF("命中时增加(平均)", P3(AttackUrgeGain3), 0f, 100f, "{0:0}%", 1f));
+                SetP3(AttackUrgeGain3, SliderF("命中时增加", P3(AttackUrgeGain3), 0f, 100f, "{0:0}%", 1f));
                 SetP3(AttackUrgeJitter3, SliderF("上面两项的波动幅度", P3(AttackUrgeJitter3), 0f, 90f, "±{0:0}%", 5f));
                 GUILayout.Space(4f);
                 if (!sitSide) GUILayout.Label("  射精 / 吸精·连榨 也累积索取欲（余韵走同一链条）");
-                SetP3(SyaseiUrgeChance3, SliderF("射精时·累积概率(均)", P3(SyaseiUrgeChance3), 0f, 100f, "{0:0}%", 5f));
-                SetP3(SyaseiUrgeGain3, SliderF("射精时·增加(均)", P3(SyaseiUrgeGain3), 0f, 100f, "{0:0}%", 1f));
-                SetP3(KyuseiUrgeChance3, SliderF("每次吸精·累积概率(均)", P3(KyuseiUrgeChance3), 0f, 100f, "{0:0}%", 5f));
-                SetP3(KyuseiUrgeGain3, SliderF("每次吸精·增加(均)", P3(KyuseiUrgeGain3), 0f, 100f, "{0:0}%", 1f));
+                SetP3(SyaseiUrgeChance3, SliderF("射精时·累积概率", P3(SyaseiUrgeChance3), 0f, 100f, "{0:0}%", 5f));
+                SetP3(SyaseiUrgeGain3, SliderF("射精时·增加", P3(SyaseiUrgeGain3), 0f, 100f, "{0:0}%", 1f));
+                SetP3(KyuseiUrgeChance3, SliderF("每次吸精·累积概率", P3(KyuseiUrgeChance3), 0f, 100f, "{0:0}%", 5f));
+                SetP3(KyuseiUrgeGain3, SliderF("每次吸精·增加", P3(KyuseiUrgeGain3), 0f, 100f, "{0:0}%", 1f));
                 GUILayout.Label(string.Format("  实际在 概率 {0:0.#}~{1:0.#}% / 增量 {2:0.#}~{3:0.#}% 之间随机",
                     P3(AttackUrgeChance3) * Mathf.Max(0f, 1f - P3(AttackUrgeJitter3) / 100f),
                     P3(AttackUrgeChance3) * (1f + P3(AttackUrgeJitter3) / 100f),
@@ -9781,7 +9781,7 @@ namespace BurgerShopModder
                 SetP3(DemandAttBonus3, SliderF("攻击力提升", P3(DemandAttBonus3), 0f, 500f, "{0:0}%", 5f));
                 SetP3(DemandAttSpeedBonus3, SliderF("攻击力随速度加成", P3(DemandAttSpeedBonus3), 0f, 500f, "{0:0}%", 5f));
                 SetP3(DemandAttSpeedRef3, SliderF("速度参考增幅", P3(DemandAttSpeedRef3), 5f, 300f, "{0:0}%", 5f));
-                SetP3(DemandAttSpeedExp3, SliderF("速度曲线指数(0=线性)", P3(DemandAttSpeedExp3), 0f, 8f, "{0:0.0}", 0.5f));
+                SetP3(DemandAttSpeedExp3, SliderF("速度曲线指数", P3(DemandAttSpeedExp3), 0f, 8f, "{0:0.0}", 0.5f));
                 GUILayout.Label(string.Format("  当前攻击速度倍率 ×{0:0.###} → 速度项 ×{1:0.###}",
                     SpankSpeedMul(),
                     1f + Mathf.Clamp01(Mathf.Max(0f, SpankSpeedMul() - 1f)
@@ -9805,8 +9805,8 @@ namespace BurgerShopModder
                     SetP3(OsiriReturnEnabled3, GUILayout.Toggle(P3(OsiriReturnEnabled3), "  回口交后累积「再次进骑乘位」概率"));
                     if (P3(OsiriReturnEnabled3))
                     {
-                        SetP3(OsiriReturnTrigger3, SliderF("每次造成伤害·累积概率(均)", P3(OsiriReturnTrigger3), 0f, 100f, "{0:0}%", 1f));
-                        SetP3(OsiriReturnGain3, SliderF("累积成功时增加(均)", P3(OsiriReturnGain3), 0f, 100f, "{0:0}%", 1f));
+                        SetP3(OsiriReturnTrigger3, SliderF("每次造成伤害·累积概率", P3(OsiriReturnTrigger3), 0f, 100f, "{0:0}%", 1f));
+                        SetP3(OsiriReturnGain3, SliderF("累积成功时增加", P3(OsiriReturnGain3), 0f, 100f, "{0:0}%", 1f));
                         SetP3(OsiriReturnJitter3, SliderF("上面两项波动幅度", P3(OsiriReturnJitter3), 0f, 90f, "±{0:0}%", 5f));
                         GUILayout.Label(string.Format("  当前累积 {0:0.#}%{1}", _osiriReturnChance,
                             _osiriReturnArmed ? "" : "（未武装：需先从骑乘位回口交）"));
@@ -9955,10 +9955,10 @@ namespace BurgerShopModder
                 SitPussyAreaEnabled.Value = GUILayout.Toggle(SitPussyAreaEnabled.Value, "  启用 HitArea_Manman_By_Plugins");
                 if (SitPussyAreaEnabled.Value)
                 {
-                    SitPussyAreaCX.Value = SliderF("中心 X(模型宽%)", SitPussyAreaCX.Value, 0f, 1f, "{0:0.000}", 0.005f);
-                    SitPussyAreaCY.Value = SliderF("中心 Y(模型高%)", SitPussyAreaCY.Value, 0f, 1f, "{0:0.000}", 0.005f);
-                    SitPussyAreaW.Value = SliderF("宽(模型宽%)", SitPussyAreaW.Value, 0.01f, 0.6f, "{0:0.000}", 0.005f);
-                    SitPussyAreaH.Value = SliderF("高(模型高%)", SitPussyAreaH.Value, 0.01f, 0.6f, "{0:0.000}", 0.005f);
+                    SitPussyAreaCX.Value = SliderF("中心 X（模型宽%）", SitPussyAreaCX.Value, 0f, 1f, "{0:0.000}", 0.005f);
+                    SitPussyAreaCY.Value = SliderF("中心 Y（模型高%）", SitPussyAreaCY.Value, 0f, 1f, "{0:0.000}", 0.005f);
+                    SitPussyAreaW.Value = SliderF("宽（模型宽%）", SitPussyAreaW.Value, 0.01f, 0.6f, "{0:0.000}", 0.005f);
+                    SitPussyAreaH.Value = SliderF("高（模型高%）", SitPussyAreaH.Value, 0.01f, 0.6f, "{0:0.000}", 0.005f);
                     ManmanDragMode.Value = GUILayout.Toggle(ManmanDragMode.Value,
                         "  拖动模式（判定区中心实时跟随鼠标）");
                     if (ManmanDragMode.Value)
@@ -10105,7 +10105,8 @@ namespace BurgerShopModder
             TabemiPowerMul.Value = SliderF("攻击力倍率", TabemiPowerMul.Value, 1f, 1000f, "×{0:0.#}", 10f);
             FellaSpeedPlus.Value = SliderF("口交速度加成", FellaSpeedPlus.Value, 0f, 1f, "{0:0.00}", 0.05f);
             GUILayout.Space(4f);
-            ChainMaxFella.Value = SliderI("口交连榨上限(0=不限)", ChainMaxFella.Value, 0, 50);
+            ChainMaxFella.Value = SliderI("口交连榨上限", ChainMaxFella.Value, 0, 50);
+            Hint("0 = 不限（有卡死游戏的风险）");
             GUILayout.Space(6f);
             GUILayout.Space(4f);
             HighlightHitAreas.Value = GUILayout.Toggle(HighlightHitAreas.Value,
