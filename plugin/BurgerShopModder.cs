@@ -9561,7 +9561,7 @@ namespace BurgerShopModder
                     P3(AttackUrgeGain3) * (1f + P3(AttackUrgeJitter3) / 100f)));
                 SetP3(DemandMaxStacks3, SliderI("最多叠加段数", P3(DemandMaxStacks3), 1, 20));
                 SetP3(DemandMaxStackRefreshMul3, SliderF("叠满后刷新持续时间", P3(DemandMaxStackRefreshMul3), 0f, 300f, "{0:0}%", 5f));
-                GUILayout.Label("    段数满了之后不再加层，但条件达成会给时间（0 = 原行为）");
+                Hint("段数满了之后不再加层，但条件达成会给时间（0 = 原行为）");
                 GUILayout.Space(4f);
                 SetP3(AttackCanStackDemand3, GUILayout.Toggle(P3(AttackCanStackDemand3),
                     "  角色攻击也参与叠层判定（关掉则只有打屁股能叠）"));
@@ -9692,11 +9692,11 @@ namespace BurgerShopModder
                 GUILayout.Space(4f);
                 Section("正骑 · 束缚之吻");
                 Hint("正骑的连榨/余韵【只有进入束缚之吻才会发生】");
-                GUILayout.Label("    本栏下面那些滑块（攻击力/倍速/连榨…）都已绑定到束缚之吻：");
+                Hint("本栏下面那些滑块（攻击力/倍速/连榨…）都已绑定到束缚之吻：");
                 Hint("进入吻或榨取状态时才会生效，退出即失效");
                 SitKissAutoPrepare.Value = GUILayout.Toggle(SitKissAutoPrepare.Value, "  自动进入束缚之吻（不用按 X）");
                 GUILayout.Space(4f);
-                GUILayout.Label("    坐姿锁定：进去就出不来（自动切换全拦）");
+                Hint("坐姿锁定：进去就出不来（自动切换全拦）");
                 SitLockEnabled.Value = GUILayout.Toggle(SitLockEnabled.Value,
                     "  启用坐姿锁定");
                 if (SitLockEnabled.Value)
@@ -9735,8 +9735,8 @@ namespace BurgerShopModder
                 if (GUILayout.Button("清除绑定（回到手拖矩形）"))
                     ManmanBindDrawable.Value = "";
                 Hint("点下面任一素材名即可绑定，它的大小位置就是判定区");
-                GUILayout.Label("    （绑定到非 HitArea 的美术素材才有意义 —— 那 5 个 HitArea 本身就能点）");
-                GUILayout.Label("    筛选（子串）：");
+                Hint("（绑定到非 HitArea 的美术素材才有意义 —— 那 5 个 HitArea 本身就能点）");
+                Hint("筛选（子串）：");
                 ManmanDrawableFilter.Value = GUILayout.TextField(ManmanDrawableFilter.Value ?? "", 24);
                 {
                     List<string> all = AllDrawableNames(ManmanDrawableFilter.Value);
@@ -9824,7 +9824,7 @@ namespace BurgerShopModder
                             GUILayout.Label("    鼠标在区内：" + (inRect ? "是" : "否")
                                 + "   游戏当前命中：" + pointing);
                         }
-                        else GUILayout.Label("    注意： 拿不到模型包围盒（人物不在场？）");
+                        else Hint("注意： 拿不到模型包围盒（人物不在场？）");
                     }
                     GUILayout.Label(string.Format("    当前矩形：x {0:0.000}~{1:0.000}  y {2:0.000}~{3:0.000}（屏幕比例）",
                         SitPussyAreaCX.Value - SitPussyAreaW.Value / 2f, SitPussyAreaCX.Value + SitPussyAreaW.Value / 2f,
@@ -9914,7 +9914,7 @@ namespace BurgerShopModder
         {
             _editPose = 0;      // 本栏的滑块读写这一份
             Section("口交");
-            GUILayout.Label("    这边的机制叫「吸取」（对应另外两栏的索取 / 榨取）");
+            Hint("这边的机制叫「吸取」（对应另外两栏的索取 / 榨取）");
             PowerUnlock.Value = GUILayout.Toggle(PowerUnlock.Value, "  攻击力强化");
             TabemiPowerMul.Value = SliderF("攻击力倍率", TabemiPowerMul.Value, 1f, 1000f, "×{0:0.#}", 10f);
             FellaSpeedPlus.Value = SliderF("口交速度加成", FellaSpeedPlus.Value, 0f, 1f, "{0:0.00}", 0.05f);
@@ -9982,10 +9982,9 @@ namespace BurgerShopModder
 
         private void DrawTabCostumeAndParts(object tabemi)
         {
+            Section("换装");
             DrawCostumeUi();
-            GUILayout.Space(10f);
-            Rule();
-            GUILayout.Space(6f);
+            Section("部件");
             DrawPartsUi();
         }
 
@@ -10960,7 +10959,9 @@ namespace BurgerShopModder
             GUILayout.Space(6f);
             Section("取证 / 自检");
             GUILayout.BeginHorizontal();
+            Sub("截图与导出");
             if (GUILayout.Button("截图存档")) { CaptureSnapshot(); _snapHint = "已保存到 snap_<时间戳>\\"; }
+            Sub("自检");
             if (GUILayout.Button("全量自检")) { SelfTestAll(); _snapHint = "自检完成，见 selftest.txt"; }
             if (GUILayout.Button("换衣自检")) { SelfTestCostume(); _snapHint = "换衣自检完成"; }
             GUILayout.EndHorizontal();
@@ -10998,6 +10999,7 @@ namespace BurgerShopModder
                 LogOp("诊断·连续记录", _autoExport ? "开始（每 0.5 秒落一份）" : "停止");
                 _snapHint = _autoExport ? "连续记录中：每次落一个 diag_<时间戳> 目录" : "已停止连续记录";
             }
+            Sub("记录");
             if (GUILayout.Button(ActivityLogger.Running ? "(停止) 停止活动记录" : "(记录) 开始活动记录"))
             {
                 if (ActivityLogger.Running) ActivityLogger.StopLogging(); else ActivityLogger.StartLogging();
@@ -11006,11 +11008,13 @@ namespace BurgerShopModder
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
+            Sub("换装测试");
             if (GUILayout.Button("自动裤袜截图测试")) { StartTightsTest(); _snapHint = "自动依次设 0/1/2 并截图，约 3 秒"; }
             if (GUILayout.Button("丝袜状态采样(10秒)")) { StartTightsSampling(); _snapHint = "采样中，10 秒后落盘"; }
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
+            Sub("部件与图集");
             if (GUILayout.Button("部件索引对照")) { _snapHint = DumpPartIndexMap() ? "已导出 partindex 目录" : "未找到模型（需在店内场景）"; }
             if (GUILayout.Button("盘点运行时图集")) { ProbeRuntimeAtlas(); _snapHint = "见 runtime_atlas.txt / 控制台"; }
             GUILayout.EndHorizontal();
@@ -11024,6 +11028,7 @@ namespace BurgerShopModder
                 : "「强制显示」可判断某件衣服是不是只是透明度没开");
 
             GUILayout.Space(4f);
+            Sub("危险操作");
             if (GUILayout.Button("重置全部开关"))
             {
                 GodMode.Value = false;
