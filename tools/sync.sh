@@ -55,9 +55,9 @@ CODE=(
   dist/BurgerShopModder.dll
 )
 
-# installer/：两边都有对方没有的东西 —— 发布副本里是我清理时加的说明注释，
-# 工作副本里是后来的改动。**不能盲目同步**，要人工看 diff。
-# 曾把它当"代码"同步过去，结果把清理过的版本又弄脏了（路径 + 装饰符都回来了）。
+# installer/：曾经两边都有对方没有的东西（发布副本有清理时加的注释，
+# 工作副本有后来的改动），只能人工看 diff。
+# 后来把写死的路径改成可推导的，两边终于一致了 —— 现在可以自动同步。
 INSTALLER=(
   installer/Installer.cs
   installer/Installer.csproj

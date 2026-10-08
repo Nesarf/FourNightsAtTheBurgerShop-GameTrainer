@@ -6,7 +6,12 @@ $ErrorActionPreference = 'Stop'
 $root      = Split-Path -Parent $MyInvocation.MyCommand.Path
 $build     = Split-Path -Parent $root
 $dist      = Join-Path $build 'dist'
-$game      = '<游戏目录>'
+# 游戏目录从 tools/gamepath.txt 读 —— 那个文件本来就有，而且在 gitignore 里。
+# 写死在脚本里的话：发布副本带本机路径、换成占位符又跑不了。
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$gamePathFile = Join-Path $repoRoot 'tools\gamepath.txt'
+if (-not (Test-Path $gamePathFile)) { throw '找不到 tools/gamepath.txt —— 先写一行游戏目录进去' }
+$game = (Get-Content $gamePathFile -Raw).Trim()
 $bepSrc    = Join-Path $env:TEMP 'BepInEx_clean'
 
 # 1) 从官方压缩包重新解出干净的 BepInEx（不用游戏目录里那份，避免带入运行缓存）

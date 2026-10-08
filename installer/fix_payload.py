@@ -7,7 +7,9 @@ import shutil
 import sys
 import zipfile
 
-ROOT = r"<repo>"
+# ROOT 从脚本自身位置推 —— 写死的话发布副本里带本机路径，
+# 而把路径换成占位符又跑不了。脚本在 installer/ 下，上一级就是仓库根。
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INST = os.path.join(ROOT, "installer")
 OLD = os.path.join(INST, "payload.zip")
 TMP = r"E:\DaShaoHuo\cache\tmp\payload_unz"
