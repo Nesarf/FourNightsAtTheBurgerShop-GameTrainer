@@ -6277,15 +6277,15 @@ namespace BurgerShopModder
         {
             switch ((arg ?? "status").ToLowerInvariant())
             {
-                case "on": SetP3(DemandEnabled3, true); return "索取模式 = 开";
-                case "off": SetP3(DemandEnabled3, false); _demandMode = false; _demandModePose = -1; _demandStacks = 0; _afterglowRemaining = 0; _afterglowPending = 0; _demandEntered = false; return "索取模式 = 关";
+                case "on": SetP3(DemandEnabled3, true); return ModeWordForBanner() + "模式 = 开";
+                case "off": SetP3(DemandEnabled3, false); _demandMode = false; _demandModePose = -1; _demandStacks = 0; _afterglowRemaining = 0; _afterglowPending = 0; _demandEntered = false; return ModeWordForBanner() + "模式 = 关";
                 case "fire":
                     {
                         float lo = Mathf.Min(P3(DemandDurationMin3), P3(DemandDurationMax3));
                         float hi = Mathf.Max(P3(DemandDurationMin3), P3(DemandDurationMax3));
                         EnterOrStackDemand("手动");
-                        ShowChainBanner("索取模式", 3f);
-                        return "已手动进入索取模式，持续 " + (_demandUntil - Time.unscaledTime).ToString("0.#") + "s";
+                        ShowChainBanner(ModeWordForBanner() + "模式", 3f);
+                        return "已手动进入" + ModeWordForBanner() + "模式，持续 " + (_demandUntil - Time.unscaledTime).ToString("0.#") + "s";
                     }
                 case "afterglow":
                     {
@@ -7670,7 +7670,7 @@ namespace BurgerShopModder
                 _afterglowPending = 0; _demandSyaseiCount = 0; _afterglowSettleAt = -999f;
                 _demandEntered = false; _afterglowRemaining = 0;
                 SetP3(DemandMaxStacks3, 5);
-                sb.Append(" 索取模式");
+                sb.Append(" 模式参数（三栏共用一份）");
 
                 SetP3(AttackUrgeChance3, 8f); SetP3(AttackUrgeGain3, 3f); SetP3(AttackUrgeJitter3, 50f);
                 SetP3(SyaseiUrgeChance3, 100f); SetP3(SyaseiUrgeGain3, 8f);
@@ -7980,6 +7980,20 @@ namespace BurgerShopModder
         /// 这个机制在三个栏位各有各的叫法：
         ///   口交 → 吸取    背榨(背面骑乘) → 索取    正骑(坐姿) → 榨取
         /// </summary>
+        /// <summary>
+        /// 模式名，用于屏幕横幅与命令回执。
+        ///
+        /// 【为什么不能直接用 ModeWord()】
+        /// 模式可能跨姿势持续（_demandModePose 记的是【进入时】的姿势），
+        /// 而 ModeWord() 用的是【当前】姿势 —— 模式中途换了姿势，
+        /// 横幅就会显示成另一个词。
+        /// </summary>
+        internal static string ModeWordForBanner()
+        {
+            int p = _demandModePose >= 0 ? _demandModePose : PoseIdx();
+            return ModeWordAt(p);
+        }
+
         internal static string ModeWord()
         {
             int p = PoseIdx();
