@@ -34,7 +34,7 @@ if [ "$before_mtime" != "$after_mtime" ]; then
   echo "    请【关掉修改器面板 / 停止调参】后重跑。"
   exit 2
 fi
-echo "  ✓ 安静（8 秒内无写入）"
+echo "   安静（8 秒内无写入）"
 echo
 
 # ---- 1. 快照 ----
@@ -84,14 +84,14 @@ echo
 
 fail=0
 if [ "$(python3 -c "print(abs(float('${A_END:-0}')-float('${A_NEW:-0}'))<0.01)")" = "True" ]; then
-  echo "  ✓ 游戏侧的改动保住了"
+  echo "   游戏侧的改动保住了"
 else
-  echo "  ✗ 游戏侧的改动丢了（期望 $A_NEW，实际 $A_END）"; fail=1
+  echo "   游戏侧的改动丢了（期望 $A_NEW，实际 $A_END）"; fail=1
 fi
 if [ "$(python3 -c "print(abs(float('${B_END:-0}')-float('${B_NEW:-0}'))<0.01)")" = "True" ]; then
-  echo "  ✓ 外部侧的改动保住了"
+  echo "   外部侧的改动保住了"
 else
-  echo "  ✗ 外部侧的改动被覆盖（期望 $B_NEW，实际 $B_END）"; fail=1
+  echo "   外部侧的改动被覆盖（期望 $B_NEW，实际 $B_END）"; fail=1
 fi
 
 echo

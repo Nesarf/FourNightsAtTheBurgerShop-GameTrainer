@@ -4807,7 +4807,7 @@ namespace BurgerShopModder
         /// <summary>
         /// 【HitArea_Manman · 鼠标这条路】
         ///
-        /// ★ 关键：游戏里【鼠标】和【触摸】走的是两条完全不同的路 ——
+        /// 重点： 关键：游戏里【鼠标】和【触摸】走的是两条完全不同的路 ——
         ///
         ///   触摸 → Live2D_HitAreaCheck.GetTouchTargetName(pos)   ← 返回值直接派发
         ///   鼠标 → Live2D_HitAreaCheck.mousePointing（【静态字段】）
@@ -4857,7 +4857,7 @@ namespace BurgerShopModder
         /// <summary>
         /// 【HitArea_Manman 自己的点击处理】
         ///
-        /// ★ 为什么不能用 HitArea_Head_Sit：
+        /// 重点： 为什么不能用 HitArea_Head_Sit：
         ///   坐姿的头部点击（頭叩かれるSit）**是解除束缚之吻的** ——
         ///     kissing == 2 → SkillCheck.GetReadyForSkillCheck()   ← 技能检定 / 解吻
         ///     kissing == 1 → SitGirlKiss叩く量++                    ← 累积解除量
@@ -6822,7 +6822,7 @@ namespace BurgerShopModder
 
                 // 【关键】只有真的搬到了东西才推进版本号。
                 // 第一版写的是无条件置 1 —— 结果测试时它"跑了但没搬成"，
-                // 版本号却被推到 1，于是【以后永远不会再试】✗
+                // 版本号却被推到 1，于是【以后永远不会再试】
                 // 那比不迁移更糟：用户以为迁过了，实际参数全回落默认。
                 //
                 // 现在：没搬成就不推进 → 下次启动还会再试一次（开销可忽略）。
@@ -7765,7 +7765,7 @@ namespace BurgerShopModder
         /// 【按 base 名索引三份组】
         ///
         /// 原来迁移时用 `g[0].Definition.Key == baseName` 去查 —— 那个属性拿到的
-        /// 并不是配置键，于是 41 个组全都查不到，迁移静默地一个键都没搬 ✗
+        /// 并不是配置键，于是 41 个组全都查不到，迁移静默地一个键都没搬 
         /// （诊断日志把这点直接打出来了。）
         ///
         /// 改成在绑定的时候就登记，不再依赖反射去猜。
@@ -7780,7 +7780,7 @@ namespace BurgerShopModder
 
             // 描述模板是三栏共用的，而模板里【混着三个词】——
             // 有的条写"索取"、有的写"榨取"。单向替换不够：只把"索取"改成别的，
-            // 模板里本来写着"榨取"的那些，在【背榨】栏就会显示成"榨取" ✗
+            // 模板里本来写着"榨取"的那些，在【背榨】栏就会显示成"榨取" 
             //
             // 所以【先归一成占位符，再按栏位填】—— 三个方向都成立：
             //   口交 → 吸取    背榨 → 索取    正骑 → 榨取
@@ -9088,7 +9088,7 @@ namespace BurgerShopModder
             DrawHitAreaHighlight();
             if (!_showPanel) return;
 
-            float w = _collapsed ? 190f : 452f;
+            float w = _collapsed ? 200f : 540f;   // 540 而不是 452 —— 原来标签会被挤到贴边
             _win = GUILayout.Window(0x0717, _win, DrawWindow,
                 _collapsed ? "修改器（F9）" : "数值修改器 · F9 隐藏",
                 GUILayout.Width(w));
@@ -9186,7 +9186,7 @@ namespace BurgerShopModder
             GUILayout.EndHorizontal();
 
             GUILayout.Space(6f);
-            GUILayout.Label("—— 快捷开关 ——");
+            Section("快捷开关");
             GodMode.Value = GUILayout.Toggle(GodMode.Value, "  无敌（HP 每帧补满）");
             NoEcstasy.Value = GUILayout.Toggle(NoEcstasy.Value, "  绝顶值归零（不被吸精）");
             EcstasyResist.Value = SliderF("绝顶抗性", EcstasyResist.Value, 0f, 1f, "{0:0.00}", 0.05f);
@@ -9197,7 +9197,7 @@ namespace BurgerShopModder
             DrawTremorSection();
 
             GUILayout.Space(4f);
-            GUILayout.Label("—— 汉堡层数 ——");
+            Section("汉堡层数");
             object menu = StaticPart("menu");
             int baseCount = menu != null ? (int)GetFloat(menu, "Base具材数") : -1;
             int rel = player != null ? (int)GetFloat(player, "syaseiCount") : -1;
@@ -9265,7 +9265,7 @@ namespace BurgerShopModder
             GUILayout.Label("  安全闸不能关：绝顶值若永远到不了上限，榨取循环不会收束");
 
             GUILayout.Space(4f);
-            GUILayout.Label("—— 吸精 · 连榨 ——");
+            Section("吸精 · 连榨");
             GUILayout.Label("  连榨上限（各栏独立：骑乘位/坐姿 × 常规/模式，口交另有一套）");
             ChainMaxOsiriNormal.Value = SliderI("  骑乘位·常规", ChainMaxOsiriNormal.Value, 0, 50);
             ChainMaxOsiriDemand.Value = SliderI("  骑乘位·索取模式", ChainMaxOsiriDemand.Value, 0, 50);
@@ -9347,6 +9347,72 @@ namespace BurgerShopModder
 
         // ---- 页 3：对手（吃汉） ----
         /// <summary>「对手」页里的索取模式控制区。</summary>
+        // ══════════════════════════════════════════════════════════════
+        // 面板排版 helper
+        //
+        // 原来标题有三四种写法（"—— X ——" / "——————" / "—— X"），
+        // 间距有四个值（4/6/8/10）—— 全靠手写，所以看起来乱。
+        //
+        // 现在统一成三个 helper，**间距和格式只有一处定义**。
+        // 以后改版式只需要改这里。
+        // ══════════════════════════════════════════════════════════════
+
+        private static GUIStyle _secStyle, _subStyle, _hintStyle;
+
+        private static void EnsureStyles()
+        {
+            if (_secStyle != null) return;
+            _secStyle = new GUIStyle(GUI.skin.label);
+            _secStyle.fontSize = 12;
+            _secStyle.fontStyle = FontStyle.Bold;
+            _secStyle.normal.textColor = new Color(0.85f, 0.88f, 0.96f);
+            _secStyle.wordWrap = false;
+
+            _subStyle = new GUIStyle(GUI.skin.label);
+            _subStyle.fontSize = 11;
+            _subStyle.fontStyle = FontStyle.Bold;
+            _subStyle.normal.textColor = new Color(0.72f, 0.78f, 0.90f);
+
+            _hintStyle = new GUIStyle(GUI.skin.label);
+            _hintStyle.fontSize = 10;
+            _hintStyle.normal.textColor = new Color(0.58f, 0.62f, 0.72f);
+            _hintStyle.wordWrap = true;
+        }
+
+        /// <summary>一级小节。左侧色条 + 上方固定留白。</summary>
+        private void Section(string title)
+        {
+            EnsureStyles();
+            GUILayout.Space(10f);
+            GUILayout.Label("▍" + title, _secStyle);
+        }
+
+        /// <summary>二级小节。更小、无装饰。</summary>
+        private void Sub(string title)
+        {
+            EnsureStyles();
+            GUILayout.Space(6f);
+            GUILayout.Label("   " + title, _subStyle);
+        }
+
+        /// <summary>说明文字（灰色小字，自动换行）。</summary>
+        private void Hint(string text)
+        {
+            EnsureStyles();
+            GUILayout.Label("     " + text, _hintStyle);
+        }
+
+        /// <summary>一条细分隔线（原来写成一串破折号）。</summary>
+        private void Rule()
+        {
+            GUILayout.Space(4f);
+            var r = GUILayoutUtility.GetRect(1f, 1f);
+            GUI.DrawTexture(new Rect(r.x, r.y, r.width, 1f),
+                Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0f,
+                new Color(1f, 1f, 1f, 0.10f), 0f, 0f);
+            GUILayout.Space(4f);
+        }
+
         private void DrawDemandSection(bool sitSide)
         {
             // 这个机制三栏各有叫法：口交=吸取、背榨=索取、正骑=榨取。
@@ -9396,12 +9462,12 @@ namespace BurgerShopModder
                         "  坐姿点头部随时可累积榨取欲（不限束缚之吻）");
                     SitSyaseiToDrainChance.Value = SliderF("坐姿射精→进榨取的概率",
                         SitSyaseiToDrainChance.Value, 0f, 100f, "{0:0}%", 5f);
-                    GUILayout.Label("    坐姿挂起超时见下方「余韵」区");
+                    Hint("坐姿挂起超时见下方「余韵」区");
                     GUILayout.Space(4f);
                     GUILayout.Label("  —— 正骑 · 束缚之吻 ——");
-                    GUILayout.Label("    正骑的连榨/余韵【只有进入束缚之吻才会发生】");
+                    Hint("正骑的连榨/余韵【只有进入束缚之吻才会发生】");
                     GUILayout.Label("    本栏下面那些滑块（攻击力/倍速/连榨…）都已绑定到束缚之吻：");
-                    GUILayout.Label("    进入吻或榨取状态时才会生效，退出即失效");
+                    Hint("进入吻或榨取状态时才会生效，退出即失效");
                     SitKissAutoPrepare.Value = GUILayout.Toggle(SitKissAutoPrepare.Value, "  自动进入束缚之吻（不用按 X）");
                     GUILayout.Space(4f);
                     GUILayout.Label("    坐姿锁定：进去就出不来（自动切换全拦）");
@@ -9421,7 +9487,7 @@ namespace BurgerShopModder
                     SitKissNoDecay.Value = GUILayout.Toggle(SitKissNoDecay.Value, "  阻止窗口越玩越短（原版每次 *=0.9）");
                     SitKissWindowMul.Value = SliderF("窗口长度倍数", SitKissWindowMul.Value, 50f, 1000f, "{0:0}%", 25f);
                     GUILayout.Space(4f);
-                    GUILayout.Label("    接吻中但还没进榨取时，单独用这一套速度：");
+                    Hint("接吻中但还没进榨取时，单独用这一套速度：");
                     KissSpeedEnabled.Value = GUILayout.Toggle(KissSpeedEnabled.Value, "  束缚之吻单独调速");
                     if (KissSpeedEnabled.Value)
                     {
@@ -9432,8 +9498,8 @@ namespace BurgerShopModder
                     }
                     GUILayout.Space(4f);
                     GUILayout.Label("  —— 正骑 · HitArea_Manman_By_Plugins ——");
-                    GUILayout.Label("    点击 = 坐姿版的「打屁股」：涨榨取欲 + 给坐姿动作一个速度冲量");
-                    GUILayout.Label("    判定按【人物模型包围盒】算 → 跟着人物走，换分辨率也不跑偏");
+                    Hint("点击 = 坐姿版的「打屁股」：涨榨取欲 + 给坐姿动作一个速度冲量");
+                    Hint("判定按【人物模型包围盒】算 → 跟着人物走，换分辨率也不跑偏");
                     SitPussyAreaShowRect.Value = GUILayout.Toggle(SitPussyAreaShowRect.Value,
                         "  跟着总开关一起画（粉色）—— 总开关在下面「实验性高亮」那个");
                     GUILayout.Space(4f);
@@ -9442,7 +9508,7 @@ namespace BurgerShopModder
                         ? "（无，用手拖的矩形）" : ManmanBindDrawable.Value));
                     if (GUILayout.Button("清除绑定（回到手拖矩形）"))
                         ManmanBindDrawable.Value = "";
-                    GUILayout.Label("    点下面任一素材名即可绑定，它的大小位置就是判定区");
+                    Hint("点下面任一素材名即可绑定，它的大小位置就是判定区");
                     GUILayout.Label("    （绑定到非 HitArea 的美术素材才有意义 —— 那 5 个 HitArea 本身就能点）");
                     GUILayout.Label("    筛选（子串）：");
                     ManmanDrawableFilter.Value = GUILayout.TextField(ManmanDrawableFilter.Value ?? "", 24);
@@ -9484,7 +9550,7 @@ namespace BurgerShopModder
                         ManmanDragMode.Value = GUILayout.Toggle(ManmanDragMode.Value,
                             "  拖动模式（判定区中心实时跟随鼠标）");
                         if (ManmanDragMode.Value)
-                            GUILayout.Label("    开着时框会跟着鼠标跑；对准位置后点下面的「绑定」");
+                            Hint("开着时框会跟着鼠标跑；对准位置后点下面的「绑定」");
                         if (GUILayout.Button(ManmanDragMode.Value ? "绑定到此位置（并退出拖动）" : "把中心设为当前鼠标位置"))
                         {
                             float rx, ry;
@@ -9529,10 +9595,10 @@ namespace BurgerShopModder
                                 }
                                 catch { }
                                 GUILayout.Label("    当前来源：" + src);
-                                GUILayout.Label("    鼠标在区内：" + (inRect ? "是 ✓" : "否")
+                                GUILayout.Label("    鼠标在区内：" + (inRect ? "是" : "否")
                                     + "   游戏当前命中：" + pointing);
                             }
-                            else GUILayout.Label("    ⚠ 拿不到模型包围盒（人物不在场？）");
+                            else GUILayout.Label("    注意： 拿不到模型包围盒（人物不在场？）");
                         }
                         GUILayout.Label(string.Format("    当前矩形：x {0:0.000}~{1:0.000}  y {2:0.000}~{3:0.000}（屏幕比例）",
                             SitPussyAreaCX.Value - SitPussyAreaW.Value / 2f, SitPussyAreaCX.Value + SitPussyAreaW.Value / 2f,
@@ -9724,7 +9790,7 @@ namespace BurgerShopModder
         private void DrawTabFella(object tabemi)
         {
             _editPose = 0;      // 本栏的滑块读写这一份
-            GUILayout.Label("—— 口交 ——");
+            Section("口交");
             GUILayout.Label("    这边的机制叫「吸取」（对应另外两栏的索取 / 榨取）");
             PowerUnlock.Value = GUILayout.Toggle(PowerUnlock.Value, "  攻击力强化");
             TabemiPowerMul.Value = SliderF("攻击力倍率", TabemiPowerMul.Value, 1f, 1000f, "×{0:0.#}", 10f);
@@ -9747,8 +9813,8 @@ namespace BurgerShopModder
         private void DrawTabOsiri(object tabemi)
         {
             _editPose = 1;      // 本栏的滑块读写这一份
-            GUILayout.Label("—— 背榨 · 背面骑乘 ——");
-            GUILayout.Label("    这边的机制叫「索取」：打屁股攒索取欲 → 索取模式");
+            Section("背榨 · 背面骑乘");
+            Hint("这边的机制叫「索取」：打屁股攒索取欲 → 索取模式");
             GUILayout.Space(4f);
             OsiriKyuseiTier4.Value = GUILayout.Toggle(OsiriKyuseiTier4.Value,
                 "  连榨撞击声固定用第 3、4 档（其余状态按速度分档）");
@@ -9767,8 +9833,8 @@ namespace BurgerShopModder
         private void DrawTabSit(object tabemi)
         {
             _editPose = 2;      // 本栏的滑块读写这一份
-            GUILayout.Label("—— 正骑 · 坐姿 ——");
-            GUILayout.Label("    这边的机制叫「榨取」：点头部攒榨取欲 → 榨取模式");
+            Section("正骑 · 坐姿");
+            Hint("这边的机制叫「榨取」：点头部攒榨取欲 → 榨取模式");
             DrawDemandSection(true);
             GUILayout.Space(4f);
             ChainMaxSitNormal.Value = SliderI("坐姿·常规 连榨上限", ChainMaxSitNormal.Value, 0, 50);
@@ -9786,7 +9852,7 @@ namespace BurgerShopModder
         {
             DrawTabCaps(player);
             GUILayout.Space(10f);
-            GUILayout.Label("————————————");
+            Rule();
             GUILayout.Space(6f);
             DrawTabSystem(player, clock);
         }
@@ -9795,7 +9861,7 @@ namespace BurgerShopModder
         {
             DrawCostumeUi();
             GUILayout.Space(10f);
-            GUILayout.Label("————————————");
+            Rule();
             GUILayout.Space(6f);
             DrawPartsUi();
         }
@@ -10014,7 +10080,7 @@ namespace BurgerShopModder
                 // 而且【没有任何报错】（S1 那三条就是这么发现的）。
                 //
                 // 现在先查 `_p3ByName` 索引（BindP3 绑定时就登记好了）—— 命中即自动处理。
-                // **新增一个 BindP3 参数，set 命令自动支持** ✓
+                // **新增一个 BindP3 参数，set 命令自动支持** 
                 //
                 // 下面那些手写的 P3 case 保留着（无害），但已不会被执行 ——
                 // 删 54 行属纯清理、风险为零收益也为零，留着还能当"这批参数长什么样"的活文档。
@@ -10225,7 +10291,7 @@ namespace BurgerShopModder
 
             bool changed;
             CfgGuard.Lock lk = CfgGuard.PrepareWrite(cfg, out changed);
-            if (lk == null) return "  ⚠ 另一个写入者正在写（训练器？），本次未落盘，请稍后重试";
+            if (lk == null) return "  注意： 另一个写入者正在写（训练器？），本次未落盘，请稍后重试";
 
             string note = "";
             try
@@ -10737,7 +10803,7 @@ namespace BurgerShopModder
             UnlockAllDays.Value = GUILayout.Toggle(UnlockAllDays.Value, "  解锁全部章节");
 
             GUILayout.Space(6f);
-            GUILayout.Label("—— 取证 / 自检 ——");
+            Section("取证 / 自检");
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("截图存档")) { CaptureSnapshot(); _snapHint = "已保存到 snap_<时间戳>\\"; }
             if (GUILayout.Button("全量自检")) { SelfTestAll(); _snapHint = "自检完成，见 selftest.txt"; }
