@@ -15,7 +15,7 @@ namespace BurgerShopInstaller
     internal static class Program
     {
         internal const string AppTitle = "汉堡店 数值修改器 · 安装程序";
-        internal const string Version = "1.0.1";
+        internal const string Version = "1.0.2";
         internal const string GameExe = "Four Nights at the Burger Shop.exe";
         internal const string GameFolderName = "Four Nights at the Burger Shop ～ハンバーガー食べながら食べられるミニゲーム～";
         internal const string PayloadResource = "payload.zip";
@@ -263,6 +263,16 @@ namespace BurgerShopInstaller
 
                         string rel = e.FullName.Replace('/', Path.DirectorySeparatorChar);
                         string dest = Path.Combine(root, rel);
+
+                        // 【目录条目要单独处理】
+                        // 载荷 zip 里有 BepInEx/config/ 这样的目录条目，FullName 以 / 结尾。
+                        // 对它们调 File.Create 会抛 DirectoryNotFoundException
+                        // （"未能找到路径的一部分"）—— 因为路径以分隔符结尾。
+                        if (e.FullName.EndsWith("/") || e.FullName.EndsWith("\\"))
+                        {
+                            if (!string.IsNullOrEmpty(dest)) Directory.CreateDirectory(dest);
+                            continue;
+                        }
 
                         string dir = Path.GetDirectoryName(dest);
                         if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
@@ -743,6 +753,10 @@ namespace BurgerShopInstaller
             TryTrace("=== 开始安装: " + root);
 
             var worker = new BackgroundWorker();
+            // 【必须显式声明】BackgroundWorker 默认 WorkerReportsProgress = false，
+            // 此时调 ReportProgress() 会抛 InvalidOperationException，
+            // 用户看到的就是「此 BackgroundWorker 声明它不报告进度」。
+            worker.WorkerReportsProgress = true;
             worker.DoWork += (s, e) =>
             {
                 Installer.Install(root, step => worker.ReportProgress(step.Percent, step.Text));
@@ -803,6 +817,8 @@ namespace BurgerShopInstaller
             TryTrace("=== 开始卸载: " + root);
 
             var worker = new BackgroundWorker();
+            // 同上：不声明就会在第一次 ReportProgress 时抛异常
+            worker.WorkerReportsProgress = true;
             worker.DoWork += (s, e) =>
             {
                 Installer.Uninstall(root, step => worker.ReportProgress(step.Percent, step.Text));
