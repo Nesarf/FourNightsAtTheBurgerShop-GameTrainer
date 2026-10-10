@@ -11,36 +11,80 @@
 
 ## 运行环境
 
-### 需要什么
+完整的依赖清单。**列出来的每一项都写了"谁来提供"** ——
+标"系统自带"或"安装程序自带"的，你不需要做任何事。
 
-| 需要 | 说明 |
+### 一、修改器（三个程序）
+
+| 依赖 | 谁来提供 | 通常是否已具备 |
+| --- | --- | --- |
+| Windows（x64 或 x86） | 你的机器 | 必需 |
+| **.NET Framework 4.7.2** | 系统 | Win10 1809+ / Win11 自带；Win7 SP1 / 8.1 要装 |
+| Windows Forms | .NET 的一部分 | 装好 .NET 就有 |
+| `System.IO.Compression` | .NET 的一部分 | 同上（安装程序解压用） |
+
+**.NET Framework 4.7.2 下载**（只有 Win7 / 8.1 需要）：
+[离线安装包](https://dotnet.microsoft.com/download/dotnet-framework/net472)
+
+### 二、插件（`BurgerShopModder.dll`）
+
+| 依赖 | 谁来提供 | 通常是否已具备 |
+| --- | --- | --- |
+| BepInEx 5.4.23.5 | **安装程序自带** | 不用管 |
+| ├ `BepInEx/core/BepInEx.dll` 等 | 安装程序自带 | 不用管 |
+| ├ `0Harmony.dll`（HarmonyX） | 安装程序自带 | 不用管 |
+| ├ `Mono.Cecil.dll` | 安装程序自带 | 不用管 |
+| ├ `MonoMod.*.dll` | 安装程序自带 | 不用管 |
+| ├ `winhttp.dll`（Doorstop 注入器） | 安装程序自带 | 不用管 |
+| └ `doorstop_config.ini` | 安装程序自带 | 不用管 |
+| Unity 2022.1 的 Mono 运行时 | **游戏自带** `MonoBleedingEdge` | 不用管 |
+| 游戏程序集（`Assembly-CSharp.dll` 等） | 游戏自带 | 不用管 |
+
+> **只有手动安装**（自己把 `.dll` 放进 `BepInEx/plugins/`）才需要先有 BepInEx。
+> 手动安装的话去 [BepInEx Releases](https://github.com/BepInEx/BepInEx/releases) 下
+> **5.4.23.5 x64**（这个游戏的 Unity 是 64 位的）。
+
+### 三、游戏本体
+
+| 依赖 | 谁来提供 | 通常是否已具备 |
+| --- | --- | --- |
+| Windows | 你的机器 | 必需 |
+| **显卡驱动** | 显卡厂商 | 需要自己保持较新 |
+| `d3d11.dll` — Direct3D 11（主渲染器） | 系统 | Win10 / 11 自带 |
+| `dxgi.dll` | 系统 | 自带 |
+| `d3d9.dll` — Direct3D 9（回退） | 系统 | 自带 |
+| `opengl32.dll` — OpenGL（回退） | 系统 | 自带 |
+| `vulkan-1.dll` — Vulkan（可选） | 显卡驱动 | 装好驱动就有 |
+| `d3dcompiler_47.dll` — 着色器编译 | 系统 | Win10 / 11 自带；**Win7 / 8 可能缺** |
+| `xinput1_3.dll` — 手柄支持 | 系统 | Win10 自带；**Win7 / 8 可能缺** |
+| `dsound.dll` — DirectSound | 系统 | 自带 |
+
+**Win7 / 8 上如果缺 `d3dcompiler_47.dll` 或 `xinput1_3.dll`**，
+装一次 [DirectX 终端运行时](https://www.microsoft.com/download/details.aspx?id=35) 即可
+（包很小）。这两个都在里面。
+
+> 顺带一提：`UnityPlayer.dll` 自己也引用 `winhttp.dll` ——
+> 而 BepInEx 的 Doorstop 正是靠替换这个 DLL 来注入的。所以它是个很自然的注入点。
+
+### 四、不需要装的东西
+
+| 不需要 | 为什么 |
 | --- | --- |
-| **Windows** | 游戏本身是 Windows 的（Unity 2022.1 / Mono），修改器跟着 |
-| **.NET Framework 4.7.2** | 三个程序都编译到这个版本 |
-| **游戏本体** | 已安装、能正常启动 |
+| BepInEx | 安装程序自带（内嵌在 exe 里） |
+| .NET SDK / .NET 运行时（CoreCLR） | 用的是 .NET **Framework**，不是 .NET 5+ |
+| **Visual C++ 运行库** | `UnityPlayer.dll` 不引用 `vcruntime140` / `msvcp140` |
+| Mono | 游戏目录自带 `MonoBleedingEdge` |
+| 管理员权限 | 装在自己的游戏目录里即可 |
+| 联网 | 安装程序里的 BepInEx 是内嵌的，不会去下载 |
+| Java / Python / Node 之类 | 与本项目无关 |
 
-**.NET Framework 4.7.2 一般不用自己装。**
+### 五、排查顺序
 
-- Windows 10 1809 及以后、Windows 11 —— **系统自带**（自带的是 4.7.2 或更高）
-- Windows 7 SP1 / 8.1 —— 需要单独装一次：
-  [.NET Framework 4.7.2 离线安装包](https://dotnet.microsoft.com/download/dotnet-framework/net472)
+游戏跑不起来时，**按这个顺序查**，别一上来就怀疑修改器：
 
-### 不需要什么
-
-- **不需要装 BepInEx** —— 安装程序自带（BepInEx 5.4.23.5，已经打进 exe 里）
-- **不需要装 .NET SDK / 运行时 / Visual C++ 运行库**
-- **不需要管理员权限**（装在自己的游戏目录里）
-- **不需要联网**（安装程序里的 BepInEx 是内嵌的，不会去下载）
-
-只有**手动安装**（自己把 `BurgerShopModder.dll` 放进 `BepInEx/plugins/`）才需要先有 BepInEx。
-
-### 三个程序分别要什么
-
-| 程序 | 要什么 |
-| --- | --- |
-| `汉堡店修改器-安装程序.exe` | 只要能跑 .NET Framework 4.7.2 的 Windows |
-| `数值修改器.exe` | 同上（它和游戏完全独立，可以单独开来改配置） |
-| `BurgerShopModder.dll` | 游戏 + BepInEx 5.x |
+1. **不开修改器，直接启动游戏** —— 能进游戏吗？
+2. 进不去 → 显卡驱动 / DirectX 运行时的问题，和修改器无关
+3. 能进去但按 F9 没反应 → 才轮到查修改器（见下方「常见问题」）
 
 ---
 
