@@ -24,6 +24,7 @@
 退出码：0 = 全过；1 = 有失败项
 """
 import re
+import hashlib
 import sys
 import pathlib
 
@@ -214,6 +215,35 @@ if mounts < 35:
     warn(f'(8) 挂载点数偏少（{mounts}）—— 预期 ≥ 35，确认没有补丁被删掉')
 else:
     ok(f'(8) 挂载点 {mounts} 个')
+
+
+# ── README 里的 SHA256 是否还准 ─────────────────────────────
+# 【为什么需要】README 里那三个哈希是手写的。签名之后它们【过期了两次】，
+# 而且没人会发现 —— 用户照着核对会以为文件被篡改了。
+# "文档里的数字"最容易过期，这类东西必须有检查盯着。
+_sha_lines = re.findall(r'^([0-9a-f]{64})  (\S+)$', read(ROOT / 'README.md') or '', re.M)
+if not _sha_lines:
+    warn('(10) README 里没找到 SHA256 校验和（如果是有意去掉的，忽略本条）')
+else:
+    _bad = []
+    for _h, _name in _sha_lines:
+        # README 里用的是 Release 资产名（ASCII），对应 dist 里的中文原名
+        _cand = {
+            'BurgerShopModder-Installer.exe': '汉堡店修改器-安装程序.exe',
+            'BurgerShopModder-Trainer.exe': '数值修改器.exe',
+            'BurgerShopModder.dll': 'BurgerShopModder.dll',
+        }.get(_name, _name)
+        _p = ROOT / 'dist' / _cand
+        if not _p.exists():
+            _bad.append('%s（dist 里没有 %s）' % (_name, _cand))
+            continue
+        _real = hashlib.sha256(_p.read_bytes()).hexdigest()
+        if _real != _h:
+            _bad.append('%s（README %s… 实际 %s…）' % (_name, _h[:12], _real[:12]))
+    if _bad:
+        fail('(10) README 里的校验和过期：' + '，'.join(_bad))
+    else:
+        ok('(10) README 里的 %d 个 SHA256 与 dist 一致' % len(_sha_lines))
 
 # ── 汇总 ──────────────────────────────────────────────────────
 print()

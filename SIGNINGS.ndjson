@@ -1,0 +1,14 @@
+# 签名记录
+#
+# 每次用 S.M.Y.T. 证书签名都追加一行（JSON Lines）。
+# 同时记了签名【前】和签名【后】的 SHA256 —— 所以它回答的是两件事：
+#   sha256_unsigned  打进签名的那个文件原本是什么
+#   sha256_signed    签完之后是什么（这就是发布出去的哈希）
+#
+# 本地路径已去掉，只留文件名。
+#
+{"file": "nanodesu.exe", "name": "nanodesu.exe", "note": "Nanodesu 1.2.1", "sha256_signed": "1FD98574AC9ECF34D74668DBC21DCEACCC3240F3272992A3030AA7F9E387C135", "sha256_unsigned": "1DFE7F14D90898935E9EFA0F25E13AD1D6D69B842A2187A3F9D922569066B2ED", "signer": "O=S.M.Y.T., CN=S.M.Y.T. Code Signing", "size": 8499496, "t": "2026-10-05T08:43:25.3340146Z", "thumbprint": "4EA54E72A1EEFAE280B99631F7680DBFF461C4F1", "timestamped": true}
+{"file": "nanodesu.exe", "name": "nanodesu.exe", "note": "Nanodesu 1.3.0 library API", "sha256_signed": "C38ADF6F1C678E907D411817948394A9584754125D1A5C7C3997960527CE2A77", "sha256_unsigned": "2E05A9B28BF5F2DEF0893ED9338E638D1E84C0D3EC73AEF619A7110C14A00774", "signer": "O=S.M.Y.T., CN=S.M.Y.T. Code Signing", "size": 8502920, "t": "2026-10-05T09:10:39.9319223Z", "thumbprint": "4EA54E72A1EEFAE280B99631F7680DBFF461C4F1", "timestamped": true}
+{"file": "BurgerShopModder.dll", "name": "BurgerShopModder.dll", "note": "汉堡店修改器 v1.0.2 插件", "sha256_signed": "D49107EFD75FCCEC30E057F701E141F07157359A6136B92B13D4FCC76B157494", "sha256_unsigned": "169C3F4228E6A6B88D4B36855C81E73804A6491251B1CC93A3828E0BADF9B003", "signer": "O=S.M.Y.T., CN=S.M.Y.T. Code Signing", "size": 275688, "t": "2026-10-11T17:47:18.0165280Z", "thumbprint": "4EA54E72A1EEFAE280B99631F7680DBFF461C4F1", "timestamped": true}
+{"file": "数值修改器.exe", "name": "数值修改器.exe", "note": "汉堡店修改器 v1.0.2 配置编辑器", "sha256_signed": "291A4338AD7438817833FBE8E1669B14B61255C21F2713F9E794CB5B82030107", "sha256_unsigned": "386E9E90803A413596516449591B49F3AFD9D8563E007DC31B71BA18C273C628", "signer": "O=S.M.Y.T., CN=S.M.Y.T. Code Signing", "size": 28880, "t": "2026-10-11T17:47:25.4276934Z", "thumbprint": "4EA54E72A1EEFAE280B99631F7680DBFF461C4F1", "timestamped": true}
+{"file": "汉堡店修改器-安装程序.exe", "name": "汉堡店修改器-安装程序.exe", "note": "汉堡店修改器 v1.0.2 安装程序", "sha256_signed": "FD5A35F215FAC573E2A3982AFABACEE1298BEA862A361EB59920ECEBBF412DA9", "sha256_unsigned": "2070102D6B5388BE076E43F57482626369C52E78A5C34ECA8A6A83C85F7E7114", "signer": "O=S.M.Y.T., CN=S.M.Y.T. Code Signing", "size": 1165528, "t": "2026-10-11T17:47:45.6056776Z", "thumbprint": "4EA54E72A1EEFAE280B99631F7680DBFF461C4F1", "timestamped": true}
