@@ -9586,6 +9586,11 @@ namespace BurgerShopModder
                 TremorSlow.Value = SliderF("减速最低值", TremorSlow.Value, 10f, 100f, "{0:0}%", 5f);
                 TremorPattern.Value = SliderI("减速模板", TremorPattern.Value, 0, 5);
                 Sub("1顿挫 2痉挛 3深陷 4迟疑 5潮汐（长短不一）");
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("手动触发动摇")) TremorCmd("fire");
+            if (GUILayout.Button("本次状态")) LogTremorStatus();
+            GUILayout.EndHorizontal();
             }
 
             GUILayout.Space(4f);
@@ -9605,7 +9610,7 @@ namespace BurgerShopModder
             // 而且这一小节挂在"绝顶动摇"和"绝顶适应"之间，语义上也不属于动摇。
             // 各栏的连榨上限现在只在各自的栏里出现。
             GUILayout.Space(4f);
-            Section("吸精");
+            Section("吸精 · 当前状态");
             // 原来这里写的是"0 = 不限；当前场景：…"，但那句"0 = 不限"指的是
             // 连榨上限滑块 —— 它们已经挪到各栏自己的专属区了。
             // 留着一句指向不存在滑块的提示会误导，所以只保留当前场景信息。
@@ -9614,11 +9619,6 @@ namespace BurgerShopModder
             GUILayout.Label(string.Format("  吸精发生率 {0}%（已修正游戏的整数除法 bug，填多少就是多少）",
                 KyuseiRateNow().ToString("0")));
 
-            GUILayout.Space(4f);
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("手动触发动摇")) TremorCmd("fire");
-            if (GUILayout.Button("本次状态")) LogTremorStatus();
-            GUILayout.EndHorizontal();
         }
 
         private static float KyuseiRateNow()
