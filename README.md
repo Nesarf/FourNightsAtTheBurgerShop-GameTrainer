@@ -217,6 +217,90 @@ bash tools/gcmd.sh demand status   # 索取/榨取模式状态
 
 ---
 
+## 代码签名
+
+**三个可执行文件都带签名**，签的是 **S.M.Y.T.**（自签证书，不是商业证书）。
+
+```
+汉堡店修改器-安装程序.exe    O=S.M.Y.T., CN=S.M.Y.T. Code Signing
+数值修改器.exe              O=S.M.Y.T., CN=S.M.Y.T. Code Signing
+BurgerShopModder.dll       O=S.M.Y.T., CN=S.M.Y.T. Code Signing
+```
+
+自己可以核实：
+
+```powershell
+Get-AuthenticodeSignature "BurgerShopModder-Installer.exe" |
+    Select-Object Status, @{n='Signer';e={$_.SignerCertificate.Subject}}
+```
+
+### 为什么是自签，不是商业证书
+
+一张证书的 **organization 字段是发证方填的**。商业 CA 按一个**经过审核的法人实体**去填，
+它要看营业执照。S.M.Y.T. 不是公司，也不该为了一个字段去变成公司。
+
+所以自签不是"买不起证书的将就"，**它是唯一能如实写明这是谁做的那种形式** ——
+信任的根留在做东西的人手里，而不是留在某个能单方面吊销、改条款、或者哪天不存在的公司那里。
+
+### 这意味着什么，说清楚
+
+| | 商业 CA | 自签（本项目） |
+| --- | --- | --- |
+| organization 字段 | 来自被审核的**公司** | 自己的声明 |
+| 信任根 | CA 的，不公开、不可审计 | **你的，你自己持有** |
+| 被吊销 | CA 可以单方面吊销 | 没有人能，也不需要 |
+| 在信任该证书的机器上验通 | 是 | 是 |
+| **在陌生人的机器上验通** | 是 | **否** |
+| **消除 SmartScreen 警告** | 是 | **否** |
+
+**所以：这个签名不解决 SmartScreen 警告，也不解决杀毒误报。**
+
+第一次运行时仍可能出现「Windows 已保护你的电脑」——
+点「更多信息」→「仍要运行」。
+
+（这一条**即使换了商业证书也可能出现**：SmartScreen 还要累积"下载量信誉"。）
+
+### 杀毒软件可能报毒，原因是可以解释的
+
+| 项目里的东西 | 为什么会被误判 |
+| --- | --- |
+| `winhttp.dll`（BepInEx 的 Doorstop） | 它**替换游戏目录里的系统 DLL** 来注入代码，这正是外挂的典型手法 |
+| `BurgerShopModder.dll` | 运行时修改游戏内存里的数值 |
+| 安装程序 | 往游戏目录写文件、改 `doorstop_config.ini` |
+
+**行为上它确实像外挂**，因为它就是。区别只在于：它是你自愿装的，只改这一个游戏。
+
+### 怎么确认你下到的文件没被改过
+
+**签名和 SHA256 一起用。**
+
+签名证明「这是 S.M.Y.T. 签的」，校验和证明「你拿到的和发布的是同一份」。
+
+```powershell
+# 1. 下载 exe 和 SHA256SUMS.txt 到同一个目录
+# 2. 算你自己的哈希
+Get-FileHash "BurgerShopModder-Installer.exe" -Algorithm SHA256
+# 3. 和 SHA256SUMS.txt 里的那行比，一样就没被动过
+```
+
+v1.0.2 的值是：
+
+```
+fd5a35f215fac573e2a3982afabacee1298bea862a361eb59920ecebbf412da9  BurgerShopModder-Installer.exe
+291a4338ad7438817833fbe8e1669b14b61255c21f2713f9e794cb5b82030107  BurgerShopModder-Trainer.exe
+d49107efd75fccec30e057f701e141f07157359a6136b92b13d4fcc76b157494  BurgerShopModder.dll
+```
+
+**校验和对不上就别运行**，那说明文件在中途被改过。
+
+每次签名都记在 `smyt-signings.ndjson`（同时记签名前后的 SHA256），
+所以「这份是不是我们签的」以后可以查。
+
+### 直说的话
+
+**校验和能证明「你拿到的和我发布的是同一份」，但证明不了「我发布的东西本身是善意的」。**
+这个判断只能你自己做。仓库是全开的，代码都在这儿。
+
 ## 常见问题
 
 ### 装的时候报「此 BackgroundWorker 声明它不报告进度」
