@@ -7745,6 +7745,18 @@ namespace BurgerShopModder
         internal static string DumpBindingsPublic() { return GameBindings.Dump(FindType); }
         internal static bool ManmanEnabledPublic() { return SitPussyAreaEnabled.Value; }
         internal static void SetSitLockPublic(bool on) { SitLockEnabled.Value = on; }
+        /// <summary>供 PresetStore 用：拿到配置对象与它的路径。</summary>
+        internal static BepInEx.Configuration.ConfigFile ConfigPublic()
+        {
+            return _pluginInstance != null ? _pluginInstance.Config : null;
+        }
+
+        internal static string ConfigPathPublic()
+        {
+            try { return _pluginInstance != null ? _pluginInstance.Config.ConfigFilePath : null; }
+            catch { return null; }
+        }
+
         internal static Type FindTypePublic(string n) { return FindType(n); }
         internal static FieldInfo FieldQuietPublic(Type t, string n) { return FieldQuiet(t, n); }
         internal static string ManmanSourcePublic()
@@ -9066,7 +9078,7 @@ namespace BurgerShopModder
         // ---------------------------------------------------------------
         // 面板（分页，避免压住游戏）
         // ---------------------------------------------------------------
-        private static readonly string[] TabNames = { "玩家", "口交", "背榨", "正骑", "换装", "系统" };
+        private static readonly string[] TabNames = { "玩家", "口交", "背榨", "正骑", "换装", "系统", "预设", "关于" };
         private int _tab;
 
         /// <summary>供命令通道切栏（截图验证布局时用）。</summary>
@@ -9077,6 +9089,22 @@ namespace BurgerShopModder
             if (tab < 0 || tab >= TabNames.Length) return "ERR 没有这个页签：" + tab;
             _pluginInstance.RequestTabShot(tab, name);
             return "已请求截图 [" + tab + "] " + TabNames[tab] + " -> " + name + ".png（本帧末尾执行）";
+        }
+
+        /// <summary>供命令通道展开/收起「关于」—— 截图验证用。</summary>
+        /// <summary>供命令通道设定面板滚动位置 —— 截图验证下半部分用。</summary>
+        internal static string ScrollPublic(float y)
+        {
+            if (_pluginInstance == null) return "ERR 插件实例不存在";
+            _pluginInstance._scroll = new Vector2(0f, y);
+            _pluginInstance._pendingScroll = y;
+            return "面板滚动 = " + y.ToString("0");
+        }
+
+        internal static string AboutPublic(bool? on)
+        {
+            if (_pluginInstance == null) return "ERR 插件实例不存在";
+            return "关于现在是独立栏（第 7 栏），不需要展开了";
         }
 
         internal static void SetTabPublic(int i) { if (_pluginInstance != null) _pluginInstance._tab = i; }
@@ -9132,7 +9160,8 @@ namespace BurgerShopModder
             if (tab >= 0 && tab < TabNames.Length) _tab = tab;
             // 把滚动重置到顶部 —— 否则截的是上一次留下的滚动位置，
             // 前后对比就没法复现（踩过：同一栏两次截图内容不一样）。
-            _scroll = Vector2.zero;
+            // 想看下半部分就先发 scroll 命令，它会设 _pendingScroll。
+            _scroll = new Vector2(0f, _pendingScroll);
             _pendingShotName = name;
             _pendingShotTab = tab;
         }
@@ -9155,6 +9184,121 @@ namespace BurgerShopModder
         private Sev _hintSev = Sev.Ok;
         // 单独一个样式，不复用 Hint() 的那个 —— 复用会把所有 Hint 的颜色一起改掉
         private static GUIStyle _statusStyle;
+
+        // ---- 关于 ----
+        // tabshot 会把滚动重置到顶；想截下半部分就先用 scroll 设这个值
+        private float _pendingScroll;
+        private string _aboutHint = "";
+
+        /// <summary>插件版本。与 [BepInPlugin] 里那个字符串保持一致。</summary>
+        internal const string PluginVersion = "1.0.3";
+
+        private const string UrlRepo = "https://github.com/Nesarf/FourNightsAtTheBurgerShop-GameTrainer";
+        private const string UrlBili = "https://space.bilibili.com/11247581";
+        private const string MailAddr = "nesarfpersonal@163.com";
+
+        /// <summary>一行地址：说明 + 值 + 打开 + 复制。</summary>
+        private void AboutRow(string label, string value, bool canOpen = true)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(label, GUILayout.Width(74f));
+            GUILayout.Label(value);
+            // 邮箱不给「打开」：mailto: 在有些环境会弹「选择应用」，或者干脆没反应。
+            // 一个点了没用的按钮比没有这个按钮更让人困惑，所以邮箱只留复制。
+            if (canOpen && GUILayout.Button("打开", GUILayout.Width(52f)))
+            {
+                try { Application.OpenURL(value); _aboutHint = "已用系统浏览器打开"; }
+                catch (Exception e) { _aboutHint = "打不开：" + e.Message; }
+            }
+            if (GUILayout.Button("复制", GUILayout.Width(52f)))
+            {
+                GUIUtility.systemCopyBuffer = value;
+                _aboutHint = "已复制到剪贴板";
+            }
+            GUILayout.EndHorizontal();
+        }
+
+        // ---- 预设 ----
+        private string _presetName = "";
+        private string _presetHint = "";
+        private Vector2 _presetScroll;
+
+        /// <summary>
+        /// 预设栏：把当前全部配置存成命名快照，随时切回去。
+        ///
+        /// 【名字用输入框】输入框在游戏里能用（选项菜单本身就是 IMGUI 的）。
+        /// 【应用会覆盖】所以每次应用前 PresetStore 都会先把当前状态备份一份，
+        /// 提示里会写出备份文件名 —— 覆盖操作必须留退路。
+        /// </summary>
+        private void DrawTabPreset()
+        {
+            Section("配置预设");
+            Hint("把当前的全部设置存成一份快照，以后一键切回去。");
+            Hint("预设只含修改器的设置，不含存档。");
+
+            GUILayout.Space(4f);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("名字", GUILayout.Width(44f));
+            _presetName = GUILayout.TextField(_presetName ?? "", 24);
+            if (GUILayout.Button("存为预设", GUILayout.Width(90f)))
+                _presetHint = PresetStore.Save(_presetName);
+            GUILayout.EndHorizontal();
+            Hint("存的时候如果同名已存在，旧的那份会先自动备份。");
+
+            GUILayout.Space(6f);
+            var names = PresetStore.List();
+            Section("已有预设（" + names.Count + "）");
+            if (names.Count == 0)
+            {
+                Hint("还没有预设。填个名字，点上面的「存为预设」。");
+            }
+            else
+            {
+                _presetScroll = GUILayout.BeginScrollView(_presetScroll, GUILayout.Height(Mathf.Min(230f, 34f * names.Count + 8f)));
+                foreach (string n in names)
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label("  " + n);
+                    if (GUILayout.Button("应用", GUILayout.Width(56f))) _presetHint = PresetStore.Apply(n);
+                    if (GUILayout.Button("覆盖", GUILayout.Width(56f)))
+                    {
+                        _presetName = n;
+                        _presetHint = PresetStore.Save(n);
+                    }
+                    if (GUILayout.Button("删除", GUILayout.Width(56f))) _presetHint = PresetStore.Delete(n);
+                    GUILayout.EndHorizontal();
+                }
+                GUILayout.EndScrollView();
+            }
+
+            GUILayout.Space(4f);
+            Hint("「应用」会覆盖当前全部设置 —— 覆盖前会自动备份一份当前状态，提示里会写出文件名。");
+            if (!string.IsNullOrEmpty(_presetHint)) GUILayout.Label("  " + _presetHint);
+            GUILayout.Space(4f);
+            string dir = PresetStore.DirPath();
+            if (!string.IsNullOrEmpty(dir)) GUILayout.Label("  预设目录：" + dir);
+        }
+
+        /// <summary>「关于」栏。和系统同级 —— 它是给人看的，不属于任何一组功能。</summary>
+        private void DrawTabAbout()
+        {
+            Section("关于");
+            GUILayout.Space(4f);
+            // 原来这里有两行，是同一句话的两遍 —— 加标题时和原本那行撞了。合成一行。
+            GUILayout.Label("Four Nights at the Burger Shop · 数值修改器   v" + PluginVersion);
+            GUILayout.Label("BepInEx 插件 + 配套修改器。游戏本体不会被改动。");
+            GUILayout.Space(4f);
+
+            AboutRow("仓库", UrlRepo);
+            AboutRow("bilibili", UrlBili);
+            AboutRow("反馈邮箱", MailAddr, canOpen: false);
+
+            GUILayout.Space(4f);
+            Hint("遇到问题、想报 bug、想要别的游戏版本的适配 —— 上面三个地方都能找到我。");
+            GUILayout.Label("  本仓库不包含游戏的任何素材或程序集。");
+            if (!string.IsNullOrEmpty(_aboutHint))
+                GUILayout.Label("  " + _aboutHint);
+        }
 
         // ---- 面板背景 ----
         // 默认皮肤的窗口是半透明的，压在花哨的游戏画面上时文字读不清。
@@ -9428,7 +9572,7 @@ namespace BurgerShopModder
                 {
                     GUIStyle st = GUI.skin.button;
                     if (_tab == i) st = HighlightStyle(st);
-                    if (GUILayout.Button(TabNames[i], st, GUILayout.Width(66f))) _tab = i;
+                    if (GUILayout.Button(TabNames[i], st, GUILayout.Width(62f))) _tab = i;
                 }
                 GUILayout.EndHorizontal();
                 GUILayout.Space(4f);
@@ -9442,6 +9586,8 @@ namespace BurgerShopModder
                     case 2: DrawTabOsiri(tabemi); break;
                     case 3: DrawTabSit(tabemi); break;
                     case 4: DrawTabCostumeAndParts(tabemi); break;
+                    case 6: DrawTabPreset(); break;
+                    case 7: DrawTabAbout(); break;
                     default: DrawTabSystemWithCaps(player, clock); break;
                 }
                 GUILayout.EndScrollView();
@@ -11198,7 +11344,7 @@ namespace BurgerShopModder
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Space(6f);
+
             Section("取证 / 自检");
             GUILayout.BeginHorizontal();
             Sub("截图与导出");

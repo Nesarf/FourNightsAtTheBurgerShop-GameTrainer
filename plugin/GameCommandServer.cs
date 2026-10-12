@@ -286,6 +286,61 @@ namespace BurgerShopModder
                     Plugin.SetSitLockPublic(true);
                     Say("[坐姿锁定] 已锁上 —— 进入坐姿后不会再被切走");
                     break;
+                case "preset":
+                    {
+                        // preset list
+                        // preset save <名字>
+                        // preset apply <名字>
+                        // preset del <名字>
+                        // preset dir
+                        string sub = a.Length >= 2 ? a[1].ToLowerInvariant() : "list";
+                        switch (sub)
+                        {
+                            case "list":
+                                {
+                                    var ns = BurgerShopModder.PresetStore.List();
+                                    Say("预设 " + ns.Count + " 个：" + (ns.Count == 0 ? "（无）" : string.Join(" / ", ns.ToArray())));
+                                }
+                                break;
+                            case "dir":
+                                Say("预设目录：" + (BurgerShopModder.PresetStore.DirPath() ?? "(拿不到)"));
+                                break;
+                            case "save":
+                            case "apply":
+                            case "del":
+                                {
+                                    if (a.Length < 3) { Say("ERR preset " + sub + " <名字>"); break; }
+                                    string nm = string.Join(" ", a, 2, a.Length - 2);
+                                    if (sub == "save") Say(BurgerShopModder.PresetStore.Save(nm));
+                                    else if (sub == "apply") Say(BurgerShopModder.PresetStore.Apply(nm));
+                                    else Say(BurgerShopModder.PresetStore.Delete(nm));
+                                }
+                                break;
+                            default:
+                                Say("ERR preset <list|save|apply|del|dir> [名字]");
+                                break;
+                        }
+                        break;
+                    }
+
+                case "scroll":
+                    {
+                        float y = 0f;
+                        if (a.Length >= 2) float.TryParse(a[1], out y);
+                        Say(Plugin.ScrollPublic(y));
+                        break;
+                    }
+
+                case "about":
+                    {
+                        // about        切换
+                        // about on/off 明确设定
+                        string v = a.Length >= 2 ? a[1].ToLowerInvariant() : "";
+                        bool? want = v == "on" ? true : (v == "off" ? false : (bool?)null);
+                        Say(Plugin.AboutPublic(want));
+                        break;
+                    }
+
                 case "tabshot":
                     {
                         // tabshot <页签> <名字>
