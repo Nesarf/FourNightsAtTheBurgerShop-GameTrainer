@@ -1,4 +1,17 @@
-# GitHub 发布用的文案（直接复制粘贴）
+# GitHub 发布用的文案
+
+> **这是内部用的草稿，不是对外文档。**
+>
+> 仓库的 Description、Topics、Release 说明在这里起草，然后手工贴到 GitHub 上。
+> 真正生效的内容在 GitHub 那一侧 —— **这里的内容过期不代表发布内容过期**。
+>
+> 最新的 Release 说明可以从线上拉回来核对：
+> ```
+> gh release view v1.0.4 --repo Nesarf/FourNightsAtTheBurgerShop-GameTrainer --json body --jq .body
+> ```
+>
+> 下面 (3) 那节停在 v1.0.0，**只当模板看**，别直接复制。
+
 
 ---
 

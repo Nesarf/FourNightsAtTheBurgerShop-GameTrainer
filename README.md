@@ -222,7 +222,13 @@ bash tools/gcmd.sh demand status   # 索取/榨取模式状态
 | **某个功能为什么长这样**（逆向发现、踩过的坑） | [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) |
 | 每个版本改了什么 | [`CHANGELOG.md`](CHANGELOG.md) |
 
-`ENGINEERING-NOTES.md` 里有 40 条历史记录，每条都写了**症状 / 根因 / 修法 / 教训**。踩过的坑包括：
+`ENGINEERING-NOTES.md` 有 **40 条**历史记录 + **4 篇**附录 + **4 条** S 系列，
+每条都写了**症状 / 根因 / 修法 / 教训**。开头有一张**目录**，可以直接跳到某一条。
+
+`KNOWN-ISSUES.md` 是它的**派生视图** —— 只列还没解决的，
+每条的状态一行写清，编号与工程笔记对应。
+
+踩过的坑包括：
 
 - Harmony 挂错类会**静默失败**（同一个方法名可能属于不同的类）
 - 游戏的动画有**两种播法**（混合器 `*.State` 与层上 `Play` 的 `*.CurrentState`），调速逻辑两种都要覆盖
