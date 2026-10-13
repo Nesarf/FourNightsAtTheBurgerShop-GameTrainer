@@ -8969,6 +8969,16 @@ namespace BurgerShopModder
         private static void InvokeFloat(object obj, string name, float value, bool twoArgs)
         {
             if (obj == null) return;
+
+            // 【为什么还要再判一次】
+            // 上面那行 `obj == null` 里 obj 的类型是 object，走的是【引用相等】，
+            // 它会绕过 UnityEngine.Object 重载的 ==。
+            // 而 Unity 的物体被销毁之后 C# 引用并不为 null —— 于是场景切换后
+            // 缓存下来的 player 能通过上面那行，然后在 Invoke 里炸掉，
+            // 真实原因还被 TargetInvocationException 包住。
+            // 这就是「调用 HPGaugeChangePercent 失败」那两条偶发警告的来源。
+            if (obj is UnityEngine.Object uo && uo == null) return;
+
             try
             {
                 if (twoArgs)
@@ -8981,11 +8991,33 @@ namespace BurgerShopModder
                     new[] { typeof(float) }, null);
                 if (m != null) m.Invoke(obj, new object[] { value });
             }
+            catch (TargetInvocationException tie) when (tie.InnerException != null)
+            {
+                // 把内层异常挖出来 —— 原来只记外层消息，等于什么也没说。
+                // 每种方法只详细记一次，免得刷屏（这个方法可能每帧被调到）。
+                if (!_invokeWarned.Contains(name))
+                {
+                    _invokeWarned.Add(name);
+                    Exception inner = tie.InnerException;
+                    Log.LogWarning("调用 " + name + " 失败，内层异常："
+                        + inner.GetType().Name + ": " + inner.Message
+                        + "\n  调用对象类型: " + obj.GetType().Name
+                        + "\n  参数: " + value.ToString("0.###") + (twoArgs ? " (双参)" : "")
+                        + "\n  " + (inner.StackTrace ?? "(无栈)"));
+                }
+            }
             catch (Exception e)
             {
-                if (Log != null) Log.LogWarning("调用 " + name + " 失败：" + e.Message);
+                if (!_invokeWarned.Contains(name))
+                {
+                    _invokeWarned.Add(name);
+                    Log.LogWarning("调用 " + name + " 失败：" + e.GetType().Name + ": " + e.Message);
+                }
             }
         }
+
+        /// <summary>已经详细记过警告的方法名。避免每帧重复刷同一条。</summary>
+        private static readonly HashSet<string> _invokeWarned = new HashSet<string>();
 
         // ---------------------------------------------------------------
         // 每秒应用

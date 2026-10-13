@@ -308,7 +308,7 @@ v1.0.4 的值是：
 ```
 a315e8dc628aa7ee030d182cbe83c179e8fe65b5529648eed662824a1610db03  BurgerShopModder-Installer.exe
 8b84eb30b4ba7b4cce7d8415749c1fa773cd4b1ec02177a9b9092e9379d0f2d8  BurgerShopModder-Trainer.exe
-0939edc60a2323d72eb5e790396be00ded107ae8cf4fbd268bb93acee3b712f7  BurgerShopModder.dll
+048ebd361efb10955a5b4fde628fd5f341cb38addd7080cd41996e072c72f581  BurgerShopModder.dll
 ```
 
 **校验和对不上就别运行**，那说明文件在中途被改过。
