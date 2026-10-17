@@ -22,6 +22,7 @@
         <Compile Include="CfgGuard.cs" />
     <Compile Include="GameBindings.cs" />
     <Compile Include="PresetStore.cs" />
+    <Compile Include="GameBuild.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -151,6 +151,17 @@ MenuControl.Timing / BuildMenu
 日志位置：`<游戏目录>/BepInEx/LogOutput.log`。
 搜 `找不到` 或 `挂载` 就能看到哪些没成功。
 
+### 插件会自己核对
+
+不用手动比对。插件启动时会读一次游戏程序集，结论写在两处：
+
+- **日志**：`<游戏目录>/BepInEx/LogOutput.log` 里搜「程序集核对」，
+  会看到「与开发时一致」或「与开发时【不一致】」
+- **面板**：「系统 → 取证 / 自检」的第一行就是它。不一致时会多出一个
+  「看详情（程序集指纹）」按钮，点开能看到期望值与实际值
+
+**只报告，不拦截** —— 版本不同不一定坏，硬拦会把「或许能用」变成「一定不能用」。
+
 ### 如果你的是别的版本
 
 两个办法：
@@ -370,7 +381,7 @@ v1.0.5 的值是：
 ```
 55cc7bd4e0240d820bef1278ec2a4700d5a82acb42f7e7fa361d6d71a807d116  BurgerShopModder-Installer.exe
 b848c9963da5764ced98e0d2b8be41d2aca5b4ec3526c8e6f4541fd464f485cd  BurgerShopModder-Trainer.exe
-b86fc20fa264ead950a8e66dffc704195c949031a78c46b27b103c5732adc591  BurgerShopModder.dll
+4d874674eef22258ecb2f4ebe21f104823c2ab51a6c006f91c2f45a9237c4c15  BurgerShopModder.dll
 ```
 
 **校验和对不上就别运行**，那说明文件在中途被改过。

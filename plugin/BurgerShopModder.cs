@@ -231,6 +231,10 @@ namespace BurgerShopModder
               _pluginInstance = this;
             Log = Logger;
 
+            // 游戏构建核对：这个游戏没有版本号，所以核程序集指纹。
+            // 只报告、不拦截 —— 版本不同不一定坏，硬拦会把"或许能用"变成"一定不能用"。
+            GameBuild.ReportOnce(Log);
+
             // 【配置版本】用于自动迁移。
             //   0 = 还没迁移过（老配置 / 全新配置都算 0）
             //   1 = 已经把「单份键」的值搬到「按姿势三份键」
@@ -9219,6 +9223,7 @@ namespace BurgerShopModder
 
         // ---- 关于 ----
         // tabshot 会把滚动重置到顶；想截下半部分就先用 scroll 设这个值
+        private bool _showBuild;
         private float _pendingScroll;
         private string _aboutHint = "";
 
@@ -11378,6 +11383,20 @@ namespace BurgerShopModder
 
 
             Section("取证 / 自检");
+
+            // ── 游戏构建核对 ──
+            // 这个游戏没有版本号（exe 的 FileVersion 是 Unity 的版本），
+            // 所以只能核程序集指纹。结论放最前面：它决定了后面所有自检的可信度。
+            {
+                string verdict = GameBuild.Summary();
+                GUILayout.Label("  游戏版本：" + verdict);
+                if (!verdict.Contains("一致"))
+                {
+                    if (GUILayout.Button("看详情（程序集指纹）")) _showBuild = !_showBuild;
+                    if (_showBuild) Hint(GameBuild.Detail());
+                }
+            }
+
             GUILayout.BeginHorizontal();
             Sub("截图与导出");
             if (GUILayout.Button("截图存档")) { CaptureSnapshot(); _snapHint = "已保存到 snap_<时间戳>\\"; }
