@@ -376,12 +376,12 @@ Get-FileHash "BurgerShopModder-Installer.exe" -Algorithm SHA256
 # 3. 和 SHA256SUMS.txt 里的那行比，一样就没被动过
 ```
 
-v1.0.5 的值是：
+v1.0.6 的值是：
 
 ```
-55cc7bd4e0240d820bef1278ec2a4700d5a82acb42f7e7fa361d6d71a807d116  BurgerShopModder-Installer.exe
-b848c9963da5764ced98e0d2b8be41d2aca5b4ec3526c8e6f4541fd464f485cd  BurgerShopModder-Trainer.exe
-4d874674eef22258ecb2f4ebe21f104823c2ab51a6c006f91c2f45a9237c4c15  BurgerShopModder.dll
+0fd0b0cc1ad8c770c91ac0603e55691c7f09c1f163f97ccd615f6e648a530a84  BurgerShopModder-Installer.exe
+bda4e32aa3c158d0df65f93c4ba6ca2ba8b36833d88a8f6eb9be9cba31c25a82  BurgerShopModder-Trainer.exe
+a43f5e4e3b24dcdebab3424511134346cfed1f3365d06aa88ae1172b3360ab44  BurgerShopModder.dll
 ```
 
 **校验和对不上就别运行**，那说明文件在中途被改过。
