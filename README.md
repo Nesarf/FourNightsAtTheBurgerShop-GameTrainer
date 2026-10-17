@@ -102,6 +102,68 @@
 
 ---
 
+## 支持的游戏版本
+
+**这款游戏没有版本号。** exe 的 `FileVersion` 填的是 Unity 的版本，`app.info` 里只有厂商名和标题
+（`幻夢劇場シャルロッテ | Four Nights at the Burger Shop`）。
+
+所以下面给的是**可以自己核对的事实**，不是一句"支持 v1.0"。
+
+### 开发与测试对着的这一份
+
+| 项目 | 值 |
+| --- | --- |
+| **引擎** | Unity **2022.1.24f1** (`709dddfb713f`) |
+| **游戏程序集** | `Four Nights at the Burger Shop_Data/Managed/Assembly-CSharp.dll` |
+| **大小** | 293888 字节 |
+| **SHA256** | `9f2c64db2dc259d4347aeb00ef644507a22aee9d5a3b66328cb27babda9a0bb4` |
+
+自己核对：
+
+```powershell
+Get-FileHash "<游戏目录>\Four Nights at the Burger Shop_Data\Managed\Assembly-CSharp.dll" -Algorithm SHA256
+```
+
+**对得上** → 和这个修改器开发时的是同一份，全部功能都是对着它验证的。
+
+**对不上** → 不一定会坏，但**没验证过**。见下。
+
+### 为什么用程序集指纹而不是版本号
+
+这个修改器靠 Harmony 给游戏里的**具名方法**挂补丁：
+
+```
+TabemiControl.Osiri叩かれる / UpdateAtt / Osiri解除 / 頭叩かれるSit
+Live2D_Animation_SitOsiri.Event_OsiriSyasei*
+MenuControl.Timing / BuildMenu
+```
+
+**方法名或签名一变，对应的补丁就挂不上。** 版本号是发布者随便起的，程序集才是真正决定能不能挂的东西。
+
+### 版本对不上会怎样
+
+不会崩，也不会损坏存档。表现是**部分功能无效**：
+
+- 插件启动时会在日志里报「找不到 xxx」或「挂载失败」
+- 面板会显示「挂载点 36 个」这个数字 —— **少了就说明有补丁没挂上**
+- 游戏里按 F9 还能打开面板，但对应那一栏的改动不生效
+
+日志位置：`<游戏目录>/BepInEx/LogOutput.log`。
+搜 `找不到` 或 `挂载` 就能看到哪些没成功。
+
+### 如果你的是别的版本
+
+两个办法：
+
+1. **告诉我**（仓库 Issue / bilibili / 邮箱都行）—— 如果能拿到那份程序集，
+   把方法名和签名对一遍就能知道差在哪里
+2. **自己看** —— 面板的「系统 → 取证 / 自检」里有绑定检查，会把没挂上的列出来
+
+> 这个游戏有 DLC 和不同发布渠道的版本。**不同渠道的构建可能不一样**，
+> 如果你是别的来源，先核对上面那个 SHA256 再装。
+
+---
+
 ## 里面有什么
 
 | 目录 | 内容 |
