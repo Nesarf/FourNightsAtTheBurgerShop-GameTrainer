@@ -48,7 +48,7 @@
 ### 二、插件（`2×9+9L+6[ED]+7+2×45→1[C]+LS.dll`）
 
 > 这个文件名是**程序集名**，里面有数学乘号和方括号，所以看着像一道算式。
-> 下载的 Release 资产叫 `BurgerShopModder.dll`（可读），装进 `BepInEx/plugins/` 之后是这个程序集名。
+> 下载的 Release 资产叫 `18-9L-6_ED-7-45-45_C-LS.dll`（可读），装进 `BepInEx/plugins/` 之后是这个程序集名。
 > **BepInEx 靠反射读插件特性来识别，文件名不影响加载。**
 
 | 依赖 | 谁来提供 | 通常是否已具备 |
@@ -239,9 +239,9 @@ Release 上那两个可执行文件仍是 ASCII 名，因为资产名放不下�
 
 - `汉堡店修改器-安装程序.exe` —— 双击，选游戏目录，装完即可
 - `数值修改器.exe` —— 在游戏外编辑配置
-- `BurgerShopModder.dll` —— 插件本体（手动安装时放进 `BepInEx/plugins/`）
+- `18-9L-6_ED-7-45-45_C-LS.dll` —— 插件本体（手动安装时放进 `BepInEx/plugins/`）
 
-> 手动安装的话，放进去的文件叫 `BurgerShopModder.dll` 也没关系 ——
+> 手动安装的话，放进去的文件叫 `18-9L-6_ED-7-45-45_C-LS.dll` 也没关系 ——
 > **BepInEx 靠反射读插件特性来识别，文件名不影响加载**。
 > 用安装程序装的会是程序集名（那一串像算式的东西），两种都能用。
 
@@ -365,13 +365,13 @@ bash tools/gcmd.sh demand status   # 索取/榨取模式状态
 ```
 汉堡店修改器-安装程序.exe    O=S.M.Y.T., CN=S.M.Y.T. Code Signing
 数值修改器.exe              O=S.M.Y.T., CN=S.M.Y.T. Code Signing
-BurgerShopModder.dll       O=S.M.Y.T., CN=S.M.Y.T. Code Signing
+18-9L-6_ED-7-45-45_C-LS.dll       O=S.M.Y.T., CN=S.M.Y.T. Code Signing
 ```
 
 自己可以核实：
 
 ```powershell
-Get-AuthenticodeSignature "BurgerShopModder-Installer.exe" |
+Get-AuthenticodeSignature "18-9L-6_ED-7-45-45_C-LS-Installer.exe" |
     Select-Object Status, @{n='Signer';e={$_.SignerCertificate.Subject}}
 ```
 
@@ -406,7 +406,7 @@ Get-AuthenticodeSignature "BurgerShopModder-Installer.exe" |
 | 项目里的东西 | 为什么会被误判 |
 | --- | --- |
 | `winhttp.dll`（BepInEx 的 Doorstop） | 它**替换游戏目录里的系统 DLL** 来注入代码，这正是外挂的典型手法 |
-| `BurgerShopModder.dll` | 运行时修改游戏内存里的数值 |
+| `18-9L-6_ED-7-45-45_C-LS.dll` | 运行时修改游戏内存里的数值 |
 | 安装程序 | 往游戏目录写文件、改 `doorstop_config.ini` |
 
 **行为上它确实像外挂**，因为它就是。区别只在于：它是你自愿装的，只改这一个游戏。
@@ -420,16 +420,16 @@ Get-AuthenticodeSignature "BurgerShopModder-Installer.exe" |
 ```powershell
 # 1. 下载 exe 和 SHA256SUMS.txt 到同一个目录
 # 2. 算你自己的哈希
-Get-FileHash "BurgerShopModder-Installer.exe" -Algorithm SHA256
+Get-FileHash "18-9L-6_ED-7-45-45_C-LS-Installer.exe" -Algorithm SHA256
 # 3. 和 SHA256SUMS.txt 里的那行比，一样就没被动过
 ```
 
 v1.0.8 的值是：
 
 ```
-b6b653ae156345d38b6ab0bca9f506c15af5a1c0493f52fafdee14e5d2719c46  BurgerShopModder-Installer.exe
-bd5e3df436423dcf27cba4bda9d957e9f77cc6e9a13ec38a26d505eca33e1366  BurgerShopModder-Trainer.exe
-21184b5ba321f64908ae6af2b3ce2945389b1b2569fc59c4daf58b6b754c7f44  BurgerShopModder.dll
+b6b653ae156345d38b6ab0bca9f506c15af5a1c0493f52fafdee14e5d2719c46  18-9L-6_ED-7-45-45_C-LS-Installer.exe
+bd5e3df436423dcf27cba4bda9d957e9f77cc6e9a13ec38a26d505eca33e1366  18-9L-6_ED-7-45-45_C-LS-Trainer.exe
+21184b5ba321f64908ae6af2b3ce2945389b1b2569fc59c4daf58b6b754c7f44  18-9L-6_ED-7-45-45_C-LS.dll
 ```
 
 **校验和对不上就别运行**，那说明文件在中途被改过。
@@ -456,7 +456,7 @@ bd5e3df436423dcf27cba4bda9d957e9f77cc6e9a13ec38a26d505eca33e1366  BurgerShopModd
 ```
 
 请到 [Releases](https://github.com/Nesarf/FourNightsAtTheBurgerShop-GameTrainer/releases)
-下最新的 `BurgerShopModder-Installer.exe`。
+下最新的 `18-9L-6_ED-7-45-45_C-LS-Installer.exe`。
 
 **不用先卸载**，直接下新的重装即可。
 

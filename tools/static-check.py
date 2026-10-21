@@ -229,11 +229,12 @@ else:
     for _h, _name in _sha_lines:
         # README 里用的是 Release 资产名（ASCII），对应 dist 里的中文原名
         _cand = {
-            'BurgerShopModder-Installer.exe': '汉堡店修改器-安装程序.exe',
-            'BurgerShopModder-Trainer.exe': '数值修改器.exe',
-            # Release 资产叫 BurgerShopModder.dll（可读），
-            # dist 里的实际文件是程序集名（那串含乘号与方括号的）
-            'BurgerShopModder.dll': '2×9+9L+6[ED]+7+2×45→1[C]+LS.dll',
+            "18-9L-6_ED-7-45-45_C-LS-Installer.exe": '汉堡店修改器-安装程序.exe',
+            "18-9L-6_ED-7-45-45_C-LS-Trainer.exe": '数值修改器.exe',
+            # README 里的校验和写的是【Release 资产名】（ASCII），
+            # dist 里的实际文件是【程序集名】（含乘号与方括号）。
+            # 两者刻意不同：资产名要能上传，程序集名要能表达完整意思。
+            "18-9L-6_ED-7-45-45_C-LS.dll": "2×9+9L+6[ED]+7+2×45→1[C]+LS.dll",
         }.get(_name, _name)
         _p = ROOT / 'dist' / _cand
         if not _p.exists():

@@ -122,11 +122,11 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path out | Out-Null
           # 安装程序与修改器用 ASCII 名另存一份（Release 资产必须 ASCII）
-          Copy-Item 'dist/汉堡店修改器-安装程序.exe' 'out/BurgerShopModder-Installer.exe'
-          Copy-Item 'dist/数值修改器.exe'            'out/BurgerShopModder-Trainer.exe'
+          Copy-Item 'dist/汉堡店修改器-安装程序.exe' "out/18-9L-6_ED-7-45-45_C-LS-Installer.exe"
+          Copy-Item 'dist/数值修改器.exe'            "out/18-9L-6_ED-7-45-45_C-LS-Trainer.exe"
           $plug = '2' + [char]0x00D7 + '9+9L+6[ED]+7+2' + [char]0x00D7 + '45' + [char]0x2192 + '1[C]+LS.dll'
           # 发布资产名保持可读的 BurgerShopModder.dll，只有源路径是程序集名
-          Copy-Item -LiteralPath (Join-Path 'dist' $plug) 'out/BurgerShopModder.dll'
+          Copy-Item -LiteralPath (Join-Path 'dist' $plug) "out/18-9L-6_ED-7-45-45_C-LS.dll"
           Copy-Item 'dist/使用说明.md'               'out/Manual-zh-CN.md'
           
           # 【只列 out/ 里的资产】
@@ -189,9 +189,9 @@ jobs:
         run: |
           $tag = $env:GITHUB_REF_NAME
           $assets = @(
-            'out/BurgerShopModder-Installer.exe',
-            'out/BurgerShopModder-Trainer.exe',
-            'out/BurgerShopModder.dll',
+            "out/18-9L-6_ED-7-45-45_C-LS-Installer.exe",
+            "out/18-9L-6_ED-7-45-45_C-LS-Trainer.exe",
+            "out/18-9L-6_ED-7-45-45_C-LS.dll",
             'out/SHA256SUMS.txt'
           )
           gh release view $tag 2>$null
