@@ -22,11 +22,6 @@
 > 「汉堡店四个夜晚 数值修改器」「burger shop 修改器」—— 找的就是这里。
 > 日文原名是《Four Nights at the Burger Shop ～ハンバーガー食べながら食べられるミニゲーム～》。
 
-> **本仓库曾用名：`FourNightsAtTheBurgerShop-GameTrainer`。**
-> 2026-10 改名为 `BurgerShop-FourNights-Mod`（把 `BurgerShop` 提到最前，更容易被搜到）。
-> 旧地址 GitHub 仍然重定向到这里，所以老的链接不会失效。
-> 如果你是从「FourNightsAtTheBurgerShop-GameTrainer」这个名字找过来的，就是这里。
-
 > **本仓库不包含游戏的任何素材或程序集。**
 > 编译需要你**自己从游戏安装目录**取引用 DLL（见下方「编译」）。
 > 这是有意为之 —— 游戏资源受版权保护，不应该被再分发。
@@ -417,7 +412,7 @@ c1aa0aade7c4797f3b343bbc04a6cbee9e8cc308ba79906e77e51b134237b463  BurgerShopModd
 请修改 WorkerReportsProgress 以声明它报告进度。
 ```
 
-请到 [Releases](https://github.com/Nesarf/BurgerShop-FourNights-Mod/releases)
+请到 [Releases](https://github.com/Nesarf/FourNightsAtTheBurgerShop-GameTrainer/releases)
 下最新的 `BurgerShopModder-Installer.exe`。
 
 **不用先卸载**，直接下新的重装即可。

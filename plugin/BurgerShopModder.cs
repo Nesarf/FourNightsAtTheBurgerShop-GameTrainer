@@ -9230,7 +9230,7 @@ namespace BurgerShopModder
         /// <summary>插件版本。与 [BepInPlugin] 里那个字符串保持一致。</summary>
         internal const string PluginVersion = "1.0.7";
 
-        private const string UrlRepo = "https://github.com/Nesarf/BurgerShop-FourNights-Mod";
+        private const string UrlRepo = "https://github.com/Nesarf/FourNightsAtTheBurgerShop-GameTrainer";
         private const string UrlBili = "https://space.bilibili.com/11247581";
         private const string MailAddr = "nesarfpersonal@163.com";
 
