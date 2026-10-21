@@ -196,8 +196,19 @@ jobs:
           )
           gh release view $tag 2>$null
           if ($LASTEXITCODE -eq 0) {
-            Write-Host "Release $tag 已存在 → 只更新资产"
-            gh release upload $tag @assets --clobber
-          } else {
-            gh release create $tag @assets --title "数值修改器 $tag" --notes-file notes.md
+            # 【不覆盖已存在的 release】
+            # 这个 workflow 只做 dotnet build，**不签名**（没有证书）。
+            # 而正式发布的资产是人工签名后上传的 —— 如果这里 clobber，
+            # 那些带签名的文件会被未签名的构建产物替换掉。
+            # 所以已存在就什么都不做，让人工发布的结果保持原样。
+            Write-Host "Release $tag 已存在 —— 跳过。"
+            Write-Host "  正式资产由人工签名后上传；这里不覆盖，避免把签名版本换掉。"
+            exit 0
           }
+          
+          # 兜底：tag 打了但没人建 release 时，先建一个能用的。
+          # 明确标注未签名，免得有人以为它和手动发布的一样。
+          $banner = "> **注意：本页资产由 CI 构建，未经代码签名。**`n> 正式发布请以带 S.M.Y.T. 签名的版本为准。`n`n"
+          Set-Content -Encoding utf8 notes-final.md -Value $banner
+          Get-Content notes.md -Raw | Add-Content -Encoding utf8 notes-final.md
+          gh release create $tag @assets --title "数值修改器 $tag" --notes-file notes-final.md
