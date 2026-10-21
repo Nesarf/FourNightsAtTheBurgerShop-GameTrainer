@@ -384,9 +384,9 @@ Get-FileHash "BurgerShopModder-Installer.exe" -Algorithm SHA256
 v1.0.7 的值是：
 
 ```
-76c8ee0f6a94639d09744de16569a58d208df8c388d1cf0d2ec3696390641558  BurgerShopModder-Installer.exe
-e3d1b162503e07534f9de5ee35ee4cf49735d51d4e4b8cfa27eb7477211f599f  BurgerShopModder-Trainer.exe
-c1aa0aade7c4797f3b343bbc04a6cbee9e8cc308ba79906e77e51b134237b463  BurgerShopModder.dll
+9167ab03468d836e9cc698f4b3c2f349912d905db98fc2a8793320dd9f14042e  BurgerShopModder-Installer.exe
+a10ab16ff2af0b1deeaed1efee62eb478b5d786bb60d60d2ff05b962ef5e348b  BurgerShopModder-Trainer.exe
+24c4588c785f238b4a12cc0c62f1883a9b03bab8ffa4e28934da4ef03a15377b  BurgerShopModder.dll
 ```
 
 **校验和对不上就别运行**，那说明文件在中途被改过。
