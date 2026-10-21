@@ -206,6 +206,10 @@ MenuControl.Timing / BuildMenu
 - `数值修改器.exe` —— 在游戏外编辑配置
 - `BurgerShopModder.dll` —— 插件本体（手动安装时放进 `BepInEx/plugins/`）
 
+> 手动安装的话，放进去的文件叫 `BurgerShopModder.dll` 也没关系 ——
+> **BepInEx 靠反射读插件特性来识别，文件名不影响加载**。
+> 用安装程序装的会是程序集名（那一串像算式的东西），两种都能用。
+
 ---
 
 ## 编译
