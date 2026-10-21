@@ -12,10 +12,15 @@
 
 ---
 
-# Four Nights at the Burger Shop · 数值修改器
+# 汉堡店的四个夜晚（Four Nights at the Burger Shop）· 数值修改器
 
 给《Four Nights at the Burger Shop ～ハンバーガー食べながら食べられるミニゲーム～》做的
 **BepInEx 插件 + 配套修改器**。游戏本体不会被改动。
+
+> **这个游戏在中文社区也写作「汉堡店的四个夜晚」。**
+> 如果你搜的是「汉堡店的四个夜晚修改器」「Four Nights at the Burger Shop 修改器」
+> 「汉堡店四个夜晚 数值修改器」「burger shop 修改器」—— 找的就是这里。
+> 日文原名是《Four Nights at the Burger Shop ～ハンバーガー食べながら食べられるミニゲーム～》。
 
 > **本仓库不包含游戏的任何素材或程序集。**
 > 编译需要你**自己从游戏安装目录**取引用 DLL（见下方「编译」）。
