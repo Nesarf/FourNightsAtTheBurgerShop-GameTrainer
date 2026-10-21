@@ -7,7 +7,7 @@
 >
 > 最新的 Release 说明可以从线上拉回来核对：
 > ```
-> gh release view v1.0.4 --repo Nesarf/FourNightsAtTheBurgerShop-GameTrainer --json body --jq .body
+> gh release view v1.0.4 --repo Nesarf/BurgerShop-FourNights-Mod --json body --jq .body
 > ```
 >
 > 下面 (3) 那节停在 v1.0.0，**只当模板看**，别直接复制。

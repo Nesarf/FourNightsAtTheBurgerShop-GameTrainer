@@ -412,7 +412,7 @@ a43f5e4e3b24dcdebab3424511134346cfed1f3365d06aa88ae1172b3360ab44  BurgerShopModd
 请修改 WorkerReportsProgress 以声明它报告进度。
 ```
 
-请到 [Releases](https://github.com/Nesarf/FourNightsAtTheBurgerShop-GameTrainer/releases)
+请到 [Releases](https://github.com/Nesarf/BurgerShop-FourNights-Mod/releases)
 下最新的 `BurgerShopModder-Installer.exe`。
 
 **不用先卸载**，直接下新的重装即可。
