@@ -121,20 +121,23 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path out | Out-Null
-          $lines = @()
-          foreach ($f in Get-ChildItem dist -File | Where-Object { $_.Extension -in @('.dll', '.exe') }) {
-            $h = (Get-FileHash -LiteralPath $f.FullName -Algorithm SHA256).Hash.ToLower()
-            $lines += "$h  $($f.Name)"
-          }
           # 安装程序与修改器用 ASCII 名另存一份（Release 资产必须 ASCII）
           Copy-Item 'dist/汉堡店修改器-安装程序.exe' 'out/BurgerShopModder-Installer.exe'
           Copy-Item 'dist/数值修改器.exe'            'out/BurgerShopModder-Trainer.exe'
           $plug = '2' + [char]0x00D7 + '9+9L+6[ED]+7+2' + [char]0x00D7 + '45' + [char]0x2192 + '1[C]+LS.dll'
           # 发布资产名保持可读的 BurgerShopModder.dll，只有源路径是程序集名
           Copy-Item -LiteralPath (Join-Path 'dist' $plug) 'out/BurgerShopModder.dll'
-          Copy-Item 'dist/使用说明.md'               'out/README-使用说明.md'
-          $lines += (Get-FileHash -LiteralPath 'out/BurgerShopModder-Installer.exe' -Algorithm SHA256).Hash.ToLower() + '  BurgerShopModder-Installer.exe'
-          $lines += (Get-FileHash -LiteralPath 'out/BurgerShopModder-Trainer.exe'   -Algorithm SHA256).Hash.ToLower() + '  BurgerShopModder-Trainer.exe'
+          Copy-Item 'dist/使用说明.md'               'out/Manual-zh-CN.md'
+          
+          # 【只列 out/ 里的资产】
+          # 原来遍历 dist/ 算哈希，但 dist/ 里可能有上一步 artifact 下载回来的旧文件 ——
+          # v1.0.8 就因此把 v1.0.7 的旧哈希写进了表里，用户照着核对会以为文件被改过。
+          # out/ 里就是最终要发布的四个文件，不会有残留。
+          $lines = @()
+          foreach ($f in Get-ChildItem -LiteralPath 'out' -File | Where-Object { $_.Name -ne 'SHA256SUMS.txt' } | Sort-Object Name) {
+            $h = (Get-FileHash -LiteralPath $f.FullName -Algorithm SHA256).Hash.ToLower()
+            $lines += "$h  $($f.Name)"
+          }
           $lines | Set-Content -Encoding utf8 out/SHA256SUMS.txt
           Write-Host "校验和："
           $lines | ForEach-Object { Write-Host "  $_" }
