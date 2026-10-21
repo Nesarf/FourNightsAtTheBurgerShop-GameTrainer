@@ -184,6 +184,41 @@ MenuControl.Timing / BuildMenu
 
 ---
 
+## 关于插件那个名字
+
+装进 `BepInEx/plugins/` 之后的文件名不是英文词，是一串记号：
+
+```
+2×9+9L+6[ED]+7+2×45→1[C]+LS
+```
+
+它是 **Big Smoke 在 GTA San Andreas 里那次点单**的紧凑记法。原台词：
+
+> I'll have two number 9s, a number 9 large, a number 6 with extra dip,
+> a number 7, two number 45s, one with cheese, and a large soda.
+
+逐项对应：
+
+| 台词 | 记号 |
+| --- | --- |
+| two number 9s | `2` 乘 `9` |
+| a number 9 large | `+ 9L` |
+| a number 6 with extra dip | `+ 6[ED]`（ED = extra dip） |
+| a number 7 | `+ 7` |
+| two number 45s | `2` 乘 `45` |
+| one with cheese | 箭头指向 `1[C]`（C = cheese） |
+| and a large soda | `+ LS`（LS = large soda） |
+
+译成中文就是：**两个 9 号、一个 9 号加大、一个 6 号加双份酱、一个 7 号、
+两个 45 号其中一个加奶酪、一大杯汽水。**
+
+为什么叫这个 —— 啊，就是个梗，没什么道理。
+
+**不影响使用**：BepInEx 靠反射读插件特性来识别，文件名随便叫什么都行。
+Release 上那两个可执行文件仍是 ASCII 名，因为资产名放不下这些字符。
+
+---
+
 ## 里面有什么
 
 | 目录 | 内容 |
