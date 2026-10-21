@@ -2,13 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
-    <AssemblyName>BurgerShopModder</AssemblyName>
+    <AssemblyName>2×9+9L+6[ED]+7+2×45→1[C]+LS</AssemblyName>
     <RootNamespace>BurgerShopModder</RootNamespace>
     <LangVersion>7.3</LangVersion>
     <OutputPath>..\dist\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <Version>1.0.7</Version>
+    <Version>1.0.8</Version>
     <Product>Four Nights at the Burger Shop 数值修改器</Product>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <DebugType>none</DebugType>

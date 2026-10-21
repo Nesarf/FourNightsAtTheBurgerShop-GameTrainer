@@ -36,7 +36,10 @@ $cfgDir  = Join-Path $bepSrc 'BepInEx\config'
 New-Item -ItemType Directory -Path $plugDir -Force | Out-Null
 New-Item -ItemType Directory -Path $cfgDir  -Force | Out-Null
 
-Copy-Item (Join-Path $dist 'BurgerShopModder.dll') $plugDir -Force
+# 插件文件名含数学乘号与方括号，用 [char] 构造，不依赖脚本编码；
+# 拷贝必须 -LiteralPath，否则 [ED] / [C] 会被当成通配字符类
+$plugName = '2' + [char]0x00D7 + '9+9L+6[ED]+7+2' + [char]0x00D7 + '45' + [char]0x2192 + '1[C]+LS.dll'
+Copy-Item -LiteralPath (Join-Path $dist $plugName) -Destination $plugDir -Force
 
 # 默认配置：带完整注释，装好即可被编辑器读取
 $gameCfg = Join-Path $game 'BepInEx\config\nesarf.burgershop.modder.cfg'

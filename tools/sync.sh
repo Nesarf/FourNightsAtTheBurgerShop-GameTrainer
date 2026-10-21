@@ -53,7 +53,7 @@ CODE=(
   trainer/BurgerShopTrainer.cs
   trainer/BurgerShopTrainer.csproj
   tools/static-check.py
-  dist/BurgerShopModder.dll
+  dist/2×9+9L+6[ED]+7+2×45→1[C]+LS.dll
 )
 
 # installer/：曾经两边都有对方没有的东西（发布副本有清理时加的注释，

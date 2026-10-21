@@ -65,21 +65,25 @@ jobs:
       - name: 确认 dist/ 产物齐全
         shell: pwsh
         run: |
+          # 插件文件名含数学乘号与方括号：用变量构造，
+          # 且 Test-Path / Copy-Item 一律 -LiteralPath（-Path 会把方括号当通配字符类）
+          $plug = '2' + [char]0x00D7 + '9+9L+6[ED]+7+2' + [char]0x00D7 + '45' + [char]0x2192 + '1[C]+LS.dll'
+
           $want = @(
-            'dist/BurgerShopModder.dll',
+            (Join-Path 'dist' $plug),
             'dist/数值修改器.exe',
             'dist/汉堡店修改器-安装程序.exe',
             'dist/使用说明.md'
           )
           $miss = @()
-          foreach ($w in $want) { if (-not (Test-Path $w)) { $miss += $w } }
+          foreach ($w in $want) { if (-not (Test-Path -LiteralPath $w)) { $miss += $w } }
           if ($miss.Count -gt 0) {
             Write-Host "::error::dist/ 缺文件："
             $miss | ForEach-Object { Write-Host "  $_" }
             exit 1
           }
           # 确认 exe/dll 是有效 PE（以 MZ 开头）
-          foreach ($p in @('dist/BurgerShopModder.dll', 'dist/数值修改器.exe', 'dist/汉堡店修改器-安装程序.exe')) {
+          foreach ($p in @((Join-Path 'dist' $plug), 'dist/数值修改器.exe', 'dist/汉堡店修改器-安装程序.exe')) {
             $b = [IO.File]::ReadAllBytes($p)
             if ($b[0] -ne 0x4D -or $b[1] -ne 0x5A) { Write-Host "::error::$p 不是有效 PE"; exit 1 }
             $kb = [math]::Round($b.Length / 1KB)
@@ -125,7 +129,9 @@ jobs:
           # 安装程序与修改器用 ASCII 名另存一份（Release 资产必须 ASCII）
           Copy-Item 'dist/汉堡店修改器-安装程序.exe' 'out/BurgerShopModder-Installer.exe'
           Copy-Item 'dist/数值修改器.exe'            'out/BurgerShopModder-Trainer.exe'
-          Copy-Item 'dist/BurgerShopModder.dll'      'out/BurgerShopModder.dll'
+          $plug = '2' + [char]0x00D7 + '9+9L+6[ED]+7+2' + [char]0x00D7 + '45' + [char]0x2192 + '1[C]+LS.dll'
+          # 发布资产名保持可读的 BurgerShopModder.dll，只有源路径是程序集名
+          Copy-Item -LiteralPath (Join-Path 'dist' $plug) 'out/BurgerShopModder.dll'
           Copy-Item 'dist/使用说明.md'               'out/README-使用说明.md'
           $lines += (Get-FileHash 'out/BurgerShopModder-Installer.exe' -Algorithm SHA256).Hash.ToLower() + '  BurgerShopModder-Installer.exe'
           $lines += (Get-FileHash 'out/BurgerShopModder-Trainer.exe'   -Algorithm SHA256).Hash.ToLower() + '  BurgerShopModder-Trainer.exe'

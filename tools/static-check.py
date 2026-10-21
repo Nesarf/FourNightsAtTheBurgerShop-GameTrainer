@@ -231,7 +231,9 @@ else:
         _cand = {
             'BurgerShopModder-Installer.exe': '汉堡店修改器-安装程序.exe',
             'BurgerShopModder-Trainer.exe': '数值修改器.exe',
-            'BurgerShopModder.dll': 'BurgerShopModder.dll',
+            # Release 资产叫 BurgerShopModder.dll（可读），
+            # dist 里的实际文件是程序集名（那串含乘号与方括号的）
+            'BurgerShopModder.dll': '2×9+9L+6[ED]+7+2×45→1[C]+LS.dll',
         }.get(_name, _name)
         _p = ROOT / 'dist' / _cand
         if not _p.exists():

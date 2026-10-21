@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -15,8 +15,14 @@ namespace BurgerShopInstaller
     internal static class Program
     {
         internal const string AppTitle = "汉堡店 数值修改器 · 安装程序";
-        internal const string Version = "1.0.7";
+        internal const string Version = "1.0.8";
         internal const string GameExe = "Four Nights at the Burger Shop.exe";
+
+        /// <summary>插件的 BepInPlugin GUID。用来识别"这个 dll 是我们的旧版"。</summary>
+        internal const string PluginGuid = "nesarf.burgershop.modder";
+
+        /// <summary>旧版用过的插件文件名。换程序集名之后它们会变成遗留文件。</summary>
+        internal static readonly string[] LegacyPluginNames = { "BurgerShopModder.dll" };
         internal const string GameFolderName = "Four Nights at the Burger Shop ～ハンバーガー食べながら食べられるミニゲーム～";
         internal const string PayloadResource = "payload.zip";
         internal const string ManifestName = "burger-shop-mod.installed";
@@ -245,8 +251,66 @@ namespace BurgerShopInstaller
         }
 
         /// <summary>安装（或重装）。返回写入的文件数。</summary>
+        /// <summary>
+        /// 删掉旧版遗留的插件文件。
+        ///
+        /// 判据是文件里有没有我们的 GUID 字符串 —— 只看文件名不够，
+        /// 用户可能手动复制过别的东西放在那儿。
+        /// 删之前先确认，确认不了就跳过并保留（宁可留一个警告，不要误删别人的文件）。
+        /// </summary>
+        private static void CleanupLegacyPlugins(string root, Action<Step> report)
+        {
+            foreach (string name in Program.LegacyPluginNames)
+            {
+                string path = Path.Combine(Path.Combine(Path.Combine(root, "BepInEx"), "plugins"), name);
+                try
+                {
+                    if (!File.Exists(path)) continue;
+                    if (!LooksLikeOurs(path)) continue;
+
+                    // 先改名为 .old 再删 —— 万一判断错了还能找回来
+                    string bak = path + ".old";
+                    if (File.Exists(bak)) File.Delete(bak);
+                    File.Move(path, bak);
+                    File.Delete(bak);
+
+                    report?.Invoke(new Step { Text = "清理旧版插件 " + name, Percent = 3 });
+                }
+                catch
+                {
+                    // 删不掉不影响安装本身（文件被占用时会走到这里）
+                }
+            }
+        }
+
+        /// <summary>这个文件里有没有我们的插件 GUID（字符串常量以 UTF-16 存在 #US 堆里）。</summary>
+        private static bool LooksLikeOurs(string path)
+        {
+            try
+            {
+                byte[] bytes = File.ReadAllBytes(path);
+                // UTF-16 LE 下的 GUID 字节序列
+                byte[] needle = Encoding.Unicode.GetBytes(Program.PluginGuid);
+                for (int i = 0; i + needle.Length <= bytes.Length; i++)
+                {
+                    bool hit = true;
+                    for (int k = 0; k < needle.Length; k++)
+                    {
+                        if (bytes[i + k] != needle[k]) { hit = false; break; }
+                    }
+                    if (hit) return true;
+                }
+            }
+            catch { }
+            return false;
+        }
+
         internal static int Install(string root, Action<Step> report)
         {
+            // 【先清理旧版】**必须在解包之前** —— 否则装完才清，
+            // 中途失败会留下两个插件同时在场的状态。
+            CleanupLegacyPlugins(root, report);
+
             Assembly asm = Assembly.GetExecutingAssembly();
             using (Stream raw = asm.GetManifestResourceStream(Program.PayloadResource))
             {

@@ -45,7 +45,11 @@
 **.NET Framework 4.7.2 下载**（只有 Win7 / 8.1 需要）：
 [离线安装包](https://dotnet.microsoft.com/download/dotnet-framework/net472)
 
-### 二、插件（`BurgerShopModder.dll`）
+### 二、插件（`2×9+9L+6[ED]+7+2×45→1[C]+LS.dll`）
+
+> 这个文件名是**程序集名**，里面有数学乘号和方括号，所以看着像一道算式。
+> 下载的 Release 资产叫 `BurgerShopModder.dll`（可读），装进 `BepInEx/plugins/` 之后是这个程序集名。
+> **BepInEx 靠反射读插件特性来识别，文件名不影响加载。**
 
 | 依赖 | 谁来提供 | 通常是否已具备 |
 | --- | --- | --- |
@@ -381,12 +385,12 @@ Get-FileHash "BurgerShopModder-Installer.exe" -Algorithm SHA256
 # 3. 和 SHA256SUMS.txt 里的那行比，一样就没被动过
 ```
 
-v1.0.7 的值是：
+v1.0.8 的值是：
 
 ```
-9167ab03468d836e9cc698f4b3c2f349912d905db98fc2a8793320dd9f14042e  BurgerShopModder-Installer.exe
-a10ab16ff2af0b1deeaed1efee62eb478b5d786bb60d60d2ff05b962ef5e348b  BurgerShopModder-Trainer.exe
-24c4588c785f238b4a12cc0c62f1883a9b03bab8ffa4e28934da4ef03a15377b  BurgerShopModder.dll
+b6b653ae156345d38b6ab0bca9f506c15af5a1c0493f52fafdee14e5d2719c46  BurgerShopModder-Installer.exe
+bd5e3df436423dcf27cba4bda9d957e9f77cc6e9a13ec38a26d505eca33e1366  BurgerShopModder-Trainer.exe
+21184b5ba321f64908ae6af2b3ce2945389b1b2569fc59c4daf58b6b754c7f44  BurgerShopModder.dll
 ```
 
 **校验和对不上就别运行**，那说明文件在中途被改过。
