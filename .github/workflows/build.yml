@@ -123,7 +123,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path out | Out-Null
           $lines = @()
           foreach ($f in Get-ChildItem dist -File | Where-Object { $_.Extension -in @('.dll', '.exe') }) {
-            $h = (Get-FileHash $f.FullName -Algorithm SHA256).Hash.ToLower()
+            $h = (Get-FileHash -LiteralPath $f.FullName -Algorithm SHA256).Hash.ToLower()
             $lines += "$h  $($f.Name)"
           }
           # 安装程序与修改器用 ASCII 名另存一份（Release 资产必须 ASCII）
@@ -133,8 +133,8 @@ jobs:
           # 发布资产名保持可读的 BurgerShopModder.dll，只有源路径是程序集名
           Copy-Item -LiteralPath (Join-Path 'dist' $plug) 'out/BurgerShopModder.dll'
           Copy-Item 'dist/使用说明.md'               'out/README-使用说明.md'
-          $lines += (Get-FileHash 'out/BurgerShopModder-Installer.exe' -Algorithm SHA256).Hash.ToLower() + '  BurgerShopModder-Installer.exe'
-          $lines += (Get-FileHash 'out/BurgerShopModder-Trainer.exe'   -Algorithm SHA256).Hash.ToLower() + '  BurgerShopModder-Trainer.exe'
+          $lines += (Get-FileHash -LiteralPath 'out/BurgerShopModder-Installer.exe' -Algorithm SHA256).Hash.ToLower() + '  BurgerShopModder-Installer.exe'
+          $lines += (Get-FileHash -LiteralPath 'out/BurgerShopModder-Trainer.exe'   -Algorithm SHA256).Hash.ToLower() + '  BurgerShopModder-Trainer.exe'
           $lines | Set-Content -Encoding utf8 out/SHA256SUMS.txt
           Write-Host "校验和："
           $lines | ForEach-Object { Write-Host "  $_" }
