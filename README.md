@@ -12,6 +12,10 @@
 
 ---
 
+**中文** | [**English**](README.en.md)
+
+---
+
 # 汉堡店的四个夜晚（Four Nights at the Burger Shop）· 数值修改器
 
 给《Four Nights at the Burger Shop ～ハンバーガー食べながら食べられるミニゲーム～》做的

@@ -69,6 +69,7 @@ INSTALLER=(
 # 文档：发布 → 工作
 DOCS=(
   README.md
+  README.en.md
   CHANGELOG.md
   KNOWN-ISSUES.md
   ENGINEERING-NOTES.md
