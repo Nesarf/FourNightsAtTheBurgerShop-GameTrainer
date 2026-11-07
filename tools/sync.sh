@@ -109,7 +109,7 @@ do_check() {
     fi
   done
   echo
-  for f in 使用说明.md; do
+  for f in 使用说明.md 使用说明.en.md; do
     if [ -f "$PUB/$f" ]; then
       if [ -f "$WORK/$f" ] && diff -q "$WORK/$f" "$PUB/$f" >/dev/null 2>&1; then
         echo "  同      $f"
@@ -153,7 +153,7 @@ do_code() {
 do_docs() {
   echo "=== 文档：发布 → 工作 ==="
   local n=0
-  for f in "${DOCS[@]}" 使用说明.md; do
+  for f in "${DOCS[@]}" 使用说明.md 使用说明.en.md; do
     [ -f "$PUB/$f" ] || continue
     if [ -f "$WORK/$f" ] && diff -q "$WORK/$f" "$PUB/$f" >/dev/null 2>&1; then continue; fi
     mkdir -p "$(dirname "$WORK/$f")"
