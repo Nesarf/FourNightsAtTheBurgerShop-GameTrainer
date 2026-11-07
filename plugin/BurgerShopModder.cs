@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -4817,8 +4817,6 @@ namespace BurgerShopModder
             return list;
         }
 
-        private static float _hitRectDbg;
-
         /// <summary>
         /// 【HitArea_Manman · 鼠标这条路】
         ///
@@ -9623,9 +9621,16 @@ namespace BurgerShopModder
                     case 2: DrawTabOsiri(tabemi); break;
                     case 3: DrawTabSit(tabemi); break;
                     case 4: DrawTabCostumeAndParts(tabemi); break;
+                    // 5 = 系统。显式写出来，别靠 default ——
+                    // 否则 _tab 越界（比如以后加栏漏改、或者存档里的旧值）也会静默落到系统栏。
+                    case 5: DrawTabSystemWithCaps(player, clock); break;
                     case 6: DrawTabPreset(); break;
                     case 7: DrawTabAbout(); break;
-                    default: DrawTabSystemWithCaps(player, clock); break;
+                    default:
+                        // 真的越界：回到玩家栏，而不是假装在系统栏
+                        _tab = 0;
+                        DrawTabPlayer(player);
+                        break;
                 }
                 GUILayout.EndScrollView();
 
@@ -11602,7 +11607,7 @@ namespace BurgerShopModder
         {
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("=== 全量健壮性自检 " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " ===");
-            sb.AppendLine("插件版本 1.0.0 / 场景 " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+            sb.AppendLine("插件版本 " + PluginVersion + " / 场景 " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
             sb.AppendLine();
 
             int pass = 0, fail = 0, skip = 0;
