@@ -16,7 +16,7 @@
 #     文档          README / 使用说明 / KNOWN-ISSUES / CHANGELOG / ENGINEERING-NOTES
 #                   发布副本 为权威  →  发布 → 工作
 #
-#     dist/使用说明.md 特殊：它是安装包的输入
+#     安装包与 CI 都读根目录的 使用说明.md（dist/ 里不放副本）
 #     （dist/ 下不再放 KNOWN-ISSUES / CHANGELOG 的副本 —— 打包不用它们，留着只会各自漂移）（会被打进 payload.zip），
 #                   但内容归文档管 → 也走 发布 → 工作
 #
@@ -109,7 +109,7 @@ do_check() {
     fi
   done
   echo
-  for f in 使用说明.md dist/使用说明.md; do
+  for f in 使用说明.md; do
     if [ -f "$PUB/$f" ]; then
       if [ -f "$WORK/$f" ] && diff -q "$WORK/$f" "$PUB/$f" >/dev/null 2>&1; then
         echo "  同      $f"
@@ -153,7 +153,7 @@ do_code() {
 do_docs() {
   echo "=== 文档：发布 → 工作 ==="
   local n=0
-  for f in "${DOCS[@]}" 使用说明.md dist/使用说明.md; do
+  for f in "${DOCS[@]}" 使用说明.md; do
     [ -f "$PUB/$f" ] || continue
     if [ -f "$WORK/$f" ] && diff -q "$WORK/$f" "$PUB/$f" >/dev/null 2>&1; then continue; fi
     mkdir -p "$(dirname "$WORK/$f")"

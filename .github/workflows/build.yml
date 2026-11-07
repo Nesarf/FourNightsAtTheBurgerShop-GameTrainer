@@ -73,7 +73,7 @@ jobs:
             (Join-Path 'dist' $plug),
             'dist/数值修改器.exe',
             'dist/汉堡店修改器-安装程序.exe',
-            'dist/使用说明.md'
+            '使用说明.md'
           )
           $miss = @()
           foreach ($w in $want) { if (-not (Test-Path -LiteralPath $w)) { $miss += $w } }
@@ -127,7 +127,7 @@ jobs:
           $plug = '2' + [char]0x00D7 + '9+9L+6[ED]+7+2' + [char]0x00D7 + '45' + [char]0x2192 + '1[C]+LS.dll'
           # 发布资产名保持可读的 BurgerShopModder.dll，只有源路径是程序集名
           Copy-Item -LiteralPath (Join-Path 'dist' $plug) "out/18-9L-6_ED-7-45-45_C-LS.dll"
-          Copy-Item 'dist/使用说明.md'               'out/Manual-zh-CN.md'
+          Copy-Item '使用说明.md'               'out/Manual-zh-CN.md'
           
           # 【只列 out/ 里的资产】
           # 原来遍历 dist/ 算哈希，但 dist/ 里可能有上一步 artifact 下载回来的旧文件 ——
