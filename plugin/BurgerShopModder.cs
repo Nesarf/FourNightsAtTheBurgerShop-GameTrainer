@@ -2213,8 +2213,7 @@ namespace BurgerShopModder
                         try { rawLen = t.GetRawTextureData<byte>().Length; }
                         catch (Exception e) { err = e.GetType().Name + ":" + e.Message; }
 
-                        Log.LogInfo(string.Format(
-                            "贴图探针：{0} {1}x{2} fmt={3} isReadable={4} rawBytes={5} {6}",
+                        Log.LogInfo(L.T("贴图探针：{0} {1}x{2} fmt={3} isReadable={4} rawBytes={5} {6}",
                             t.name, t.width, t.height, t.format, t.isReadable, rawLen, err));
                     }
                 }
@@ -2494,7 +2493,7 @@ namespace BurgerShopModder
                 foreach (var kv in byTex)
                 {
                     var t = texOf[kv.Value[0]];
-                    sb.AppendLine(string.Format("  贴图 {0} id={1} {2}x{3} fmt={4} 被 {5} 个 drawable 使用",
+                    sb.AppendLine(L.T("  贴图 {0} id={1} {2}x{3} fmt={4} 被 {5} 个 drawable 使用",
                         t.name, kv.Key, t.width, t.height, t.format, kv.Value.Count));
 
                     // GPU 回读这张贴图，统计内容分布
@@ -2507,7 +2506,7 @@ namespace BurgerShopModder
                     if (px.Length < bw * bh) { sb.AppendLine("    数据长度异常 " + px.Length); continue; }
                     int opaque = 0;
                     for (int i = 0; i < bw * bh; i++) if (px[i].a > 16) opaque++;
-                    sb.AppendLine(string.Format("    内容占比 {0:0.0}%（{1}/{2} 个 4x4 采样格）",
+                    sb.AppendLine(L.T("    内容占比 {0:0.0}%（{1}/{2} 个 4x4 采样格）",
                         100f * opaque / (bw * bh), opaque, bw * bh));
 
                     // 丝袜 mesh 在这张贴图上的命中
@@ -2632,7 +2631,7 @@ namespace BurgerShopModder
                             if (pid == n) { found = i; break; }
                         }
                     }
-                    sb.AppendLine(string.Format("{0,-34} 真实下标 = {1}", n, found));
+                    sb.AppendLine(L.T("{0,-34} 真实下标 = {1}", n, found));
                 }
 
                 // ============ 核心：子物体顺序 vs Parts 数组顺序 ============
@@ -3651,7 +3650,7 @@ namespace BurgerShopModder
                         target = EaseToward(cur, target, maxE);
                         // 【骤降溯源】平滑之后仍有大掉幅 → 记一笔，好判断是不是这里
                         if (target - cur < -50f)
-                            Log.LogInfo(string.Format("[骤降溯源] 连榨软上限：cur={0:0.#} target={1:0.#} soft={2:0.#} wob={3:0.#} maxE={4:0.#}",
+                            Log.LogInfo(L.T("[骤降溯源] 连榨软上限：cur={0:0.#} target={1:0.#} soft={2:0.#} wob={3:0.#} maxE={4:0.#}",
                                 cur, target, soft, wob, maxE));
                         float d = target - cur;
                         if (Mathf.Abs(d) > 0.002f)
@@ -4146,8 +4145,8 @@ namespace BurgerShopModder
                         ? Mathf.Max(0, ChainLimitNow() - ChainNow())
                         : -1;
                     ShowChainBanner(_afterglowRemaining > 0
-                        ? string.Format("余韵 · 剩余 {0} 次", _afterglowRemaining)
-                        : (left >= 0 ? string.Format("连榨 · 剩余 {0} 次", left) : "连榨"));
+                        ? L.T("余韵 · 剩余 {0} 次", _afterglowRemaining)
+                        : (left >= 0 ? L.T("连榨 · 剩余 {0} 次", left) : "连榨"));
                     InvokeAt(__instance, "Play_Osiri吸精", true);
                 }
                 else if (_demandMode && P3(DemandBlockFella3))
@@ -4663,8 +4662,7 @@ namespace BurgerShopModder
                 {
                     _ecDropCount++;
                     object tab = Tabemi();
-                    Log.LogWarning(string.Format(
-                        "[绝顶骤降 #{0}] {1:0.#} → {2:0.#}（Δ{3:0.#}）  姿势={4}  模式={5}(入于{6})  段={7}"
+                    Log.LogWarning(L.T("[绝顶骤降 #{0}] {1:0.#} → {2:0.#}（Δ{3:0.#}）  姿势={4}  模式={5}(入于{6})  段={7}"
                         + "  sitState={8}  kissing={9:0}  osiriState={10}  Syaseing={11}"
                         + "  余韵剩={12}  连榨={13}",
                         _ecDropCount, _lastEc, cur, d,
@@ -4882,8 +4880,7 @@ namespace BurgerShopModder
                 bool inside = (mp.x >= x0 && mp.x <= x1 && mp.y >= y0 && mp.y <= y1);
                 if (inside && !_manmanWasInside)
                 {
-                    Log.LogInfo(string.Format(
-                        "[HitArea_Manman_By_Plugins] 鼠标进入判定区（屏幕 {0:0},{1:0}；矩形 {2:0}~{3:0} × {4:0}~{5:0}）",
+                    Log.LogInfo(L.T("[HitArea_Manman_By_Plugins] 鼠标进入判定区（屏幕 {0:0},{1:0}；矩形 {2:0}~{3:0} × {4:0}~{5:0}）",
                         mp.x, mp.y, x0, x1, y0, y1));
                 }
                 _manmanWasInside = inside;
@@ -5470,7 +5467,7 @@ namespace BurgerShopModder
                 {
                     repeat = true;
                     _afterglowRemaining--;
-                    ShowChainBanner(string.Format("余韵 · 剩余 {0} 次", _afterglowRemaining));
+                    ShowChainBanner(L.T("余韵 · 剩余 {0} 次", _afterglowRemaining));
                 }
                 else
                 {
@@ -5487,8 +5484,8 @@ namespace BurgerShopModder
                 {
                     int left = ChainLimitNow() > 0 ? Mathf.Max(0, ChainLimitNow() - ChainNow()) : -1;
                     ShowChainBanner(_afterglowRemaining > 0
-                        ? string.Format("余韵 · 剩余 {0} 次", _afterglowRemaining)
-                        : (left >= 0 ? string.Format("连榨 · 剩余 {0} 次", left) : "连榨"));
+                        ? L.T("余韵 · 剩余 {0} 次", _afterglowRemaining)
+                        : (left >= 0 ? L.T("连榨 · 剩余 {0} 次", left) : "连榨"));
                     InvokeAt(__instance, "Play_SitKiss吸精", true);
                 }
                 else
@@ -5540,7 +5537,7 @@ namespace BurgerShopModder
                 {
                     repeat = true;
                     _afterglowRemaining--;
-                    ShowChainBanner(string.Format("余韵 · 剩余 {0} 次", _afterglowRemaining));
+                    ShowChainBanner(L.T("余韵 · 剩余 {0} 次", _afterglowRemaining));
                 }
                 else
                 {
@@ -5558,8 +5555,8 @@ namespace BurgerShopModder
                 {
                     int left = ChainLimitNow() > 0 ? Mathf.Max(0, ChainLimitNow() - ChainNow()) : -1;
                     ShowChainBanner(_afterglowRemaining > 0
-                        ? string.Format("余韵 · 剩余 {0} 次", _afterglowRemaining)
-                        : (left >= 0 ? string.Format("连榨 · 剩余 {0} 次", left) : "连榨"));
+                        ? L.T("余韵 · 剩余 {0} 次", _afterglowRemaining)
+                        : (left >= 0 ? L.T("连榨 · 剩余 {0} 次", left) : "连榨"));
                     InvokeAt(__instance, "Play_SitKiss吸精", true);
                 }
                 else
@@ -6306,7 +6303,7 @@ namespace BurgerShopModder
                     }
                     catch { }
 
-                    return string.Format("osiriState={0}  实际速率={1:0.###}  索取倍速已套用={2}  用过的成员={3}  片段={4}",
+                    return L.T("osiriState={0}  实际速率={1:0.###}  索取倍速已套用={2}  用过的成员={3}  片段={4}",
                         phase, sp, _animSpeedApplied, _animSpeedMemberUsed ?? "(还没套过)", clip);
                 }
             }
@@ -6383,8 +6380,8 @@ namespace BurgerShopModder
                         catch { }
                         st = pose + st;
                         float zh = Mathf.Max(0f, _zeroHoldUntil - Time.unscaledTime);
-                        if (zh > 0f) st += string.Format("（清零振荡中 剩 {0:0.#}s）", zh);
-                        return string.Format("{0}  索取欲={1:0.#}%（叠下一层需 {16:0.#}%）  攻击力={2:0.##}(+{3:0}%)  "
+                        if (zh > 0f) st += L.T("（清零振荡中 剩 {0:0.#}s）", zh);
+                        return L.T("{0}  索取欲={1:0.#}%（叠下一层需 {16:0.#}%）  攻击力={2:0.##}(+{3:0}%)  "
                             + "动画倍速={7:0}%[{8}]  回口交基准={9:0.#}%  已回口交={10}次  回归累积={12:0.#}%{13}  余韵剩={4}(待发动{14}{15})  触发过{5}次",
                             st, _demandUrge, att, P3(DemandAttBonus3), _afterglowRemaining, _demandTotal, _afterglowTotal,
                             P3(DemandAnimSpeed3), _animSpeedMemberUsed ?? "未生效",
@@ -6651,7 +6648,7 @@ namespace BurgerShopModder
             _afterglowTotal++;
             _afterglowSettleAt = -999f;
             Log.LogInfo("[余韵] 最后一段已结束且局面稳定 → 发动余韵 " + _afterglowRemaining + " 次");
-            ShowChainBanner(string.Format("余韵 · 剩余 {0} 次", _afterglowRemaining), 4f);
+            ShowChainBanner(L.T("余韵 · 剩余 {0} 次", _afterglowRemaining), 4f);
 
             // 立刻开一次榨取，把余韵的连榨链启动起来（否则没有"收尾事件"去消费它）
             try
@@ -7538,7 +7535,7 @@ namespace BurgerShopModder
                     repeat = true;
                     _afterglowRemaining--;
                     AddChainGain(Player());
-                    ShowChainBanner(string.Format("余韵 · 剩余 {0} 次", _afterglowRemaining));
+                    ShowChainBanner(L.T("余韵 · 剩余 {0} 次", _afterglowRemaining));
                     Log.LogInfo("[" + ModeWord() + "] 余韵中，本次强制连榨（剩 " + _afterglowRemaining + " 次）");
                 }
                 else if (repeat && ChainLimitNow() > 0 && ChainNow() >= ChainLimitNow())
@@ -7553,7 +7550,7 @@ namespace BurgerShopModder
                 {
                     ChainSet(ChainNow() + 1);
                     ShowChainBanner(ChainLimitNow() > 0
-                        ? string.Format("连榨 · 剩余 {0} 次", Mathf.Max(0, ChainLimitNow() - ChainNow()))
+                        ? L.T("连榨 · 剩余 {0} 次", Mathf.Max(0, ChainLimitNow() - ChainNow()))
                         : "连榨");
                 }
                 else _kyuseiChain = 0;
@@ -8158,7 +8155,7 @@ namespace BurgerShopModder
 
             // (1) 上限天花板
             chk("(1) 上限天花板", maxHp <= CapCeiling + 0.5f && maxEc <= CapCeiling + 0.5f,
-                string.Format("maxHP={0:0.#} maxEcstasy={1:0.#} 天花板={2:0}", maxHp, maxEc, CapCeiling));
+                L.T("maxHP={0:0.#} maxEcstasy={1:0.#} 天花板={2:0}", maxHp, maxEc, CapCeiling));
 
             // (2) 动摇生命加成的账目自洽
             {
@@ -8167,7 +8164,7 @@ namespace BurgerShopModder
                 if (_hpBuffBonus > 0.0001f)
                 {
                     ok = AdaptRemaining() > 0f;
-                    d = string.Format("加成 -{0:0.##} 仍挂在上限上，适应期剩余 {1:0.##}s（应 > 0）",
+                    d = L.T("加成 -{0:0.##} 仍挂在上限上，适应期剩余 {1:0.##}s（应 > 0）",
                         _hpBuffBonus, AdaptRemaining());
                 }
                 else
@@ -8182,7 +8179,7 @@ namespace BurgerShopModder
             {
                 float gate = Mathf.Clamp(TremorSafetyGate.Value, 50f, 100f) / 100f;
                 bool ok = gate < 1f;
-                string d = string.Format("闸门 {0:0}%（绝顶值到 {0:0}% 后不再削弱）{1}",
+                string d = L.T("闸门 {0:0}%（绝顶值到 {0:0}% 后不再削弱）{1}",
                     TremorSafetyGate.Value,
                     ok ? "" : " ← 闸门关闭，绝顶值可能永远到不了顶，榨取不会收束！");
                 chk("(3) 绝顶可及性安全闸", ok, d);
@@ -8200,7 +8197,7 @@ namespace BurgerShopModder
                 float limit = 12f;   // 榨取动画正常几秒内结束；超过这个数就是真卡住
                 bool stuck = syaseing > 0.5f && el > limit;
                 soft("(5) Syaseing 未长时间卡住", !stuck,
-                    string.Format("Syaseing={0:0} 已持续={1:0.##}s 值={2:0.##}/{3:0.##}  timeScale={4:0.###} "
+                    L.T("Syaseing={0:0} 已持续={1:0.##}s 值={2:0.##}/{3:0.##}  timeScale={4:0.###} "
                         + "动摇={5} 近10s榨取={6}次  本次会话最长={7:0.##}s{8}",
                         syaseing, el, curEc, maxEc, Time.timeScale,
                         _tremorActive ? "中" : "停", EcsResetCountIn(10f),
@@ -8210,7 +8207,7 @@ namespace BurgerShopModder
 
             // (6) 抑制标志必须在帧末复位
             chk("(6) 抑制标志已复位", !_suppressDrive && !_suppressRateScale && !_suppressDamageFx,
-                string.Format("drive={0} rate={1} fx={2}（都应为 false）",
+                L.T("drive={0} rate={1} fx={2}（都应为 false）",
                     _suppressDrive, _suppressRateScale, _suppressDamageFx));
 
             // (7) timeScale 应等于 游戏速度 × 动摇模板输出
@@ -8223,12 +8220,12 @@ namespace BurgerShopModder
                     expect *= Mathf.Lerp(1f, floorPct, depth);
                 }
                 chk("(7) 时间刻度一致", Mathf.Abs(Time.timeScale - expect) < 0.02f,
-                    string.Format("实际 {0:0.###}  期望 {1:0.###}", Time.timeScale, expect));
+                    L.T("实际 {0:0.###}  期望 {1:0.###}", Time.timeScale, expect));
             }
 
             // (8) 动摇状态自洽
             soft("(8) 动摇状态自洽", !(_tremorActive && TremorActiveFlag() == false),
-                string.Format("_tremorActive={0} 模板={1} 剩余={2:0.##}s",
+                L.T("_tremorActive={0} 模板={1} 剩余={2:0.##}s",
                     _tremorActive, (_tremorPat >= 0 && _tremorPat < TremorPatNames.Length) ? TremorPatNames[_tremorPat] : "?",
                     _tremorActive ? Mathf.Max(0f, _tremorDur - (Time.unscaledTime - _tremorT0)) : 0f));
 
@@ -8274,7 +8271,7 @@ namespace BurgerShopModder
                 int n10 = EcsResetCountIn(10f), n30 = EcsResetCountIn(30f);
                 bool ok = n10 <= 3;
                 chk("(12) 榨取未陷入循环", ok,
-                    string.Format("近 10 秒 {0} 次、近 30 秒 {1} 次{2}",
+                    L.T("近 10 秒 {0} 次、近 30 秒 {1} 次{2}",
                         n10, n30,
                         ok ? "" : " ← 反复重演，通常是 maxEcstasy 被削减到过小，"
                                  + "导致 CurrentEcstasy 很快又 >= maxEcstasy，Syaseing 一清就又触发"));
@@ -8282,7 +8279,7 @@ namespace BurgerShopModder
 
             // (13) 上限是否被削到过小（榨取螺旋的燃料）
             soft("(13) 绝顶上限未被削到过小", !(maxEc > 0f && maxEc < 10f),
-                string.Format("maxEcstasy={0:0.##} 本次会话见过的最小值={1}", maxEc,
+                L.T("maxEcstasy={0:0.##} 本次会话见过的最小值={1}", maxEc,
                     _maxEcMinSeen == float.MaxValue ? -1f : _maxEcMinSeen));
 
             // (14) 时间刻度不得归零 —— 动画停住 = 动画事件不触发 = Syaseing 永不清除
@@ -8302,7 +8299,7 @@ namespace BurgerShopModder
                 int dm = FxCountIn(_fxDamageTimes, 3f);
                 bool ok = sy <= 3 && ky <= 3 && dm <= 8;
                 chk("(15) 特效未反复触发", ok,
-                    string.Format("近 3 秒：绝顶红光 {0} 次、吸精红光 {1} 次、受伤红光 {2} 次（Syaseing 已持续 {3:0.##}s）{4}",
+                    L.T("近 3 秒：绝顶红光 {0} 次、吸精红光 {1} 次、受伤红光 {2} 次（Syaseing 已持续 {3:0.##}s）{4}",
                         sy, ky, dm, SyaseingElapsed(),
                         ok ? "" : " ← 在反复播特效，说明对应动画在重复触发而收尾事件没跟上"));
             }
@@ -8348,17 +8345,17 @@ namespace BurgerShopModder
             {
                 int mx = Mathf.Max(1, P3(DemandMaxStacks3));
                 chk("(18) 段数在范围内", _demandStacks >= 0 && _demandStacks <= mx,
-                    string.Format("段={0} 上限={1}", _demandStacks, mx));
+                    L.T("段={0} 上限={1}", _demandStacks, mx));
             }
 
             chk("(19) 索取欲非负", _demandUrge >= -0.01f,
-                string.Format("索取欲={0:0.##}%", _demandUrge));
+                L.T("索取欲={0:0.##}%", _demandUrge));
 
             {
                 int poseNow = PoseIdx();
                 bool bad = _demandMode && _demandModePose == 1 && poseNow == 2;
                 soft("(20) 背榨模式未被坐姿顶替", !bad,
-                    string.Format("模式入于={0} 当前姿势={1} 段={2}{3}",
+                    L.T("模式入于={0} 当前姿势={1} 段={2}{3}",
                         _demandModePose, poseNow, _demandStacks,
                         bad ? " ← 背榨的模式被切到了坐姿（状态级兜底应当夺回）" : ""));
             }
@@ -8367,11 +8364,11 @@ namespace BurgerShopModder
                 int lim = ChainLimitNow();
                 int now = ChainNow();
                 soft("(21) 连榨计数未超上限", lim <= 0 || now <= lim,
-                    string.Format("档位={0} 计数={1} 上限={2}", ChainSlotName(), now, lim));
+                    L.T("档位={0} 计数={1} 上限={2}", ChainSlotName(), now, lim));
             }
 
             chk("(22) 余韵计数非负", _afterglowPending >= 0 && _afterglowRemaining >= 0,
-                string.Format("待发动={0} 进行中={1} 累计={2}", _afterglowPending, _afterglowRemaining, _afterglowTotal));
+                L.T("待发动={0} 进行中={1} 累计={2}", _afterglowPending, _afterglowRemaining, _afterglowTotal));
 
             {
                 bool shouldHave = SitPussyAreaEnabled.Value && PoseIdx() == 2;
@@ -8379,7 +8376,7 @@ namespace BurgerShopModder
                 bool got = PussyAreaScreenRect(out qx0, out qy0, out qx1, out qy1);
                 soft("(23) Manman 区矩形可取", !shouldHave || got,
                     shouldHave
-                        ? (got ? string.Format("矩形 {0:0}~{1:0} × {2:0}~{3:0}", qx0, qx1, qy0, qy1)
+                        ? (got ? L.T("矩形 {0:0}~{1:0} × {2:0}~{3:0}", qx0, qx1, qy0, qy1)
                                : "坐姿 + 已启用，却拿不到矩形（模型包围盒取不到？）")
                         : "不需要（不在坐姿或未启用）");
             }
@@ -8398,7 +8395,7 @@ namespace BurgerShopModder
 
             sb.Append("  ").Append(SevTag(sev)).Append((char)10);
             if (_pluginInstance != null) _pluginInstance.SetHint(
-                string.Format("自检：硬性 {0} / 提醒 {1}  {2}", fail, warn, SevTag(sev)), sev);
+                L.T("自检：硬性 {0} / 提醒 {1}  {2}", fail, warn, SevTag(sev)), sev);
 
             sb.Append("结论：").Append(fail == 0 ? "无硬性矛盾" : (fail + " 项硬性矛盾"))
               .Append(warn > 0 ? ("，" + warn + " 项提醒") : "，无提醒").Append((char)10);
@@ -8431,7 +8428,7 @@ namespace BurgerShopModder
                     }
                 case "status":
                     if (!_tremorActive)
-                        return string.Format("动摇：未在波动{0}  概率={1:0}%  冷却={2:0.#}s  剩余冷却={3:0.#}s  脉冲间隔={4:0.###}s  手感计数={5}",
+                        return L.T("动摇：未在波动{0}  概率={1:0}%  冷却={2:0.#}s  剩余冷却={3:0.#}s  脉冲间隔={4:0.###}s  手感计数={5}",
                             AdaptRemaining() > 0f
                                 ? "【绝顶适应中 剩余 " + AdaptRemaining().ToString("0.#") + "s 倍率 " + TremorAdaptFactor.Value.ToString("0") + " 上限+" + TremorHpMaxBonus.Value.ToString("0") + "% 减伤" + (100f - TremorHpGuard.Value).ToString("0")
                                     + "% 回复" + TremorHpRegen.Value.ToString("0") + "%/s】"
@@ -8445,7 +8442,7 @@ namespace BurgerShopModder
                         float t = Time.unscaledTime - _tremorT0;
                         float uu = Mathf.Clamp01(t / _tremorDur);
                         float ce = Mathf.Lerp(_tremorV1, _tremorSettle, uu * uu * (3f - 2f * uu));
-                        return string.Format("动摇中：已过 {0:0.00}/{1:0.00}s  振幅={2:0.##}  中心线={8:0.##}(降 {9:0.##})  落点={3:0.##}（v1={4:0.##} 增益={5:0.##} 损失={6:0.#}%）{7}",
+                        return L.T("动摇中：已过 {0:0.00}/{1:0.00}s  振幅={2:0.##}  中心线={8:0.##}(降 {9:0.##})  落点={3:0.##}（v1={4:0.##} 增益={5:0.##} 损失={6:0.#}%）{7}",
                             t, _tremorDur, _tremorA, _tremorSettle, _tremorV1, _tremorGain,
                             _tremorGain > 0f ? (_tremorV1 - _tremorSettle) / _tremorGain * 100f : 0f,
                             _tremorCaught ? "  [已稳住]" : "",
@@ -8593,7 +8590,7 @@ namespace BurgerShopModder
             float af = AdaptFactor();
             InvokeFloat(p, "EcstasyChange", amount);
             float after = GetFloat(p, "CurrentEcstasy");
-            return string.Format("注入 {0:0.##} → 实际增加 {1:0.###}（前 {2:0.##} 后 {3:0.##}，"
+            return L.T("注入 {0:0.##} → 实际增加 {1:0.###}（前 {2:0.##} 后 {3:0.##}，"
                 + "上升率 {4:0}%，适应倍率 {5:0.##}）",
                 amount, after - before, before, after, EcstasyUpRate.Value, af);
         }
@@ -8670,7 +8667,7 @@ namespace BurgerShopModder
                 if (pl == null) return;
                 float cur = GetFloat(pl, "CurrentEcstasy");
                 object tab = Tabemi();
-                Log.LogInfo(string.Format("[骤降溯源] {0}：清前值={1:0.#}  姿势={2}  模式={3}(入于{4})  段={5}"
+                Log.LogInfo(L.T("[骤降溯源] {0}：清前值={1:0.#}  姿势={2}  模式={3}(入于{4})  段={5}"
                     + "  sitState={6}  kissing={7:0}  osiriState={8}  Syaseing={9}  连榨={10}",
                     where, cur, PoseIdx(), _demandMode, _demandModePose, _demandStacks,
                     tab != null ? GetStringField(tab, "sitState") : "?",
@@ -9207,7 +9204,7 @@ namespace BurgerShopModder
                 System.IO.File.WriteAllBytes(System.IO.Path.Combine(dir, name + ".png"), png);
                 System.IO.File.WriteAllText(System.IO.Path.Combine(dir, name + ".rect"), rectTxt);
 
-                _snapHint = string.Format("tabshot [{0}] {1} -> {2}.png  面板 {3},{4} {5}x{6}",
+                _snapHint = L.T("tabshot [{0}] {1} -> {2}.png  面板 {3},{4} {5}x{6}",
                     tabNo, TabNames[tabNo], name, ix, iy, iw, ih);
                 Log.LogInfo("[tabshot] " + _snapHint);
             }
@@ -9298,7 +9295,7 @@ namespace BurgerShopModder
 
             GUILayout.Space(4f);
             GUILayout.BeginHorizontal();
-            GUILayout.Label("名字", GUILayout.Width(44f));
+            GUILayout.Label(L.T("名字"), GUILayout.Width(44f));
             _presetName = GUILayout.TextField(_presetName ?? "", 24);
             if (GUILayout.Button(L.T("存为预设"), GUILayout.Width(BtnW("存为预设", 90f))))
                 _presetHint = PresetStore.Save(_presetName);
@@ -9336,7 +9333,7 @@ namespace BurgerShopModder
             if (!string.IsNullOrEmpty(_presetHint)) GUILayout.Label("  " + _presetHint);
             GUILayout.Space(4f);
             string dir = PresetStore.DirPath();
-            if (!string.IsNullOrEmpty(dir)) GUILayout.Label("  预设目录：" + dir);
+            if (!string.IsNullOrEmpty(dir)) GUILayout.Label("  " + L.T("预设目录：") + dir);
         }
 
         /// <summary>「关于」栏。和系统同级 —— 它是给人看的，不属于任何一组功能。</summary>
@@ -9345,8 +9342,8 @@ namespace BurgerShopModder
             Section("关于");
             GUILayout.Space(4f);
             // 原来这里有两行，是同一句话的两遍 —— 加标题时和原本那行撞了。合成一行。
-            GUILayout.Label("Four Nights at the Burger Shop · 数值修改器   v" + PluginVersion);
-            GUILayout.Label("BepInEx 插件 + 配套修改器。游戏本体不会被改动。");
+            GUILayout.Label("Four Nights at the Burger Shop · " + L.T("数值修改器") + "   v" + PluginVersion);
+            GUILayout.Label(L.T("BepInEx 插件 + 配套修改器。游戏本体不会被改动。"));
             GUILayout.Space(4f);
 
             AboutRow("仓库", UrlRepo);
@@ -9355,7 +9352,7 @@ namespace BurgerShopModder
 
             GUILayout.Space(4f);
             Hint("遇到问题、想报 bug、想要别的游戏版本的适配 —— 上面三个地方都能找到我。");
-            GUILayout.Label("  本仓库不包含游戏的任何素材或程序集。");
+            GUILayout.Label("  " + L.T("本仓库不包含游戏的任何素材或程序集。"));
             if (!string.IsNullOrEmpty(_aboutHint))
                 GUILayout.Label("  " + _aboutHint);
         }
@@ -9587,7 +9584,7 @@ namespace BurgerShopModder
             GUIStyle prevWin = GUI.skin.window;
             GUI.skin.window = _winStyle;
             _win = GUILayout.Window(0x0717, _win, DrawWindow,
-                _collapsed ? "修改器（F9）" : "数值修改器 · F9 隐藏",
+                _collapsed ? L.T("修改器（F9）") : L.T("数值修改器 · F9 隐藏"),
                 GUILayout.Width(w));
             GUI.skin.window = prevWin;
             _win.width = w;
@@ -9603,10 +9600,10 @@ namespace BurgerShopModder
 
             // 顶部：收起 / 场景状态
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button(_collapsed ? "展开" : "收起", GUILayout.Width(56f)))
+            if (GUILayout.Button(_collapsed ? L.T("展开") : L.T("收起"), GUILayout.Width(56f)))
                 _collapsed = !_collapsed;
             string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            GUILayout.Label(player == null ? "标题画面（无数据）" : scene);
+            GUILayout.Label(player == null ? L.T("标题画面（无数据）") : scene);
             GUILayout.EndHorizontal();
 
             if (!_collapsed)
@@ -9614,13 +9611,13 @@ namespace BurgerShopModder
                 // 实时数值摘要
                 if (player != null)
                 {
-                    GUILayout.Label(string.Format("HP {0:0.#}/{1:0.#}    绝顶 {2:0.#}/{3:0.#}",
+                    GUILayout.Label(L.T("HP {0:0.#}/{1:0.#}    绝顶 {2:0.#}/{3:0.#}",
                         GetFloat(player, "currentHP"), GetFloat(player, "maxHP"),
                         GetFloat(player, "CurrentEcstasy"), GetFloat(player, "maxEcstasy")));
                 }
                 if (clock != null)
                 {
-                    GUILayout.Label(string.Format("进度 {0:0}%   时刻 {1:0.0}h   一天 {2} 秒",
+                    GUILayout.Label(L.T("进度 {0:0}%   时刻 {1:0.0}h   一天 {2} 秒",
                         GetFloat(clock, "clockProgress") * 100f, GetFloat(clock, "gameHour"),
                         (int)GetFloat(clock, "fullTime")));
                 }
@@ -9667,7 +9664,7 @@ namespace BurgerShopModder
                     }
                     _statusStyle.normal.textColor = SevColor(_hintSev);
                     GUILayout.Label(string.IsNullOrEmpty(_snapHint)
-                        ? "产物目录 BepInEx" + (char)92 + "l2d_dump" + (char)92
+                        ? L.T("产物目录") + " BepInEx" + (char)92 + "l2d_dump" + (char)92
                         : _snapHint, _statusStyle);
                 }
 
@@ -9716,11 +9713,11 @@ namespace BurgerShopModder
             EcstasyDownRate.Value = SliderF("绝顶下降率", EcstasyDownRate.Value, 0f, 200f, "{0:0}%", 5f);
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("HP 不下降")) HpDownRate.Value = 0f;
-            if (GUILayout.Button("绝顶不上升")) EcstasyUpRate.Value = 0f;
+            if (GUILayout.Button(L.T("HP 不下降"))) HpDownRate.Value = 0f;
+            if (GUILayout.Button(L.T("绝顶不上升"))) EcstasyUpRate.Value = 0f;
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("全回 100%"))
+            if (GUILayout.Button(L.T("全回 100%")))
             {
                 HpDownRate.Value = 100f;
                 HpUpRate.Value = 100f;
@@ -9731,8 +9728,8 @@ namespace BurgerShopModder
 
             GUILayout.Space(6f);
             Section("快捷设置");
-            GodMode.Value = GUILayout.Toggle(GodMode.Value, "  无敌（HP 每帧补满）");
-            NoEcstasy.Value = GUILayout.Toggle(NoEcstasy.Value, "  绝顶值归零（不被吸精）");
+            GodMode.Value = GUILayout.Toggle(GodMode.Value, "  " + L.T("无敌（HP 每帧补满）"));
+            NoEcstasy.Value = GUILayout.Toggle(NoEcstasy.Value, "  " + L.T("绝顶值归零（不被吸精）"));
             EcstasyResist.Value = SliderF("绝顶抗性", EcstasyResist.Value, 0f, 1f, "{0:0.00}", 0.05f);
             MaxBurgerNum.Value = SliderI("连吃汉堡上限", MaxBurgerNum.Value, 0, 200);
             SyaseiCount.Value = SliderI("射精次数", SyaseiCount.Value, 0, 100);
@@ -9745,13 +9742,13 @@ namespace BurgerShopModder
             object menu = StaticPart("menu");
             int baseCount = menu != null ? (int)GetFloat(menu, "Base具材数") : -1;
             int rel = player != null ? (int)GetFloat(player, "syaseiCount") : -1;
-            GUILayout.Label(string.Format("基础具材 {0}   射精次数 {1}   → 订单约 {2} 层",
+            GUILayout.Label(L.T("基础具材 {0}   射精次数 {1}   → 订单约 {2} 层",
                 baseCount < 0 ? "--" : baseCount.ToString(),
                 rel < 0 ? "--" : rel.ToString(),
                 (baseCount < 0 || rel < 0) ? "--" : (baseCount + rel).ToString()));
             Hint("层数 = 基础具材 + 射精次数（作者设计：榨得越多堆越高）");
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("层数复位（4 层）") && player != null)
+            if (GUILayout.Button(L.T("层数复位（4 层）")) && player != null)
             {
                 SyaseiCount.Value = 0;
                 _lastSyasei = 0f;
@@ -9759,7 +9756,7 @@ namespace BurgerShopModder
                 if (menu != null) SetField(menu, "Base具材数", 4);
                 _snapHint = "已复位为基础 4 层（重进当天生效）";
             }
-            if (GUILayout.Button("基础具材回 4") && menu != null)
+            if (GUILayout.Button(L.T("基础具材回 4")) && menu != null)
             {
                 SetField(menu, "Base具材数", 4);
                 _snapHint = "Base具材数 = 4";
@@ -9772,9 +9769,9 @@ namespace BurgerShopModder
             Section("快捷操作");
             GUILayout.Space(6f);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("HP 回满") && player != null)
+            if (GUILayout.Button(L.T("HP 回满")) && player != null)
                 InvokeFloat(player, "HPChange", GetFloat(player, "maxHP") - GetFloat(player, "currentHP"));
-            if (GUILayout.Button("绝顶清零") && player != null)
+            if (GUILayout.Button(L.T("绝顶清零")) && player != null)
                 InvokeFloat(player, "EcstasyChange", -GetFloat(player, "CurrentEcstasy"));
             GUILayout.EndHorizontal();
         }
@@ -9785,7 +9782,7 @@ namespace BurgerShopModder
         {
             GUILayout.Space(8f);
             Section("绝顶动摇（累积时随机触发的衰减正弦波动）");
-            TremorEnabled.Value = GUILayout.Toggle(TremorEnabled.Value, "  启用动摇");
+            TremorEnabled.Value = GUILayout.Toggle(TremorEnabled.Value, "  " + L.T("启用动摇"));
             if (TremorEnabled.Value)
             {
                 TremorChance.Value = SliderF("触发概率", TremorChance.Value, 0f, 100f, "{0:0}%", 1f);
@@ -9795,14 +9792,14 @@ namespace BurgerShopModder
                 Sub("可超过 100% —— 那样落点会压到波动之前的值以下（倒扣）");
                 TremorCatch.Value = SliderF("按 R 稳住后损失", TremorCatch.Value, 0f, 90f, "{0:0}%", 1f);
                 TremorCooldown.Value = SliderF("冷却", TremorCooldown.Value, 0f, 20f, "{0:0.0}s", 0.5f);
-                TremorResonate.Value = GUILayout.Toggle(TremorResonate.Value, "  与攻击脉冲共振（攻速快→抖动更细更快）");
+                TremorResonate.Value = GUILayout.Toggle(TremorResonate.Value, "  " + L.T("与攻击脉冲共振（攻速快→抖动更细更快）"));
                 TremorSlow.Value = SliderF("减速最低值", TremorSlow.Value, 10f, 100f, "{0:0}%", 5f);
                 TremorPattern.Value = SliderI("减速模板", TremorPattern.Value, 0, 5);
                 Sub("1顿挫 2痉挛 3深陷 4迟疑 5潮汐（长短不一）");
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("手动触发动摇")) TremorCmd("fire");
-            if (GUILayout.Button("本次状态")) LogTremorStatus();
+            if (GUILayout.Button(L.T("手动触发动摇"))) TremorCmd("fire");
+            if (GUILayout.Button(L.T("本次状态"))) LogTremorStatus();
             GUILayout.EndHorizontal();
             }
 
@@ -9829,7 +9826,7 @@ namespace BurgerShopModder
             // 留着一句指向不存在滑块的提示会误导，所以只保留当前场景信息。
             Hint("当前场景：" + ChainSlotName()
                 + "，上限 " + ChainLimitNow() + "，已连 " + ChainNow());
-            GUILayout.Label(string.Format("  吸精发生率 {0}%（已修正游戏的整数除法 bug，填多少就是多少）",
+            GUILayout.Label(L.T("  吸精发生率 {0}%（已修正游戏的整数除法 bug，填多少就是多少）",
                 KyuseiRateNow().ToString("0")));
 
         }
@@ -9862,8 +9859,8 @@ namespace BurgerShopModder
             Hint("吃汉堡的回血按 maxHP 的百分比算 → 上限被削就越来越难回血。");
 
             GUILayout.Space(4f);
-            LockMaxHp.Value = GUILayout.Toggle(LockMaxHp.Value, "  锁 HP 上限（不再下降）");
-            LockMaxEcstasy.Value = GUILayout.Toggle(LockMaxEcstasy.Value, "  锁绝顶值上限");
+            LockMaxHp.Value = GUILayout.Toggle(LockMaxHp.Value, "  " + L.T("锁 HP 上限（不再下降）"));
+            LockMaxEcstasy.Value = GUILayout.Toggle(LockMaxEcstasy.Value, "  " + L.T("锁绝顶值上限"));
 
             GUILayout.Space(4f);
             Section("目标上限（绝对值，每帧平滑逼近）");
@@ -9875,26 +9872,26 @@ namespace BurgerShopModder
 
             GUILayout.Space(4f);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("HP 目标 ×1.5") && player != null)
+            if (GUILayout.Button(L.T("HP 目标 ×1.5")) && player != null)
                 TargetHp.Value = Mathf.Min(3000f, GetFloat(player, "maxHP") * 1.5f);
-            if (GUILayout.Button("HP 目标 ×2") && player != null)
+            if (GUILayout.Button(L.T("HP 目标 ×2")) && player != null)
                 TargetHp.Value = Mathf.Min(3000f, GetFloat(player, "maxHP") * 2f);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("绝顶目标 ×1.5") && player != null)
+            if (GUILayout.Button(L.T("绝顶目标 ×1.5")) && player != null)
                 TargetEcstasy.Value = Mathf.Min(3000f, GetFloat(player, "maxEcstasy") * 1.5f);
-            if (GUILayout.Button("绝顶目标 ×2") && player != null)
+            if (GUILayout.Button(L.T("绝顶目标 ×2")) && player != null)
                 TargetEcstasy.Value = Mathf.Min(3000f, GetFloat(player, "maxEcstasy") * 2f);
             GUILayout.EndHorizontal();
 
             GUILayout.Space(4f);
-            if (GUILayout.Button("恢复默认上限（100 / 100）"))
+            if (GUILayout.Button(L.T("恢复默认上限（100 / 100）")))
             {
                 TargetHp.Value = 100f;
                 TargetEcstasy.Value = 100f;
             }
-            GUILayout.Label(string.Format("硬上限保护：{0:0}（超过会被压回）", CapCeiling));
+            GUILayout.Label(L.T("硬上限保护：{0:0}（超过会被压回）", CapCeiling));
         }
 
         // ---- 页 3：对手（吃汉） ----
@@ -9939,7 +9936,7 @@ namespace BurgerShopModder
         {
             EnsureStyles();
             GUILayout.Space(10f);
-            GUILayout.Label("" + title, _secStyle);
+            GUILayout.Label("" + L.T(title), _secStyle);
         }
 
         /// <summary>二级小节。更小、无装饰。</summary>
@@ -9954,7 +9951,7 @@ namespace BurgerShopModder
         private void Hint(string text)
         {
             EnsureStyles();
-            GUILayout.Label("     " + text, _hintStyle);
+            GUILayout.Label("     " + L.T(text), _hintStyle);
         }
 
         /// <summary>一条细分隔线（原来写成一串破折号）。</summary>
@@ -9972,33 +9969,33 @@ namespace BurgerShopModder
         {
             // 这个机制三栏各有叫法：口交=吸取、背榨=索取、正骑=榨取。
             // 本方法被背榨(sitSide=false)与正骑(sitSide=true)调用，所以按参数取名。
-            string mw = sitSide ? "榨取" : "索取";
-            Section(sitSide ? "正骑 · 榨取模式" : "背榨 · 索取模式（打屁股触发）");
-            SetP3(DemandEnabled3, GUILayout.Toggle(P3(DemandEnabled3), sitSide ? "  启用榨取模式" : "  启用索取模式"));
+            string mw = sitSide ? L.T("榨取") : L.T("索取");
+            Section(sitSide ? L.T("正骑 · 榨取模式") : L.T("背榨 · 索取模式（打屁股触发）"));
+            SetP3(DemandEnabled3, GUILayout.Toggle(P3(DemandEnabled3), sitSide ? "  " + L.T("启用榨取模式") : "  " + L.T("启用索取模式")));
             GUILayout.Space(4f);
-            SetP3(SpankSpeedEnabled3, GUILayout.Toggle(P3(SpankSpeedEnabled3), "  打屁股给攻击速度冲量"));
+            SetP3(SpankSpeedEnabled3, GUILayout.Toggle(P3(SpankSpeedEnabled3), "  " + L.T("打屁股给攻击速度冲量")));
             if (P3(SpankSpeedEnabled3))
             {
                 SetP3(SpankSpeedGain3, SliderF("首下冲量", P3(SpankSpeedGain3), 0f, 200f, "{0:0}%", 2f));
                 SetP3(SpankSpeedStack3, SliderF("叠加倍率", P3(SpankSpeedStack3), 0f, 100f, "{0:0}%", 5f));
                 SetP3(SpankSpeedRise3, SliderF("冲上去的快慢", P3(SpankSpeedRise3), 1f, 60f, "{0:0}", 1f));
                 SetP3(SpankSpeedDecay3, SliderF("消退的快慢", P3(SpankSpeedDecay3), 0.01f, 5f, "{0:0.00}", 0.05f));
-                GUILayout.Label(string.Format("  当前乘数 ×{0:0.###}（目标 ×{1:0.###}）",
+                GUILayout.Label(L.T("  当前乘数 ×{0:0.###}（目标 ×{1:0.###}）",
                     SpankSpeedMul(), SpankSpeedTarget()));
             }
             if (P3(DemandEnabled3))
             {
-                if (!sitSide) GUILayout.Label("  打屁股 → 累积「索取欲」，索取欲的数值就是进入索取模式的概率");
+                if (!sitSide) GUILayout.Label("  " + L.T("打屁股 → 累积「索取欲」，索取欲的数值就是进入索取模式的概率"));
                 SetP3(AttackUrgeChance3, SliderF("涨欲概率·平均", P3(AttackUrgeChance3), 0f, 100f, "{0:0}%", 1f));
                 SetP3(AttackUrgeGain3, SliderF("命中时增加", P3(AttackUrgeGain3), 0f, 100f, "{0:0}%", 1f));
                 SetP3(AttackUrgeJitter3, SliderF("上面两项的波动幅度", P3(AttackUrgeJitter3), 0f, 90f, "±{0:0}%", 5f));
                 GUILayout.Space(4f);
-                if (!sitSide) GUILayout.Label("  射精 / 吸精·连榨 也累积索取欲（余韵走同一链条）");
+                if (!sitSide) GUILayout.Label("  " + L.T("射精 / 吸精·连榨 也累积索取欲（余韵走同一链条）"));
                 SetP3(SyaseiUrgeChance3, SliderF("射精时·累积概率", P3(SyaseiUrgeChance3), 0f, 100f, "{0:0}%", 5f));
                 SetP3(SyaseiUrgeGain3, SliderF("射精时·增加", P3(SyaseiUrgeGain3), 0f, 100f, "{0:0}%", 1f));
                 SetP3(KyuseiUrgeChance3, SliderF("每次吸精·累积概率", P3(KyuseiUrgeChance3), 0f, 100f, "{0:0}%", 5f));
                 SetP3(KyuseiUrgeGain3, SliderF("每次吸精·增加", P3(KyuseiUrgeGain3), 0f, 100f, "{0:0}%", 1f));
-                GUILayout.Label(string.Format("  实际在 概率 {0:0.#}~{1:0.#}% / 增量 {2:0.#}~{3:0.#}% 之间随机",
+                GUILayout.Label(L.T("  实际在 概率 {0:0.#}~{1:0.#}% / 增量 {2:0.#}~{3:0.#}% 之间随机",
                     P3(AttackUrgeChance3) * Mathf.Max(0f, 1f - P3(AttackUrgeJitter3) / 100f),
                     P3(AttackUrgeChance3) * (1f + P3(AttackUrgeJitter3) / 100f),
                     P3(AttackUrgeGain3) * Mathf.Max(0f, 1f - P3(AttackUrgeJitter3) / 100f),
@@ -10007,26 +10004,25 @@ namespace BurgerShopModder
                 SetP3(DemandMaxStackRefreshMul3, SliderF("叠满后刷新持续时间", P3(DemandMaxStackRefreshMul3), 0f, 300f, "{0:0}%", 5f));
                 Hint("段数满了之后不再加层，但条件达成会给时间（0 = 原行为）");
                 GUILayout.Space(4f);
-                SetP3(AttackCanStackDemand3, GUILayout.Toggle(P3(AttackCanStackDemand3),
-                    "  角色攻击也参与叠层判定（关掉则只有打屁股能叠）"));
+                SetP3(AttackCanStackDemand3, GUILayout.Toggle(P3(AttackCanStackDemand3), "  " + L.T("角色攻击也参与叠层判定（关掉则只有打屁股能叠）")));
                 GUILayout.Space(4f);
                 if (sitSide)
 
                 Sub("叠好一层" + mw + "状态所需的" + mw + "欲（两者上限都是 300%）：");
                 Hint("" + mw + "欲攒够对应数值才会叠上那一层");
-                if (GUILayout.Toggle(P3(DemandTriggerMode3) == 1, "    阈值模式（攒够就叠，可预期）"))
+                if (GUILayout.Toggle(P3(DemandTriggerMode3) == 1, "    " + L.T("阈值模式（攒够就叠，可预期）")))
                     SetP3(DemandTriggerMode3, 1);
-                if (GUILayout.Toggle(P3(DemandTriggerMode3) == 0, "    概率模式（" + mw + "欲即概率，随机）"))
+                if (GUILayout.Toggle(P3(DemandTriggerMode3) == 0, L.T("    概率模式（{0}欲即概率，随机）", mw)))
                     SetP3(DemandTriggerMode3, 0);
                 SetP3(DemandThresholdBase3, SliderF("叠第1层所需索取欲", P3(DemandThresholdBase3), 0f, 300f, "{0:0}%", 5f));
                 SetP3(DemandThresholdStep3, SliderF("每多一层所需增加", P3(DemandThresholdStep3), 0f, 300f, "{0:0}%", 5f));
-                GUILayout.Label(string.Format("    叠各层所需：{0:0} / {1:0} / {2:0} / {3:0} / {4:0} …",
+                GUILayout.Label(L.T("    叠各层所需：{0:0} / {1:0} / {2:0} / {3:0} / {4:0} …",
                     P3(DemandThresholdBase3),
                     P3(DemandThresholdBase3) + P3(DemandThresholdStep3),
                     P3(DemandThresholdBase3) + P3(DemandThresholdStep3) * 2f,
                     P3(DemandThresholdBase3) + P3(DemandThresholdStep3) * 3f,
                     P3(DemandThresholdBase3) + P3(DemandThresholdStep3) * 4f));
-                GUILayout.Label(string.Format("    当前" + mw + "欲 {0:0.#}%  ·  距叠第 {1} 层还差 {2:0.#}%",
+                GUILayout.Label(L.T("    当前" + mw + "欲 {0:0.#}%  ·  距叠第 {1} 层还差 {2:0.#}%",
                     DemandUrge,
                     _demandStacks + 1,
                     Mathf.Max(0f, P3(DemandThresholdBase3) + P3(DemandThresholdStep3) * Mathf.Max(0, _demandStacks) - DemandUrge)));
@@ -10040,18 +10036,18 @@ namespace BurgerShopModder
                 SetP3(DemandAttSpeedBonus3, SliderF("攻击力随速度加成", P3(DemandAttSpeedBonus3), 0f, 500f, "{0:0}%", 5f));
                 SetP3(DemandAttSpeedRef3, SliderF("速度参考增幅", P3(DemandAttSpeedRef3), 5f, 300f, "{0:0}%", 5f));
                 SetP3(DemandAttSpeedExp3, SliderF("速度曲线指数", P3(DemandAttSpeedExp3), 0f, 8f, "{0:0.0}", 0.5f));
-                GUILayout.Label(string.Format("  当前攻击速度倍率 ×{0:0.###} → 速度项 ×{1:0.###}",
+                GUILayout.Label(L.T("  当前攻击速度倍率 ×{0:0.###} → 速度项 ×{1:0.###}",
                     SpankSpeedMul(),
                     1f + Mathf.Clamp01(Mathf.Max(0f, SpankSpeedMul() - 1f)
                         / Mathf.Max(0.05f, P3(DemandAttSpeedRef3) / 100f)) * P3(DemandAttSpeedBonus3) / 100f));
                 SetP3(DemandAnimSpeed3, SliderF("绝顶动画倍速", P3(DemandAnimSpeed3), 50f, 800f, "{0:0}%", 25f));
-                SetP3(DemandSpeedSplit3, GUILayout.Toggle(P3(DemandSpeedSplit3), "  分阶段加速（避免与 osiri 加速叠加）"));
+                SetP3(DemandSpeedSplit3, GUILayout.Toggle(P3(DemandSpeedSplit3), "  " + L.T("分阶段加速（避免与 osiri 加速叠加）")));
                 GUILayout.Space(4f);
                 // 【正骑里不显示】回口交 / 回归累积是【背榨】的机制 ——
                 // 坐姿现在已锁死（SitLockEnabled），这些"回到口交再回骑乘位"的项在正骑里没有意义。
                 if (!sitSide)
                 {
-                    SetP3(DemandBlockFella3, GUILayout.Toggle(P3(DemandBlockFella3), "  " + mw + "模式期间不回口交"));
+                    SetP3(DemandBlockFella3, GUILayout.Toggle(P3(DemandBlockFella3), "  " + L.T("{0}模式期间不回口交", mw)));
                     SetP3(DemandFellaDecay3, SliderF("每次索取·回口交衰减", P3(DemandFellaDecay3), 0f, 90f, "{0:0}%", 5f));
                     SetP3(DemandOsiriBoost3, SliderI("回口交后骑乘位门槛降低", P3(DemandOsiriBoost3), 0, 10));
                 }
@@ -10060,13 +10056,13 @@ namespace BurgerShopModder
                 // 【正骑里不显示】回归累积是【背榨 → 口交 → 再回骑乘位】的机制，坐姿里没有意义
                 if (!sitSide)
                 {
-                    SetP3(OsiriReturnEnabled3, GUILayout.Toggle(P3(OsiriReturnEnabled3), "  回口交后累积「再次进骑乘位」概率"));
+                    SetP3(OsiriReturnEnabled3, GUILayout.Toggle(P3(OsiriReturnEnabled3), "  " + L.T("回口交后累积「再次进骑乘位」概率")));
                     if (P3(OsiriReturnEnabled3))
                     {
                         SetP3(OsiriReturnTrigger3, SliderF("每次造成伤害·累积概率", P3(OsiriReturnTrigger3), 0f, 100f, "{0:0}%", 1f));
                         SetP3(OsiriReturnGain3, SliderF("累积成功时增加", P3(OsiriReturnGain3), 0f, 100f, "{0:0}%", 1f));
                         SetP3(OsiriReturnJitter3, SliderF("上面两项波动幅度", P3(OsiriReturnJitter3), 0f, 90f, "±{0:0}%", 5f));
-                        GUILayout.Label(string.Format("  当前累积 {0:0.#}%{1}", _osiriReturnChance,
+                        GUILayout.Label(L.T("  当前累积 {0:0.#}%{1}", _osiriReturnChance,
                             _osiriReturnArmed ? "" : "（未武装：需先从骑乘位回口交）"));
                     }
                 }
@@ -10075,8 +10071,8 @@ namespace BurgerShopModder
                 SetP3(DemandDurationMin3, SliderF("索取模式最短", P3(DemandDurationMin3), 2f, 300f, "{0:0}s", 1f));
                 SetP3(DemandDurationMax3, SliderF("索取模式最长", P3(DemandDurationMax3), 2f, 300f, "{0:0}s", 1f));
                 GUILayout.Space(4f);
-                GUILayout.Label(sitSide ? "  榨取模式期间速度不因射精减缓；只能由角色自行退出"
-                    : "  索取模式期间速度不因射精减缓；只能由角色自行退出");
+                GUILayout.Label(sitSide ? "  " + L.T("榨取模式期间速度不因射精减缓；只能由角色自行退出")
+                    : "  " + L.T("索取模式期间速度不因射精减缓；只能由角色自行退出"));
                 // 【顺序】共享内容全部跑完，最后才是正骑专属的那些。
                 // 原来这个调用夹在共享内容中间，导致坐姿栏里「束缚之吻 / 坐姿锁定 /
                 // Manman 区」插在叠层门槛之前，读起来是跳的。
@@ -10090,12 +10086,10 @@ namespace BurgerShopModder
                 Section("余韵 · 累积与发动");
                 SetP3(AfterglowPerSyasei3, SliderI("模式中每射精累积余韵", P3(AfterglowPerSyasei3), 0, 20));
                 SetP3(AfterglowSettleDelay3, SliderF("局面稳定后发动延迟", P3(AfterglowSettleDelay3), 0f, 5f, "{0:0.0}s", 0.1f));
-                SetP3(AfterglowUseDemandGain3, GUILayout.Toggle(P3(AfterglowUseDemandGain3),
-                    "  余韵期间仍累积余韵（一般应关：收尾不该自我延长）"));
+                SetP3(AfterglowUseDemandGain3, GUILayout.Toggle(P3(AfterglowUseDemandGain3), "  " + L.T("余韵期间仍累积余韵（一般应关：收尾不该自我延长）")));
                 SetP3(AfterglowUrgeScale3, SliderF("余韵期间索取欲增长", P3(AfterglowUrgeScale3), 0f, 100f, "{0:0}%", 5f));
                 Hint("调低它 → 余韵之后有一段干净空档，不会马上又进" + mw + "模式");
-                SetP3(AfterglowClearsUrge3, GUILayout.Toggle(P3(AfterglowClearsUrge3),
-                    "  余韵清空后把索取欲一并归零"));
+                SetP3(AfterglowClearsUrge3, GUILayout.Toggle(P3(AfterglowClearsUrge3), "  " + L.T("余韵清空后把索取欲一并归零")));
                 Sub("手动余韵 = 强制退出" + mw + "模式");
                 Hint("" + mw + "太久导致换不了姿势时，用它把" + mw + "模式清干净");
                 GUILayout.Space(4f);
@@ -10103,14 +10097,14 @@ namespace BurgerShopModder
                 SetP3(AfterglowSpeed3, SliderF("余韵动画速度", P3(AfterglowSpeed3), 10f, 400f, "{0:0}%", 5f));
                 SetP3(AfterglowSpeedWobble3, SliderF("速度波动幅度", P3(AfterglowSpeedWobble3), 0f, 90f, "±{0:0}%", 5f));
                 SetP3(AfterglowSpeedHz3, SliderF("速度波动频率", P3(AfterglowSpeedHz3), 0.02f, 4f, "{0:0.00}Hz", 0.05f));
-                GUILayout.Label(string.Format("    速度在 {0:0}% ~ {1:0}% 之间起伏（越低=单次越长）",
+                GUILayout.Label(L.T("    速度在 {0:0}% ~ {1:0}% 之间起伏（越低=单次越长）",
                     P3(AfterglowSpeed3) * (1f - P3(AfterglowSpeedWobble3) / 100f),
                     P3(AfterglowSpeed3) * (1f + P3(AfterglowSpeedWobble3) / 100f)));
                 GUILayout.Space(4f);
                 Sub("余韵 · 绝顶值（与连榨分开的一套）");
                 SetP3(AfterglowSoftCap3, SliderF("余韵绝顶值软上限", P3(AfterglowSoftCap3), 5f, 98f, "{0:0}%", 1f));
                 SetP3(AfterglowEcstasyWobble3, SliderF("到位后波动幅度", P3(AfterglowEcstasyWobble3), 0f, 40f, "±{0:0}%", 1f));
-                GUILayout.Label(string.Format("    绝顶值在 {0:0}% ~ {1:0}% 之间起伏",
+                GUILayout.Label(L.T("    绝顶值在 {0:0}% ~ {1:0}% 之间起伏",
                     Mathf.Max(0f, P3(AfterglowSoftCap3) - P3(AfterglowEcstasyWobble3)),
                     P3(AfterglowSoftCap3) + P3(AfterglowEcstasyWobble3)));
                 GUILayout.Space(4f);
@@ -10119,8 +10113,8 @@ namespace BurgerShopModder
                 DemandAfterglowMax.Value = SliderI("手动余韵上限", DemandAfterglowMax.Value, 0, 100);
             }
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("手动进入" + mw)) DemandCmd("fire");
-            if (GUILayout.Button("手动进入余韵")) DemandCmd("afterglow");
+            if (GUILayout.Button(L.T("手动进入{0}", mw))) DemandCmd("fire");
+            if (GUILayout.Button(L.T("手动进入余韵"))) DemandCmd("afterglow");
             GUILayout.EndHorizontal();
             Hint("当前：" + DemandCmd("status"));
         }
@@ -10143,8 +10137,7 @@ namespace BurgerShopModder
         private void DrawSitExtras()
                 {
                 Sub("正骑 · 榨取模式（坐姿）");
-                SitClickAlwaysAccumulate.Value = GUILayout.Toggle(SitClickAlwaysAccumulate.Value,
-                    "  坐姿点头部随时可累积榨取欲（不限束缚之吻）");
+                SitClickAlwaysAccumulate.Value = GUILayout.Toggle(SitClickAlwaysAccumulate.Value, "  " + L.T("坐姿点头部随时可累积榨取欲（不限束缚之吻）"));
                 SitSyaseiToDrainChance.Value = SliderF("坐姿射精→进榨取的概率",
                     SitSyaseiToDrainChance.Value, 0f, 100f, "{0:0}%", 5f);
                 Hint("坐姿挂起超时见下方「余韵」区");
@@ -10153,14 +10146,13 @@ namespace BurgerShopModder
                 Hint("正骑的连榨/余韵【只有进入束缚之吻才会发生】");
                 Hint("本栏下面那些滑块（攻击力/倍速/连榨…）都已绑定到束缚之吻：");
                 Hint("进入吻或榨取状态时才会生效，退出即失效");
-                SitKissAutoPrepare.Value = GUILayout.Toggle(SitKissAutoPrepare.Value, "  自动进入束缚之吻（不用按 X）");
+                SitKissAutoPrepare.Value = GUILayout.Toggle(SitKissAutoPrepare.Value, "  " + L.T("自动进入束缚之吻（不用按 X）"));
                 GUILayout.Space(4f);
                 Hint("坐姿锁定：进去就出不来（自动切换全拦）");
-                SitLockEnabled.Value = GUILayout.Toggle(SitLockEnabled.Value,
-                    "  启用坐姿锁定");
+                SitLockEnabled.Value = GUILayout.Toggle(SitLockEnabled.Value, "  " + L.T("启用坐姿锁定"));
                 if (SitLockEnabled.Value)
                 {
-                    if (GUILayout.Button("解锁一次（让游戏能切走）"))
+                    if (GUILayout.Button(L.T("解锁一次（让游戏能切走）")))
                     {
                         SitLockEnabled.Value = false;
                         _snapHint = "已解锁 —— 游戏下次尝试切换就会成功；要再锁上请重新勾选";
@@ -10169,11 +10161,11 @@ namespace BurgerShopModder
                 }
                 if (SitKissAutoPrepare.Value)
                     SitKissAutoInterval.Value = SliderF("自动进入间隔", SitKissAutoInterval.Value, 1f, 60f, "{0:0}s", 1f);
-                SitKissNoDecay.Value = GUILayout.Toggle(SitKissNoDecay.Value, "  阻止窗口越玩越短（原版每次 *=0.9）");
+                SitKissNoDecay.Value = GUILayout.Toggle(SitKissNoDecay.Value, "  " + L.T("阻止窗口越玩越短（原版每次 *=0.9）"));
                 SitKissWindowMul.Value = SliderF("窗口长度倍数", SitKissWindowMul.Value, 50f, 1000f, "{0:0}%", 25f);
                 GUILayout.Space(4f);
                 Hint("接吻中但还没进榨取时，单独用这一套速度：");
-                KissSpeedEnabled.Value = GUILayout.Toggle(KissSpeedEnabled.Value, "  束缚之吻单独调速");
+                KissSpeedEnabled.Value = GUILayout.Toggle(KissSpeedEnabled.Value, "  " + L.T("束缚之吻单独调速"));
                 if (KissSpeedEnabled.Value)
                 {
                     KissSpeedMul.Value = SliderF("接吻动画速度", KissSpeedMul.Value, 10f, 400f, "{0:0}%", 5f);
@@ -10185,13 +10177,12 @@ namespace BurgerShopModder
                 Section("正骑 · HitArea_Manman_By_Plugins");
                 Hint("点击 = 坐姿版的「打屁股」：涨榨取欲 + 给坐姿动作一个速度冲量");
                 Hint("判定按【人物模型包围盒】算 → 跟着人物走，换分辨率也不跑偏");
-                SitPussyAreaShowRect.Value = GUILayout.Toggle(SitPussyAreaShowRect.Value,
-                    "  跟着总开关一起画（粉色）—— 总开关在下面「实验性高亮」那个");
+                SitPussyAreaShowRect.Value = GUILayout.Toggle(SitPussyAreaShowRect.Value, "  " + L.T("跟着总开关一起画（粉色）—— 总开关在下面「实验性高亮」那个"));
                 GUILayout.Space(4f);
                 Sub("素材绑定（比手拖更贴合，跟着网格形变走）");
                 Hint("当前绑定：" + (string.IsNullOrEmpty(ManmanBindDrawable.Value)
                     ? "（无，用手拖的矩形）" : ManmanBindDrawable.Value));
-                if (GUILayout.Button("清除绑定（回到手拖矩形）"))
+                if (GUILayout.Button(L.T("清除绑定（回到手拖矩形）")))
                     ManmanBindDrawable.Value = "";
                 Hint("点下面任一素材名即可绑定，它的大小位置就是判定区");
                 Hint("（绑定到非 HitArea 的美术素材才有意义 —— 那 5 个 HitArea 本身就能点）");
@@ -10204,12 +10195,12 @@ namespace BurgerShopModder
                     int pg = Mathf.Clamp(ManmanDrawablePage.Value, 0, pages - 1);
                     ManmanDrawablePage.Value = pg;
 
-                    GUILayout.Label(string.Format("    共 {0} 个素材，第 {1}/{2} 页", all.Count, pg + 1, pages));
+                    GUILayout.Label(L.T("    共 {0} 个素材，第 {1}/{2} 页", all.Count, pg + 1, pages));
                     GUILayout.BeginHorizontal();
-                    if (GUILayout.Button("上一页") && pg > 0) ManmanDrawablePage.Value = pg - 1;
-                    if (GUILayout.Button("下一页") && pg < pages - 1) ManmanDrawablePage.Value = pg + 1;
-                    if (GUILayout.Button("HitArea 筛选")) ManmanDrawableFilter.Value = "HitArea";
-                    if (GUILayout.Button("清空筛选")) ManmanDrawableFilter.Value = "";
+                    if (GUILayout.Button(L.T("上一页")) && pg > 0) ManmanDrawablePage.Value = pg - 1;
+                    if (GUILayout.Button(L.T("下一页")) && pg < pages - 1) ManmanDrawablePage.Value = pg + 1;
+                    if (GUILayout.Button(L.T("HitArea 筛选"))) ManmanDrawableFilter.Value = "HitArea";
+                    if (GUILayout.Button(L.T("清空筛选"))) ManmanDrawableFilter.Value = "";
                     GUILayout.EndHorizontal();
 
                     int from = pg * PER;
@@ -10217,7 +10208,7 @@ namespace BurgerShopModder
                     {
                         string nm = all[i];
                         bool cur = (nm == ManmanBindDrawable.Value);
-                        if (GUILayout.Button((cur ? "(记录) " : "    ") + nm))
+                        if (GUILayout.Button((cur ? L.T("(记录) ") : "    ") + nm))
                         {
                             ManmanBindDrawable.Value = cur ? "" : nm;
                             _snapHint = cur ? "已取消素材绑定" : ("HitArea_Manman_By_Plugins 已绑定到素材：" + nm);
@@ -10225,18 +10216,17 @@ namespace BurgerShopModder
                         }
                     }
                 }
-                SitPussyAreaEnabled.Value = GUILayout.Toggle(SitPussyAreaEnabled.Value, "  启用 HitArea_Manman_By_Plugins");
+                SitPussyAreaEnabled.Value = GUILayout.Toggle(SitPussyAreaEnabled.Value, "  " + L.T("启用 HitArea_Manman_By_Plugins"));
                 if (SitPussyAreaEnabled.Value)
                 {
                     SitPussyAreaCX.Value = SliderF("中心 X（模型宽%）", SitPussyAreaCX.Value, 0f, 1f, "{0:0.000}", 0.005f);
                     SitPussyAreaCY.Value = SliderF("中心 Y（模型高%）", SitPussyAreaCY.Value, 0f, 1f, "{0:0.000}", 0.005f);
                     SitPussyAreaW.Value = SliderF("宽（模型宽%）", SitPussyAreaW.Value, 0.01f, 0.6f, "{0:0.000}", 0.005f);
                     SitPussyAreaH.Value = SliderF("高（模型高%）", SitPussyAreaH.Value, 0.01f, 0.6f, "{0:0.000}", 0.005f);
-                    ManmanDragMode.Value = GUILayout.Toggle(ManmanDragMode.Value,
-                        "  拖动模式（判定区中心实时跟随鼠标）");
+                    ManmanDragMode.Value = GUILayout.Toggle(ManmanDragMode.Value, "  " + L.T("拖动模式（判定区中心实时跟随鼠标）"));
                     if (ManmanDragMode.Value)
                         Hint("开着时框会跟着鼠标跑；对准位置后点下面的「绑定」");
-                    if (GUILayout.Button(ManmanDragMode.Value ? "绑定到此位置（并退出拖动）" : "把中心设为当前鼠标位置"))
+                    if (GUILayout.Button(ManmanDragMode.Value ? L.T("绑定到此位置（并退出拖动）") : L.T("把中心设为当前鼠标位置")))
                     {
                         float rx, ry;
                         if (ScreenToModelRel(Input.mousePosition, out rx, out ry))
@@ -10244,8 +10234,8 @@ namespace BurgerShopModder
                             SitPussyAreaCX.Value = rx;
                             SitPussyAreaCY.Value = ry;
                             ManmanDragMode.Value = false;
-                            _snapHint = string.Format("HitArea_Manman_By_Plugins 中心已绑定到模型相对位置 ({0:0.000}, {1:0.000})", rx, ry);
-                            Log.LogInfo(string.Format("[HitArea_Manman_By_Plugins] 中心绑定到模型相对位置 ({0:0.000}, {1:0.000})", rx, ry));
+                            _snapHint = L.T("HitArea_Manman_By_Plugins 中心已绑定到模型相对位置 ({0:0.000}, {1:0.000})", rx, ry);
+                            Log.LogInfo(L.T("[HitArea_Manman_By_Plugins] 中心绑定到模型相对位置 ({0:0.000}, {1:0.000})", rx, ry));
                         }
                         else
                         {
@@ -10267,7 +10257,7 @@ namespace BurgerShopModder
                                 if (pf2 != null) pointing = (pf2.GetValue(null) as string) ?? "(空)";
                             }
                             catch { }
-                            GUILayout.Label(string.Format("    屏幕矩形：{0:0}~{1:0} × {2:0}~{3:0}",
+                            GUILayout.Label(L.T("    屏幕矩形：{0:0}~{1:0} × {2:0}~{3:0}",
                                 dx0, dx1, dy0, dy1));
                             string src = "插件自建矩形";
                             try
@@ -10280,12 +10270,12 @@ namespace BurgerShopModder
                             }
                             catch { }
                             Hint("当前来源：" + src);
-                            Hint("鼠标在区内：" + (inRect ? "是" : "否")
-                                + "   游戏当前命中：" + pointing);
+                            Hint(L.T("鼠标在区内：") + (inRect ? L.T("是") : L.T("否"))
+                                + L.T("   游戏当前命中：") + pointing);
                         }
                         else Hint("注意： 拿不到模型包围盒（人物不在场？）");
                     }
-                    GUILayout.Label(string.Format("    当前矩形：x {0:0.000}~{1:0.000}  y {2:0.000}~{3:0.000}（屏幕比例）",
+                    GUILayout.Label(L.T("    当前矩形：x {0:0.000}~{1:0.000}  y {2:0.000}~{3:0.000}（屏幕比例）",
                         SitPussyAreaCX.Value - SitPussyAreaW.Value / 2f, SitPussyAreaCX.Value + SitPussyAreaW.Value / 2f,
                         SitPussyAreaCY.Value - SitPussyAreaH.Value / 2f, SitPussyAreaCY.Value + SitPussyAreaH.Value / 2f));
                 }
@@ -10357,7 +10347,7 @@ namespace BurgerShopModder
             Hint("本栏的设置与另外两栏【相互独立】，改一个不影响其他");
             Hint("（按姿势各存一份：_Fella / _Osiri / _Sit）");
             GUILayout.BeginHorizontal();
-            GUILayout.Label("拷贝自：", GUILayout.Width(56f));
+            GUILayout.Label(L.T("拷贝自："), GUILayout.Width(56f));
             foreach (string o in others)
             {
                 if (GUILayout.Button(o))
@@ -10374,7 +10364,7 @@ namespace BurgerShopModder
             _editPose = 0;      // 本栏的滑块读写这一份
             Section("口交");
             Hint("这边的机制叫「吸取」（对应另外两栏的索取 / 榨取）");
-            PowerUnlock.Value = GUILayout.Toggle(PowerUnlock.Value, "  攻击力强化");
+            PowerUnlock.Value = GUILayout.Toggle(PowerUnlock.Value, "  " + L.T("攻击力强化"));
             TabemiPowerMul.Value = SliderF("攻击力倍率", TabemiPowerMul.Value, 1f, 1000f, "×{0:0.#}", 10f);
             FellaSpeedPlus.Value = SliderF("口交速度加成", FellaSpeedPlus.Value, 0f, 1f, "{0:0.00}", 0.05f);
             GUILayout.Space(4f);
@@ -10382,11 +10372,10 @@ namespace BurgerShopModder
             Hint("0 = 不限（有卡死游戏的风险）");
             GUILayout.Space(6f);
             GUILayout.Space(4f);
-            HighlightHitAreas.Value = GUILayout.Toggle(HighlightHitAreas.Value,
-                "  【实验性】高亮可点击区域（三栏共用）");
+            HighlightHitAreas.Value = GUILayout.Toggle(HighlightHitAreas.Value, "  " + L.T("【实验性】高亮可点击区域（三栏共用）"));
             DrawCopyRow("口交", new string[] { "背榨", "正骑" });
             GUILayout.Space(6f);
-            if (GUILayout.Button("随机一套换衣") && tabemi != null)
+            if (GUILayout.Button(L.T("随机一套换衣")) && tabemi != null)
             {
                 InvokeMethod(tabemi, "RandomCostume");
                 ApplyCostume(tabemi);
@@ -10399,12 +10388,10 @@ namespace BurgerShopModder
             Section("背榨 · 背面骑乘");
             Hint("这边的机制叫「索取」：打屁股攒索取欲 → 索取模式");
             GUILayout.Space(4f);
-            OsiriKyuseiTier4.Value = GUILayout.Toggle(OsiriKyuseiTier4.Value,
-                "  连榨撞击声固定用第 3、4 档（其余状态按速度分档）");
+            OsiriKyuseiTier4.Value = GUILayout.Toggle(OsiriKyuseiTier4.Value, "  " + L.T("连榨撞击声固定用第 3、4 档（其余状态按速度分档）"));
             DrawDemandSection(false);
             GUILayout.Space(6f);
-            HighlightHitAreas.Value = GUILayout.Toggle(HighlightHitAreas.Value,
-                "  【实验性】高亮可点击区域（三栏共用）");
+            HighlightHitAreas.Value = GUILayout.Toggle(HighlightHitAreas.Value, "  " + L.T("【实验性】高亮可点击区域（三栏共用）"));
             DrawCopyRow("背榨", new string[] { "口交", "正骑" });
         }
 
@@ -10418,8 +10405,7 @@ namespace BurgerShopModder
             ChainMaxSitNormal.Value = SliderI("坐姿·常规 连榨上限", ChainMaxSitNormal.Value, 0, 50);
             ChainMaxSitDemand.Value = SliderI("坐姿·榨取 连榨上限", ChainMaxSitDemand.Value, 0, 50);
             GUILayout.Space(4f);
-            HighlightHitAreas.Value = GUILayout.Toggle(HighlightHitAreas.Value,
-                "  【实验性】高亮可点击区域（三栏共用）");
+            HighlightHitAreas.Value = GUILayout.Toggle(HighlightHitAreas.Value, "  " + L.T("【实验性】高亮可点击区域（三栏共用）"));
             DrawCopyRow("正骑", new string[] { "口交", "背榨" });
         }
 
@@ -10530,12 +10516,12 @@ namespace BurgerShopModder
 
             Hint("游戏从不启用的素材可以在这里手动开启。");
             Hint("(自然) = 自然可见（游戏在管）；(手动) = 已手动强制显示；空 = 隐藏");
-            GUILayout.Label(string.Format("强制列表：{0} 项   总开关：{1}{2}",
+            GUILayout.Label(L.T("强制列表：{0} 项   总开关：{1}{2}",
                 _partForceOn.Count,
                 _partOverrideEnabled ? "开" : "关",
                 _forceAllParts ? "   ← 「全部显示」生效中" : ""));
 
-            if (GUILayout.Button("列出当前显示的部件"))
+            if (GUILayout.Button(L.T("列出当前显示的部件")))
             {
                 RefreshPartList();
                 var onList = new List<string>();
@@ -10546,14 +10532,14 @@ namespace BurgerShopModder
             }
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("全部显示"))
+            if (GUILayout.Button(L.T("全部显示")))
             {
                 if (!_partOverrideEnabled) SnapshotPartOpacities();   // 开之前先记住原状
                 _partOverrideEnabled = true;
                 foreach (string n in _partNames) _partForceOn.Add(n);
                 LogOpWithState("部件·全部显示", _partNames.Count + " 个部件");
             }
-            if (GUILayout.Button("全部还原"))
+            if (GUILayout.Button(L.T("全部还原")))
             {
                 // 总开关关掉 —— 逐个勾选、全部显示 两套一起失效；
                 // 再把部件写回快照值，确保真的回到隐藏状态（只停覆盖是不够的）
@@ -10566,7 +10552,7 @@ namespace BurgerShopModder
             }
             GUILayout.EndHorizontal();
 
-            if (_partNames.Count == 0) { GUILayout.Label("未取到部件（不在店内场景？）"); return; }
+            if (_partNames.Count == 0) { GUILayout.Label(L.T("未取到部件（不在店内场景？）")); return; }
 
             foreach (string n in _partNames)
             {
@@ -10577,7 +10563,7 @@ namespace BurgerShopModder
                 GUILayout.BeginHorizontal();
                 string mark = natural ? "(自然)" : (forced ? "(手动)" : "·");
                 GUILayout.Label(mark + " " + n, GUILayout.Width(190f));
-                bool newForced = GUILayout.Toggle(forced, "强制", GUILayout.Width(60f));
+                bool newForced = GUILayout.Toggle(forced, L.T("强制"), GUILayout.Width(60f));
                 if (newForced != forced)
                 {
                     if (newForced)
@@ -10840,7 +10826,7 @@ namespace BurgerShopModder
                         float rx0, ry0, rx1, ry1;
                         if (PussyAreaScreenRect(out rx0, out ry0, out rx1, out ry1))
                         {
-                            sb.Append(string.Format("  矩形={0:0}~{1:0}x{2:0}~{3:0}", rx0, rx1, ry0, ry1));
+                            sb.Append(L.T("  矩形={0:0}~{1:0}x{2:0}~{3:0}", rx0, rx1, ry0, ry1));
                             Vector3 mpv = Input.mousePosition;
                             sb.Append("  鼠标=").Append(mpv.x.ToString("0")).Append(",").Append(mpv.y.ToString("0"));
                             sb.Append("  在区内=").Append((mpv.x >= rx0 && mpv.x <= rx1 && mpv.y >= ry0 && mpv.y <= ry1) ? "是" : "否");
@@ -11436,10 +11422,10 @@ namespace BurgerShopModder
 
         private void DrawTabSystem(object player, object clock)
         {
-            FrozenClock.Value = GUILayout.Toggle(FrozenClock.Value, "  冻结时钟（无限待在店里）");
+            FrozenClock.Value = GUILayout.Toggle(FrozenClock.Value, "  " + L.T("冻结时钟（无限待在店里）"));
             ClockFullTime.Value = SliderI("一天总时长（秒）", ClockFullTime.Value, 60, 3600);
             GameSpeed.Value = SliderF("游戏速度", GameSpeed.Value, 0.5f, 5f, "×{0:0.00}", 0.1f);
-            UnlockAllDays.Value = GUILayout.Toggle(UnlockAllDays.Value, "  解锁全部章节");
+            UnlockAllDays.Value = GUILayout.Toggle(UnlockAllDays.Value, "  " + L.T("解锁全部章节"));
 
             // ---- 汉堡制作倒计时 ----
             Section("汉堡制作倒计时");
@@ -11454,17 +11440,17 @@ namespace BurgerShopModder
             else if (BurgerTimeSpeed.Value > 100f)
                 Hint("加速：时间过得更快。");
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("原版（10 秒 / 原速）"))
+            if (GUILayout.Button(L.T("原版（10 秒 / 原速）")))
             {
                 BurgerTimeAll.Value = 0f; BurgerTimeSpeed.Value = 100f;
                 _snapHint = "倒计时已还原为原版";
             }
-            if (GUILayout.Button("冻结倒计时"))
+            if (GUILayout.Button(L.T("冻结倒计时")))
             {
                 BurgerTimeSpeed.Value = 0f;
                 _snapHint = "倒计时已冻结（可慢慢做）";
             }
-            if (GUILayout.Button("宽松（30 秒 / 半速）"))
+            if (GUILayout.Button(L.T("宽松（30 秒 / 半速）")))
             {
                 BurgerTimeAll.Value = 30f; BurgerTimeSpeed.Value = 50f;
                 _snapHint = "已设为 30 秒 + 半速";
@@ -11479,35 +11465,35 @@ namespace BurgerShopModder
             // 所以只能核程序集指纹。结论放最前面：它决定了后面所有自检的可信度。
             {
                 string verdict = GameBuild.Summary();
-                GUILayout.Label("  游戏版本：" + verdict);
+                GUILayout.Label("  " + L.T("游戏版本：") + verdict);
                 if (!verdict.Contains("一致"))
                 {
-                    if (GUILayout.Button("看详情（程序集指纹）")) _showBuild = !_showBuild;
+                    if (GUILayout.Button(L.T("看详情（程序集指纹）"))) _showBuild = !_showBuild;
                     if (_showBuild) Hint(GameBuild.Detail());
                 }
             }
 
             GUILayout.BeginHorizontal();
             Sub("截图与导出");
-            if (GUILayout.Button("截图存档")) { CaptureSnapshot(); _snapHint = "已保存到 snap_<时间戳>\\"; }
+            if (GUILayout.Button(L.T("截图存档"))) { CaptureSnapshot(); _snapHint = "已保存到 snap_<时间戳>\\"; }
             Sub("自检");
-            if (GUILayout.Button("全量自检")) { SelfTestAll(); _snapHint = "自检完成，见 selftest.txt"; }
-            if (GUILayout.Button("换衣自检")) { SelfTestCostume(); _snapHint = "换衣自检完成"; }
+            if (GUILayout.Button(L.T("全量自检"))) { SelfTestAll(); _snapHint = "自检完成，见 selftest.txt"; }
+            if (GUILayout.Button(L.T("换衣自检"))) { SelfTestCostume(); _snapHint = "换衣自检完成"; }
             GUILayout.EndHorizontal();
 
             // 一排最多 2~3 个，别横着堆太多（面板宽度有限）
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("补丁检查")) _snapHint = VerifyPatches();
-            if (GUILayout.Button("诊断导出")) { LogOp("诊断·导出", "用户点了导出"); DumpDiagnostics(); _snapHint = "已导出到 diag_<时间戳>\\"; }
+            if (GUILayout.Button(L.T("补丁检查"))) _snapHint = VerifyPatches();
+            if (GUILayout.Button(L.T("诊断导出"))) { LogOp("诊断·导出", "用户点了导出"); DumpDiagnostics(); _snapHint = "已导出到 diag_<时间戳>\\"; }
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("导出运行时贴图")) { ExportRuntimeTextures(); _snapHint = "已导出 runtime_tex\\*.png"; }
-            if (GUILayout.Button("打开产物目录")) OpenDumpDir();
+            if (GUILayout.Button(L.T("导出运行时贴图"))) { ExportRuntimeTextures(); _snapHint = "已导出 runtime_tex\\*.png"; }
+            if (GUILayout.Button(L.T("打开产物目录"))) OpenDumpDir();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("强制显示全部部件"))
+            if (GUILayout.Button(L.T("强制显示全部部件")))
             {
                 bool turningOn = !_forceAllParts;
                 if (turningOn && !_partOverrideEnabled) SnapshotPartOpacities();
@@ -11521,7 +11507,7 @@ namespace BurgerShopModder
                 }
                 _snapHint = turningOn ? "已强制显示全部部件（实验）" : "已停止强制显示（并已还原）";
             }
-            if (GUILayout.Button(_autoExport ? "(停止) 停止连续记录" : "(记录) 连续记录(0.5秒一次)"))
+            if (GUILayout.Button(_autoExport ? L.T("(停止) 停止连续记录") : L.T("(记录) 连续记录(0.5秒一次)")))
             {
                 _autoExport = !_autoExport;
                 if (_autoExport) _autoDir = "";      // 每次开始记录换一个新时间戳目录
@@ -11529,7 +11515,7 @@ namespace BurgerShopModder
                 _snapHint = _autoExport ? "连续记录中：每次落一个 diag_<时间戳> 目录" : "已停止连续记录";
             }
             Sub("记录");
-            if (GUILayout.Button(ActivityLogger.Running ? "(停止) 停止活动记录" : "(记录) 开始活动记录"))
+            if (GUILayout.Button(ActivityLogger.Running ? L.T("(停止) 停止活动记录") : L.T("(记录) 开始活动记录")))
             {
                 if (ActivityLogger.Running) ActivityLogger.StopLogging(); else ActivityLogger.StartLogging();
                 _snapHint = ActivityLogger.Running ? "记录中：activity_<时间戳>\\" : "已停止并写出 summary.txt";
@@ -11538,19 +11524,19 @@ namespace BurgerShopModder
 
             GUILayout.BeginHorizontal();
             Sub("换装测试");
-            if (GUILayout.Button("自动裤袜截图测试")) { StartTightsTest(); _snapHint = "自动依次设 0/1/2 并截图，约 3 秒"; }
-            if (GUILayout.Button("丝袜状态采样(10秒)")) { StartTightsSampling(); _snapHint = "采样中，10 秒后落盘"; }
+            if (GUILayout.Button(L.T("自动裤袜截图测试"))) { StartTightsTest(); _snapHint = "自动依次设 0/1/2 并截图，约 3 秒"; }
+            if (GUILayout.Button(L.T("丝袜状态采样(10秒)"))) { StartTightsSampling(); _snapHint = "采样中，10 秒后落盘"; }
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             Sub("部件与图集");
-            if (GUILayout.Button("部件索引对照")) { _snapHint = DumpPartIndexMap() ? "已导出 partindex 目录" : "未找到模型（需在店内场景）"; }
-            if (GUILayout.Button("盘点运行时图集")) { ProbeRuntimeAtlas(); _snapHint = "见 runtime_atlas.txt / 控制台"; }
+            if (GUILayout.Button(L.T("部件索引对照"))) { _snapHint = DumpPartIndexMap() ? "已导出 partindex 目录" : "未找到模型（需在店内场景）"; }
+            if (GUILayout.Button(L.T("盘点运行时图集"))) { ProbeRuntimeAtlas(); _snapHint = "见 runtime_atlas.txt / 控制台"; }
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("导出顶点映射")) { DumpVertexMap(); _snapHint = "已导出 vmap\vmap.tsv"; }
-            if (GUILayout.Button("列出隐藏部件")) _snapHint = ListHiddenParts();
+            if (GUILayout.Button(L.T("导出顶点映射"))) { DumpVertexMap(); _snapHint = "已导出 vmap\vmap.tsv"; }
+            if (GUILayout.Button(L.T("列出隐藏部件"))) _snapHint = ListHiddenParts();
             GUILayout.EndHorizontal();
             GUILayout.Label(_forceAllParts
                 ? "实验中：所有部件透明度被拉到 1（用于判断某件衣服到底有没有图）"
@@ -11558,7 +11544,7 @@ namespace BurgerShopModder
 
             GUILayout.Space(4f);
             Sub("危险操作");
-            if (GUILayout.Button("重置全部开关"))
+            if (GUILayout.Button(L.T("重置全部开关")))
             {
                 GodMode.Value = false;
                 NoEcstasy.Value = false;
@@ -11612,25 +11598,25 @@ namespace BurgerShopModder
                 {
                     GUIStyle style = GUI.skin.button;
                     if (cur == v) style = HighlightStyle(style);
-                    if (GUILayout.Button(v == 0 ? "无" : v.ToString(), style, GUILayout.Width(34f)))
+                    if (GUILayout.Button(v == 0 ? L.T("无") : v.ToString(), style, GUILayout.Width(34f)))
                     {
                         SetField(tabemi, SlotFields[i], v);
                         ApplyCostume(tabemi);
                         // 换装是最常出问题的一类操作：记录"选了哪项"以及"游戏随后给出的状态"
-                        LogOpWithState("换装·" + SlotLabels[i], "选 " + (v == 0 ? "无" : v.ToString()));
+                        LogOpWithState("换装·" + SlotLabels[i], "选 " + (v == 0 ? L.T("无") : v.ToString()));
                     }
                 }
                 GUILayout.EndHorizontal();
             }
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("随机一套"))
+            if (GUILayout.Button(L.T("随机一套")))
             {
                 InvokeMethod(tabemi, "RandomCostume");
                 ApplyCostume(tabemi);
                 LogOpWithState("换装·随机一套", "调 RandomCostume()");
             }
-            if (GUILayout.Button("恢复默认"))
+            if (GUILayout.Button(L.T("恢复默认")))
             {
                 for (int i = 0; i < SlotFields.Length; i++)
                     SetField(tabemi, SlotFields[i], SlotDefaults[i]);
@@ -11648,7 +11634,7 @@ namespace BurgerShopModder
                 object v = FieldQuiet(mdl.GetType(), "_Op_CenterGirlSitting_Tights")?.GetValue(mdl);
                 if (v is float f) baseOp = f;
             }
-            GUILayout.Label(string.Format("丝袜基础层 {0:0.#}（Tights={1}；插件不干预此层，仅显示实测值）",
+            GUILayout.Label(L.T("丝袜基础层 {0:0.#}（Tights={1}；插件不干预此层，仅显示实测值）",
                 baseOp, t));
         }
 
@@ -11829,9 +11815,9 @@ namespace BurgerShopModder
                 bool okEc = Mathf.Abs(gotEc - baseEc) < 0.5f;
                 if (okHp) pass++; else fail++;
                 if (okEc) pass++; else fail++;
-                sb.AppendLine(string.Format("  {0}  maxHP 被削 10% 后 → {1:0.##}（基线 {2:0.##}）",
+                sb.AppendLine(L.T("  {0}  maxHP 被削 10% 后 → {1:0.##}（基线 {2:0.##}）",
                     okHp ? "OK  " : "FAIL", gotHp, baseHp));
-                sb.AppendLine(string.Format("  {0}  maxEcstasy 被削 10% 后 → {1:0.##}（基线 {2:0.##}）",
+                sb.AppendLine(L.T("  {0}  maxEcstasy 被削 10% 后 → {1:0.##}（基线 {2:0.##}）",
                     okEc ? "OK  " : "FAIL", gotEc, baseEc));
 
                 LockMaxHp.Value = keepHp; LockMaxEcstasy.Value = keepEc;
@@ -11848,7 +11834,7 @@ namespace BurgerShopModder
                 float upHp = GetFloat(player, "maxHP");
                 bool okUpHp = upHp > maxHp + 1f;
                 if (okUpHp) pass++; else fail++;
-                sb.AppendLine(string.Format("  {0}  HP 上限 {1:0.##} → {2:0.##}（目标 {3:0.##}）",
+                sb.AppendLine(L.T("  {0}  HP 上限 {1:0.##} → {2:0.##}（目标 {3:0.##}）",
                     okUpHp ? "OK  " : "FAIL", maxHp, upHp, targetHp));
 
                 float targetEc = maxEc + 30f;
@@ -11856,7 +11842,7 @@ namespace BurgerShopModder
                 float upEc = GetFloat(player, "maxEcstasy");
                 bool okUpEc = upEc > maxEc + 1f;
                 if (okUpEc) pass++; else fail++;
-                sb.AppendLine(string.Format("  {0}  绝顶上限 {1:0.##} → {2:0.##}（目标 {3:0.##}）",
+                sb.AppendLine(L.T("  {0}  绝顶上限 {1:0.##} → {2:0.##}（目标 {3:0.##}）",
                     okUpEc ? "OK  " : "FAIL", maxEc, upEc, targetEc));
 
                 // 恢复
@@ -11882,7 +11868,7 @@ namespace BurgerShopModder
                 float hp1 = GetFloat(player, "currentHP");
                 bool okHp = Mathf.Abs(hp1 - hp0) < 0.01f;
                 if (okHp) pass++; else fail++;
-                sb.AppendLine(string.Format("  {0}  HP 下降率 0%：HPChange(-10) → {1:0.###}（原 {2:0.###}）",
+                sb.AppendLine(L.T("  {0}  HP 下降率 0%：HPChange(-10) → {1:0.###}（原 {2:0.###}）",
                     okHp ? "OK  " : "FAIL", hp1, hp0));
 
                 EcstasyUpRate.Value = 0f;
@@ -11891,7 +11877,7 @@ namespace BurgerShopModder
                 float ec1 = GetFloat(player, "CurrentEcstasy");
                 bool okEc = Mathf.Abs(ec1 - ec0) < 0.01f;
                 if (okEc) pass++; else fail++;
-                sb.AppendLine(string.Format("  {0}  绝顶上升率 0%：EcstasyChange(+10) → {1:0.###}（原 {2:0.###}）",
+                sb.AppendLine(L.T("  {0}  绝顶上升率 0%：EcstasyChange(+10) → {1:0.###}（原 {2:0.###}）",
                     okEc ? "OK  " : "FAIL", ec1, ec0));
 
                 // 50% 应当只生效一半
@@ -11902,7 +11888,7 @@ namespace BurgerShopModder
                 float applied = hp2 - hp3;
                 bool okHalf = Mathf.Abs(applied - 5f) < 0.6f;
                 if (okHalf) pass++; else fail++;
-                sb.AppendLine(string.Format("  {0}  HP 下降率 50%：HPChange(-10) 实际生效 {1:0.##}（期望 5）",
+                sb.AppendLine(L.T("  {0}  HP 下降率 50%：HPChange(-10) 实际生效 {1:0.##}（期望 5）",
                     okHalf ? "OK  " : "FAIL", applied));
 
                 // 还原
@@ -11962,7 +11948,7 @@ namespace BurgerShopModder
                 sb.AppendLine("  条尺寸：" + DescribeGauges());
 
                 sb.AppendLine(snapHasPlayer
-                    ? string.Format("  已还原：HP {0:0.##}/{1:0.##}  绝顶 {2:0.##}/{3:0.##}  连吃上限 {4}  射精 {5}",
+                    ? L.T("  已还原：HP {0:0.##}/{1:0.##}  绝顶 {2:0.##}/{3:0.##}  连吃上限 {4}  射精 {5}",
                         GetFloat(player, "currentHP"), GetFloat(player, "maxHP"),
                         GetFloat(player, "CurrentEcstasy"), GetFloat(player, "maxEcstasy"),
                         (int)GetFloat(player, "maxBurgerNum"), (int)GetFloat(player, "syaseiCount"))
@@ -11977,7 +11963,7 @@ namespace BurgerShopModder
             _selfTestKeepEc = float.NaN;
 
             sb.AppendLine();
-            sb.AppendLine(string.Format("结果：{0} 通过 / {1} 失败 / {2} 跳过", pass, fail, skip));
+            sb.AppendLine(L.T("结果：{0} 通过 / {1} 失败 / {2} 跳过", pass, fail, skip));
 
             string outFile = System.IO.Path.Combine(DiagStampDir("selftest"), "selftest.txt");
             try
@@ -12247,7 +12233,7 @@ namespace BurgerShopModder
                 bool ok = Mathf.Abs(gotOn - on) < 0.001f && Mathf.Abs(gotOff - off) < 0.001f;
                 if (ok) pass++; else fail++;
 
-                sb.AppendLine(string.Format("  {0,-8} → {1,-34} 置1后={2:0.##}  置0后={3:0.##}  {4}",
+                sb.AppendLine(L.T("  {0,-8} → {1,-34} 置1后={2:0.##}  置0后={3:0.##}  {4}",
                     slot, param, gotOn, gotOff, ok ? "OK" : "FAIL"));
 
                 SetField(tabemi, slot, saved);
@@ -12265,11 +12251,11 @@ namespace BurgerShopModder
                 float baseOp = GetFloat(model, "_Op_CenterGirlSitting_Tights");
                 bool ok = baseOp < 0.5f;
                 if (ok) pass++; else fail++;
-                sb.AppendLine(string.Format("  {0}  丝袜基础层未被插件干预 _Op_..._Tights = {1:0.#}（Tights={2}，应为 0）",
+                sb.AppendLine(L.T("  {0}  丝袜基础层未被插件干预 _Op_..._Tights = {1:0.#}（Tights={2}，应为 0）",
                     ok ? "OK  " : "FAIL", baseOp, tights));
             }
 
-            sb.AppendLine(string.Format("结果：{0} 通过 / {1} 失败", pass, fail));
+            sb.AppendLine(L.T("结果：{0} 通过 / {1} 失败", pass, fail));
 
             string outFile = System.IO.Path.Combine(DiagStampDir("selftest"), "costume_selftest.txt");
             try
@@ -12298,7 +12284,7 @@ namespace BurgerShopModder
         {
             float before = value;
             GUILayout.BeginHorizontal();
-            GUILayout.Label(label, GUILayout.Width(124f));
+            GUILayout.Label(L.T(label), GUILayout.Width(124f));
             if (GUILayout.Button("−", GUILayout.Width(24f))) value -= step;
             value = GUILayout.HorizontalSlider(value, min, max);
             if (GUILayout.Button("+", GUILayout.Width(24f))) value += step;
@@ -12316,7 +12302,7 @@ namespace BurgerShopModder
             int before = value;
             int step = StepOfInt(max);
             GUILayout.BeginHorizontal();
-            GUILayout.Label(label, GUILayout.Width(124f));
+            GUILayout.Label(L.T(label), GUILayout.Width(124f));
             if (GUILayout.Button("−", GUILayout.Width(24f))) value -= step;
             value = Mathf.RoundToInt(GUILayout.HorizontalSlider(value, min, max));
             if (GUILayout.Button("+", GUILayout.Width(24f))) value += step;

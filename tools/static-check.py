@@ -320,11 +320,18 @@ if _en.exists():
     _panel = read(ROOT / 'plugin' / 'BurgerShopModder.cs') or ''
     _calls = set(re.findall(r'L\.T\(\s*"([^"]*)"', _panel))
 
+    # 面板上大部分文案不是直接包 L.T 的，而是当参数传给这四个绘制 helper ——
+    # 翻译在 helper 内部统一做（一处改动覆盖所有调用点）。所以这里也要认。
+    _calls |= set(re.findall(r'(?:Section|Hint|SliderF|SliderI)\(\s*"([^"]*)"', _panel))
+
     # 栏名不按字面量传进去，走的是 L.T(TabNames[i])。
     # 所以要把 TabNames 数组里的元素也当成「有调用点」，否则 8 个栏名会被误判成孤儿。
     _tabarr = re.search(r'TabNames\s*=\s*\{([^}]*)\}', _panel)
     if _tabarr:
         _calls |= set(re.findall(r'"([^"]*)"', _tabarr.group(1)))
+
+    # 空字符串是占位（比如某个 Hint("")），不当成待译条目
+    _calls = {x for x in _calls if x}
 
     _orphan = [z for z in _entries if z not in _calls]
     if _orphan:

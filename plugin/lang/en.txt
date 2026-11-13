@@ -33,3 +33,321 @@
 # ---- 系统栏 ----
 界面语言	Language
 切换立刻生效，不用重启。英文还没翻完，没翻到的地方会显示中文。	Applied immediately, no restart needed. English is not complete yet - anything untranslated stays in Chinese.
+
+# ---- 预设 / 关于 / 玩家栏 ----
+攻击力提升	Attack power boost
+配置预设	Presets
+把当前的全部设置存成一份快照，以后一键切回去。	Save every current setting as a snapshot and switch back to it in one click.
+预设只含修改器的设置，不含存档。	A preset holds trainer settings only. Your save file is not part of it.
+存的时候如果同名已存在，旧的那份会先自动备份。	If a preset with that name already exists, the older one is backed up first.
+已有预设（	Existing presets (
+还没有预设。填个名字，点上面的「存为预设」。	No presets yet. Type a name, then click "Save as preset" above.
+「应用」会覆盖当前全部设置 —— 覆盖前会自动备份一份当前状态，提示里会写出文件名。	"Apply" overwrites every current setting. The current state is backed up first, and the status line names the backup file.
+遇到问题、想报 bug、想要别的游戏版本的适配 —— 上面三个地方都能找到我。	Found a problem, want to report a bug, or need this for another game version? All three links above reach me.
+变化率（按每次实际变化的量缩放）	Rate scaling (multiplies each actual change)
+100% = 原版；0% = 该类变化完全不发生	100% = vanilla; 0% = that kind of change never happens
+HP 下降率	HP loss rate
+HP 回复率	HP recovery rate
+绝顶上升率	Ecstasy gain rate
+绝顶下降率	Ecstasy decay rate
+快捷设置	Quick settings
+无敌（HP 每帧补满）	Invincible (HP refilled every frame)
+绝顶值归零（不被吸精）	Ecstasy to zero (cannot be drained)
+绝顶抗性	Ecstasy resistance
+连吃汉堡上限	Max burgers in a row
+射精次数	Ejaculation count
+射精次数影响每天的具材数，改完回标题重进当天生效。	The ejaculation count drives each day's ingredient count. Go back to the title screen and re-enter the day to apply it.
+汉堡层数	Burger layers
+层数 = 基础具材 + 射精次数（作者设计：榨得越多堆越高）	Layers = base ingredients + ejaculation count (the design: the more drained, the higher it stacks)
+快捷操作	Quick actions
+绝顶动摇（累积时随机触发的衰减正弦波动）	Ecstasy tremor (a decaying sine wave that fires at random while accumulating)
+启用动摇	Enable tremor
+触发概率	Trigger chance
+持续时间	Duration
+振幅	Amplitude
+落点损失	Landing loss
+按 R 稳住后损失	Loss after stabilising with R
+冷却	Cooldown
+与攻击脉冲共振（攻速快→抖动更细更快）	Resonate with attack pulses (faster attacks shake finer and faster)
+减速最低值	Slow floor
+减速模板	Slow template
+绝顶适应（动摇结束后，均为临时，结束严格还原）	Ecstasy adaptation (applied after a tremor, temporary throughout, fully restored afterwards)
+动摇期间攻击削弱	Attack damping during tremor
+适应持续	Adaptation duration
+适应期累积倍率	Accumulation multiplier while adapting
+生命上限提升	Max HP boost
+受伤倍率	Damage taken multiplier
+每秒回复	Regen per second
+安全闸	Safety valve
+吸精 · 当前状态	Absorb: current state
+当前场景：	Current scene: 
+上限	Caps
+游戏机制：被榨取按 3~5% 削 maxHP、1~5% 削 maxEcstasy；	Game rule: being drained shaves 3 to 5% off maxHP and 1 to 5% off maxEcstasy;
+吃汉堡的回血按 maxHP 的百分比算 → 上限被削就越来越难回血。	Burger healing is a percentage of maxHP, so a shaved cap makes recovery progressively harder.
+锁 HP 上限（不再下降）	Lock the HP cap (it stops dropping)
+锁绝顶值上限	Lock the ecstasy cap
+目标上限（绝对值，每帧平滑逼近）	Target caps (absolute values, approached smoothly every frame)
+HP 上限目标	HP cap target
+绝顶上限目标	Ecstasy cap target
+逼近速度（点/秒）	Approach speed (points/sec)
+0 = 不启用。这是「设到多少」，不是「加百分之多少」	0 = off. This sets the value itself, not a percentage increase.
+拖滑块只是改目标，不会累乘，绝不会膨胀。	Dragging a slider only changes the target. Nothing compounds, so it cannot inflate.
+榨取	Drain
+索取	Demand
+启用榨取模式	Enable drain mode
+启用索取模式	Enable demand mode
+打屁股给攻击速度冲量	Spanking gives attack speed an impulse
+首下冲量	First-hit impulse
+
+# ---- 叠层 / 余韵 / 背榨 / 束缚之吻 ----
+叠加倍率	Stack multiplier
+冲上去的快慢	How fast it rises
+消退的快慢	How fast it decays
+涨欲概率·平均	Urge gain chance (average)
+命中时增加	Gain per hit
+上面两项的波动幅度	Random spread on the two above
+射精时·累积概率	On ejaculation: accumulation chance
+射精时·增加	On ejaculation: gain
+每次吸精·累积概率	Per absorb: accumulation chance
+每次吸精·增加	Per absorb: gain
+最多叠加段数	Max stack segments
+叠满后刷新持续时间	Refresh the duration when full
+段数满了之后不再加层，但条件达成会给时间（0 = 原行为）	Once full it stops adding layers, but a satisfied condition still refreshes the timer (0 = vanilla behaviour)
+角色攻击也参与叠层判定（关掉则只有打屁股能叠）	Character attacks also count for stacking (turn this off and only spanking stacks)
+阈值模式（攒够就叠，可预期）	Threshold mode (stacks once enough has accumulated; predictable)
+    概率模式（{0}欲即概率，随机）	    Chance mode ({0} urge = chance, random)
+叠第1层所需索取欲	Urge needed for the first layer
+每多一层所需增加	Extra urge needed per further layer
+每次索取欲下限	Urge per event: minimum
+每次索取欲上限	Urge per event: maximum
+脱出惩罚概率	Escape penalty chance
+脱出要求倍数	Escape requirement multiplier
+攻击力随速度加成	Attack power scales with speed
+速度参考增幅	Reference speed gain
+速度曲线指数	Speed curve exponent
+绝顶动画倍速	Climax animation speed
+分阶段加速（避免与 osiri 加速叠加）	Staged speed-up (avoids compounding with the osiri boost)
+{0}模式期间不回口交	No fellatio return during {0} mode
+每次索取·回口交衰减	Per demand: fellatio-return decay
+回口交后骑乘位门槛降低	Riding threshold drops after a fellatio return
+回口交后累积「再次进骑乘位」概率	Accumulates the chance of returning to riding after a fellatio return
+每次造成伤害·累积概率	Per damage dealt: accumulation chance
+累积成功时增加	Gain when accumulation succeeds
+上面两项波动幅度	Random spread on the two above
+门槛原值：第1~4天 = 10/9/8/7，越低骑乘位来得越快	Base threshold: days 1 to 4 = 10/9/8/7. Lower means riding comes sooner.
+索取模式最短	Demand mode: minimum
+索取模式最长	Demand mode: maximum
+余韵 = 基础速度更低、单次持续时间更长的连榨	Afterglow = chain draining at a lower base speed but with longer individual rounds
+只在模式中按射精累积；等最后一段的连榨等活动全部结束才发动	Accumulates per ejaculation during the mode, and only fires once the last chain round has fully finished
+余韵 · 累积与发动	Afterglow: accumulation and trigger
+模式中每射精累积余韵	Afterglow accumulated per ejaculation during the mode
+局面稳定后发动延迟	Delay before firing once things settle
+余韵期间仍累积余韵（一般应关：收尾不该自我延长）	Keep accumulating afterglow during the afterglow (usually off: the ending should not extend itself)
+余韵期间索取欲增长	Urge growth during the afterglow
+调低它 → 余韵之后有一段干净空档，不会马上又进	Lower this for a clean gap after the afterglow, instead of dropping straight back in
+余韵清空后把索取欲一并归零	Zero the urge as well when the afterglow clears
+余韵 · 调速与波动	Afterglow: speed and variation
+余韵动画速度	Afterglow animation speed
+速度波动幅度	Speed variation
+速度波动频率	Speed variation frequency
+余韵绝顶值软上限	Afterglow ecstasy soft cap
+到位后波动幅度	Variation once it reaches the cap
+（下面两个只在「手动进入余韵」时用，正常流程不用）	(The next two apply only to a manually started afterglow; the normal flow does not use them)
+手动余韵下限	Manual afterglow: minimum
+手动余韵上限	Manual afterglow: maximum
+当前：	Current: 
+背榨 · 骑乘	Rear mount: riding
+骑乘速度加成	Riding speed boost
+连榨上限	Chain limit
+骑乘位·常规	Riding: normal
+骑乘位·索取模式	Riding: demand mode
+坐姿点头部随时可累积榨取欲（不限束缚之吻）	Head pats in the sitting pose accumulate drain urge at any time (not only inside the binding kiss)
+坐姿射精→进榨取的概率	Chance that a sitting ejaculation leads into draining
+坐姿挂起超时见下方「余韵」区	The sitting timeout is in the Afterglow section below
+正骑 · 束缚之吻	Riding: binding kiss
+正骑的连榨/余韵【只有进入束缚之吻才会发生】	Chain draining and afterglow in the riding pose only happen inside the binding kiss
+本栏下面那些滑块（攻击力/倍速/连榨…）都已绑定到束缚之吻：	Every slider below (attack power, speed, chain and so on) is bound to the binding kiss:
+进入吻或榨取状态时才会生效，退出即失效	they apply only while inside the kiss or draining, and stop the moment you leave
+自动进入束缚之吻（不用按 X）	Enter the binding kiss automatically (no X key needed)
+坐姿锁定：进去就出不来（自动切换全拦）	Sit lock: once in, you cannot get out (all automatic switches are blocked)
+
+# ---- 坐姿 / 口交 / 换装 / 系统栏 ----
+启用坐姿锁定	Enable sit lock
+自动进入间隔	Auto-entry interval
+阻止窗口越玩越短（原版每次 *=0.9）	Stop the window from shrinking over time (vanilla multiplies it by 0.9 each time)
+窗口长度倍数	Window length multiplier
+接吻中但还没进榨取时，单独用这一套速度：	Speeds used while kissing but before draining starts:
+束缚之吻单独调速	Separate speed control for the binding kiss
+接吻动画速度	Kiss animation speed
+波动频率	Variation frequency
+正骑 · HitArea_Manman_By_Plugins	Riding: HitArea_Manman_By_Plugins
+点击 = 坐姿版的「打屁股」：涨榨取欲 + 给坐姿动作一个速度冲量	Clicking is the sitting-pose equivalent of spanking: it raises drain urge and gives the sitting animation a speed impulse
+判定按【人物模型包围盒】算 → 跟着人物走，换分辨率也不跑偏	The hit area is computed from the character's model bounding box, so it follows the character and does not drift when the resolution changes
+跟着总开关一起画（粉色）—— 总开关在下面「实验性高亮」那个	Drawn along with the master switch (pink). The master switch is under "Experimental highlight" below.
+当前绑定：	Currently bound: 
+点下面任一素材名即可绑定，它的大小位置就是判定区	Click any part name below to bind it; its size and position become the hit area
+（绑定到非 HitArea 的美术素材才有意义 —— 那 5 个 HitArea 本身就能点）	(Binding only makes sense for non-HitArea art parts; the five HitAreas are already clickable)
+筛选（子串）：	Filter (substring): 
+启用 HitArea_Manman_By_Plugins	Enable HitArea_Manman_By_Plugins
+中心 X（模型宽%）	Center X (of model width)
+中心 Y（模型高%）	Center Y (of model height)
+宽（模型宽%）	Width (of model width)
+高（模型高%）	Height (of model height)
+拖动模式（判定区中心实时跟随鼠标）	Drag mode (the hit area centre follows the mouse live)
+开着时框会跟着鼠标跑；对准位置后点下面的「绑定」	While on, the box follows the mouse. Line it up, then click "Bind" below.
+当前来源：	Current source: 
+鼠标在区内：	Mouse inside area: 
+注意： 拿不到模型包围盒（人物不在场？）	Note: cannot read the model bounding box (character not present?)
+本栏的设置与另外两栏【相互独立】，改一个不影响其他	Settings on this tab are independent of the other two; changing one does not affect the others
+（按姿势各存一份：_Fella / _Osiri / _Sit）	(One copy per pose: _Fella / _Osiri / _Sit)
+这边的机制叫「吸取」（对应另外两栏的索取 / 榨取）	The mechanic here is Absorb, corresponding to Demand and Drain on the other two tabs
+攻击力强化	Attack power boost
+攻击力倍率	Attack power multiplier
+口交速度加成	Fellatio speed boost
+口交连榨上限	Fellatio chain limit
+0 = 不限（有卡死游戏的风险）	0 = unlimited (risks freezing the game)
+【实验性】高亮可点击区域（三栏共用）	Experimental: highlight clickable areas (shared by all three tabs)
+背榨 · 背面骑乘	Rear mount: rear riding
+这边的机制叫「索取」：打屁股攒索取欲 → 索取模式	The mechanic here is Demand: spanking builds demand urge, which leads into demand mode
+连榨撞击声固定用第 3、4 档（其余状态按速度分档）	Chain impact sounds stay on steps 3 and 4 (other states step by speed)
+正骑 · 坐姿	Riding: sitting
+这边的机制叫「榨取」：点头部攒榨取欲 → 榨取模式	The mechanic here is Drain: head pats build drain urge, which leads into drain mode
+坐姿·常规 连榨上限	Sitting, normal: chain limit
+坐姿·榨取 连榨上限	Sitting, drain: chain limit
+部件	Parts
+游戏从不启用的素材可以在这里手动开启。	Parts the game never enables can be switched on here by hand.
+(自然) = 自然可见（游戏在管）；(手动) = 已手动强制显示；空 = 隐藏	(auto) = naturally visible, managed by the game; (manual) = force-shown by hand; blank = hidden
+强制	Force
+冻结时钟（无限待在店里）	Freeze the clock (stay in the shop forever)
+一天总时长（秒）	Day length (seconds)
+游戏速度	Game speed
+解锁全部章节	Unlock all chapters
+汉堡制作倒计时	Burger-making countdown
+下单后限时做出汉堡，超时算失败。这里调的是那个倒计时。	You get limited time to make each ordered burger, and running out counts as a failure. This controls that countdown.
+每单时长（秒，0 = 原版）	Time per order (seconds, 0 = vanilla)
+当前用游戏原版：10 秒	Currently vanilla: 10 seconds
+倒计时速度（%）	Countdown speed (%)
+0 = 冻结：倒计时不走，可以慢慢做。	0 = frozen: the countdown stops and you can take your time.
+慢放：时间过得更慢，等于多给你时间。	Slowed: time passes more slowly, which gives you more of it.
+加速：时间过得更快。	Sped up: time passes faster.
+取证 / 自检	Evidence / self-check
+未进入店内场景	Not in the shop scene
+
+# ---- 各栏按钮与调试工具 ----
+(停止) 停止活动记录	(stop) Stop activity logging
+(停止) 停止连续记录	(stop) Stop continuous recording
+(记录) 	(log) 
+(记录) 开始活动记录	(log) Start activity logging
+(记录) 连续记录(0.5秒一次)	(log) Record continuously (every 0.5s)
+HP 不下降	HP does not drop
+HP 回满	Refill HP
+HP 目标 ×1.5	HP target x1.5
+HP 目标 ×2	HP target x2
+HitArea 筛选	HitArea filter
+上一页	Previous page
+下一页	Next page
+丝袜状态采样(10秒)	Tights state sampling (10s)
+全回 100%	Restore all to 100%
+全部显示	Show all
+全部还原	Restore all
+全量自检	Full self-check
+冻结倒计时	Freeze the countdown
+列出当前显示的部件	List the parts currently shown
+列出隐藏部件	List hidden parts
+原版（10 秒 / 原速）	Vanilla (10 seconds / normal speed)
+基础具材回 4	Base ingredients back to 4
+宽松（30 秒 / 半速）	Relaxed (30 seconds / half speed)
+导出运行时贴图	Export runtime textures
+导出顶点映射	Export vertex map
+层数复位（4 层）	Reset the layers to 4
+展开	Expand
+强制显示全部部件	Force-show every part
+恢复默认	Restore defaults
+恢复默认上限（100 / 100）	Restore the default caps (100 / 100)
+截图存档	Save a screenshot
+手动触发动摇	Trigger the tremor by hand
+手动进入{0}	Enter {0} manually
+手动进入余韵	Enter the afterglow by hand
+打开产物目录	Open the output folder
+把中心设为当前鼠标位置	Set the centre to the current mouse position
+换衣自检	Outfit self-check
+收起	Collapse
+无	None
+本次状态	Status this time
+清空筛选	Clear the filter
+清除绑定（回到手拖矩形）	Clear the binding (back to a hand-dragged box)
+盘点运行时图集	Inventory runtime atlases
+看详情（程序集指纹）	Show details (assembly fingerprint)
+绑定到此位置（并退出拖动）	Bind to this position (and leave drag mode)
+绝顶不上升	Ecstasy does not rise
+绝顶清零	Zero the ecstasy
+绝顶目标 ×1.5	Ecstasy target x1.5
+绝顶目标 ×2	Ecstasy target x2
+自动裤袜截图测试	Automatic tights screenshot test
+补丁检查	Check patches
+解锁一次（让游戏能切走）	Unlock once (so the game can switch away)
+诊断导出	Export diagnostics
+部件索引对照	Part index mapping
+重置全部开关	Reset every switch
+随机一套	Random set
+随机一套换衣	Random outfit
+
+# ---- 面板外框 ----
+修改器（F9）	Trainer (F9)
+数值修改器 · F9 隐藏	Trainer · F9 to hide
+标题画面（无数据）	Title screen (no data)
+产物目录	Output folder
+
+# ---- 外框与状态行 ----
+名字	Name
+预设目录：	Preset folder: 
+数值修改器	Trainer
+BepInEx 插件 + 配套修改器。游戏本体不会被改动。	A BepInEx plugin plus a companion trainer. The game itself is never modified.
+本仓库不包含游戏的任何素材或程序集。	This repository ships no game art and no game assemblies.
+打屁股 → 累积「索取欲」，索取欲的数值就是进入索取模式的概率	Spanking accumulates demand urge, and that number is the chance of entering demand mode
+射精 / 吸精·连榨 也累积索取欲（余韵走同一链条）	Ejaculation, absorbing and chain draining also add demand urge (the afterglow rides the same chain)
+榨取模式期间速度不因射精减缓；只能由角色自行退出	Speed does not decay from ejaculation during drain mode; only the character can end it
+索取模式期间速度不因射精减缓；只能由角色自行退出	Speed does not decay from ejaculation during demand mode; only the character can end it
+拷贝自：	Copied from: 
+未取到部件（不在店内场景？）	No parts found (not in the shop scene?)
+游戏版本：	Game version: 
+
+# ---- 面板状态行 ----
+    共 {0} 个素材，第 {1}/{2} 页	    {0} parts, page {1}/{2}
+    叠各层所需：{0:0} / {1:0} / {2:0} / {3:0} / {4:0} …	    Urge per layer: {0:0} / {1:0} / {2:0} / {3:0} / {4:0} …
+    绝顶值在 {0:0}% ~ {1:0}% 之间起伏	    Ecstasy swings between {0:0}% and {1:0}%
+    速度在 {0:0}% ~ {1:0}% 之间起伏（越低=单次越长）	    Speed swings between {0:0}% and {1:0}% (lower means longer rounds)
+  吸精发生率 {0}%（已修正游戏的整数除法 bug，填多少就是多少）	  Absorb rate {0}% (the game's integer-division bug is corrected, so the value you set is the value you get)
+  实际在 概率 {0:0.#}~{1:0.#}% / 增量 {2:0.#}~{3:0.#}% 之间随机	  Rolling within chance {0:0.#} to {1:0.#}% / gain {2:0.#} to {3:0.#}%
+  当前乘数 ×{0:0.###}（目标 ×{1:0.###}）	  Current multiplier x{0:0.###} (target x{1:0.###})
+  当前攻击速度倍率 ×{0:0.###} → 速度项 ×{1:0.###}	  Attack speed multiplier x{0:0.###}, speed term x{1:0.###}
+  当前累积 {0:0.#}%{1}	  Currently {0:0.#}%{1}
+HP {0:0.#}/{1:0.#}    绝顶 {2:0.#}/{3:0.#}	HP {0:0.#}/{1:0.#}    Ecstasy {2:0.#}/{3:0.#}
+进度 {0:0}%   时刻 {1:0.0}h   一天 {2} 秒	Day {0:0}%    clock {1:0.0}h    day {2} s
+基础具材 {0}   射精次数 {1}   → 订单约 {2} 层	Base ingredients {0}    ejaculations {1}   = about {2} layers per order
+硬上限保护：{0:0}（超过会被压回）	Hard cap guard: {0:0} (values above it are clamped back)
+索取欲={0:0.##}%	Demand urge = {0:0.##}%
+余韵 · 剩余 {0} 次	Afterglow: {0} rounds left
+连榨 · 剩余 {0} 次	Chain: {0} rounds left
+闸门 {0:0}%（绝顶值到 {0:0}% 后不再削弱）{1}	Gate {0:0}% (no further reduction once ecstasy reaches {0:0}%){1}
+（清零振荡中 剩 {0:0.#}s）	(zeroing oscillation, {0:0.#}s left)
+丝袜基础层 {0:0.#}（Tights={1}；插件不干预此层，仅显示实测值）	Tights base layer {0:0.#} (Tights={1}; the plugin never touches this layer, it only shows the measured value)
+强制列表：{0} 项   总开关：{1}{2}	Force list: {0} entries    master switch: {1}{2}
+待发动={0} 进行中={1} 累计={2}	pending={0} running={1} accumulated={2}
+档位={0} 计数={1} 上限={2}	step={0} count={1} cap={2}
+段={0} 上限={1}	segments={0} cap={1}
+近 10 秒 {0} 次、近 30 秒 {1} 次{2}	last 10s: {0}, last 30s: {1}{2}
+模式入于={0} 当前姿势={1} 段={2}{3}	mode entered at={0} pose={1} segments={2}{3}
+实际 {0:0.###}  期望 {1:0.###}	actual {0:0.###}  expected {1:0.###}
+结果：{0} 通过 / {1} 失败	Result: {0} passed / {1} failed
+结果：{0} 通过 / {1} 失败 / {2} 跳过	Result: {0} passed / {1} failed / {2} skipped
+自检：硬性 {0} / 提醒 {1}  {2}	Self-check: {0} hard / {1} warnings  {2}
+
+# ---- 三元标题 ----
+正骑 · 榨取模式	Riding: drain mode
+背榨 · 索取模式（打屁股触发）	Rear mount: demand mode (triggered by spanking)
+
+# ---- 命中状态 
+是	Yes
+否	No
+   游戏当前命中：	   In game hit: 
