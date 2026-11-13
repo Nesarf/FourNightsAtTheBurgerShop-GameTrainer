@@ -234,7 +234,7 @@ Release 上那两个可执行文件仍是 ASCII 名，因为资产名放不下�
 | `dist/` | 编译好的成品 |
 | `使用说明.md` | **完整说明书**（功能、参数、排查） |
 | `KNOWN-ISSUES.md` | **当前未解决的问题**（只放还没修的） |
-| `ENGINEERING-NOTES.md` | **工程笔记**：每个坑的症状 / 根因 / 修法 / 教训（40 条编号记录 + 4 篇附录 + 4 条 S 系列，带目录） |
+| `ENGINEERING-NOTES.md` | **工程笔记**：每个坑的症状 / 根因 / 修法 / 教训（40 条编号记录 + 5 篇附录 + 5 条 S 系列，带目录） |
 | `CHANGELOG.md` | 版本级变更 |
 
 ## 直接下载用（不编译）
@@ -367,7 +367,7 @@ bash tools/gcmd.sh demand status   # 索取/榨取模式状态
 | **某个功能为什么长这样**（逆向发现、踩过的坑） | [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) |
 | 每个版本改了什么 | [`CHANGELOG.md`](CHANGELOG.md) |
 
-`ENGINEERING-NOTES.md` 有 **40 条**历史记录 + **4 篇**附录 + **4 条** S 系列，
+`ENGINEERING-NOTES.md` 有 **40 条**历史记录 + **5 篇**附录 + **5 条** S 系列，
 每条都写了**症状 / 根因 / 修法 / 教训**。开头有一张**目录**，可以直接跳到某一条。
 
 `KNOWN-ISSUES.md` 是它的**派生视图** —— 只列还没解决的，
