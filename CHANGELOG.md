@@ -383,6 +383,14 @@ README 顶部加警示块、仓库 Description 以「18+ ·」开头、Topics �
 
 ### 代码
 
+- **修 issue #1：安装程序把自己当成游戏** —— `GameRunning()` 里除了精确比对，
+  还有一条 `ProcessName.IndexOf("Burger")` 的宽匹配。而安装程序自己叫
+  `BurgerShopModder-Installer`、修改器叫 `BurgerShopModder-Trainer`，都含 `Burger`。
+  于是安装程序一打开就命中，点安装永远弹「游戏正在运行，请先关闭游戏」。
+  改成排除当前进程，并且只精确比对游戏进程名。
+  这两个 exe 的名字是这一轮改资产名时定下来的；之前叫「汉堡店修改器-安装程序.exe」，
+  中文进程名不含 Burger —— 所以这是那次改名带来的一次回归。
+
 - **诊断导出的版本号改成用常量** —— 「全量自检」导出的头部一直写着硬编码的 `1.0.0`，
   而常量 `PluginVersion` 早就是 1.0.8 了
 - **系统栏显式成 `case 5`** —— 原来落在 `default` 上，`_tab` 越界时也会静默进系统栏；
