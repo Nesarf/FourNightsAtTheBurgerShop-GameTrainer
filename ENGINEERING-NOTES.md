@@ -73,6 +73,7 @@
 - 附：坐姿「攻击行程」的机制（参考知识，非缺陷）
 - 附：视角拖动（游戏机制，非缺陷）
 - 附：两棵树的同步规则（踩了很多次才理清）
+- 附：仓库在 GitHub 那一侧的设置
 
 S 系列（与编号记录并行的另一套编号，出现较晚）
 
@@ -2215,6 +2216,25 @@ PUB=$WORK/../burger-shop-publish
 
 **这类「两个变量都该不同却算成相同」的错，症状是整齐地全过。**
 全过的时候更该怀疑工具，而不是庆幸。
+
+---
+
+## 附：仓库在 GitHub 那一侧的设置
+
+仓库里原来有一份 `GITHUB发布文案.md` 当草稿，Description、Topics、Release 正文、
+Social preview 都先写进去再粘到 GitHub。删掉了 —— 粘出去之后真值就在 GitHub 那边，
+仓库里这份只会漂移，而它的自述正好是「过期不代表发布内容过期」，于是没有人会去维护它。
+
+删的时候五个部分全错了一圈：Description 还写着「六栏」（实际八栏）、
+Topics 少了五个还多一个、Release 文案停在 v1.0.0、「Website 留空也行」而它早就填好了、
+Social preview 那句里的文件名是空的。留着比没有更危险 —— 照着它填就会填错。
+
+要改就直接改 GitHub 那一侧。下面这几行是当前值，改完记得顺手更新：
+
+- **Description**：`汉堡店的四个夜晚 / Four Nights at the Burger Shop 数值修改器。18+ · BepInEx 插件，八栏面板（三种姿势各一份参数 + 预设 + 关于），自带安装程序与完整说明书。不含任何游戏素材。`
+- **Topics**：`bepinex-plugin` `csharp` `game-mod` `harmony` `live2d` `modding` `trainer` `unity-mod` `four-nights-at-the-burger-shop` `18-plus` `adult` `nsfw` `burger-shop` `four-nights`
+- **Website**：`https://space.bilibili.com/11247581`
+- **Social preview**：仓库根目录的 `social-preview.png`（1280×640），在 Settings 里上传
 
 ---
 
