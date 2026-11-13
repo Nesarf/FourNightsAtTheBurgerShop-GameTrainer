@@ -448,12 +448,12 @@ Get-FileHash "18-9L-6_ED-7-45-45_C-LS-Installer.exe" -Algorithm SHA256
 # 3. 和 SHA256SUMS.txt 里的那行比，一样就没被动过
 ```
 
-v1.0.8 的值是：
+v1.0.9 的值是：
 
 ```
 b6b653ae156345d38b6ab0bca9f506c15af5a1c0493f52fafdee14e5d2719c46  18-9L-6_ED-7-45-45_C-LS-Installer.exe
 bd5e3df436423dcf27cba4bda9d957e9f77cc6e9a13ec38a26d505eca33e1366  18-9L-6_ED-7-45-45_C-LS-Trainer.exe
-21184b5ba321f64908ae6af2b3ce2945389b1b2569fc59c4daf58b6b754c7f44  18-9L-6_ED-7-45-45_C-LS.dll
+bd391c52b02206cc5b42b982b9a03ce59ec21efc93ef77a6a744aee15e621855  18-9L-6_ED-7-45-45_C-LS.dll
 ```
 
 **校验和对不上就别运行**，那说明文件在中途被改过。

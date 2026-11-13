@@ -128,6 +128,7 @@ jobs:
           # 发布资产名保持可读的 BurgerShopModder.dll，只有源路径是程序集名
           Copy-Item -LiteralPath (Join-Path 'dist' $plug) "out/18-9L-6_ED-7-45-45_C-LS.dll"
           Copy-Item '使用说明.md'               'out/Manual-zh-CN.md'
+          Copy-Item '使用说明.en.md'            'out/Manual-en.md'
           
           # 【只列 out/ 里的资产】
           # 原来遍历 dist/ 算哈希，但 dist/ 里可能有上一步 artifact 下载回来的旧文件 ——
