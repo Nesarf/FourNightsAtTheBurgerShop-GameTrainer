@@ -318,7 +318,37 @@ if _en.exists():
             _entries.append(_zh)
 
     _panel = read(ROOT / 'plugin' / 'BurgerShopModder.cs') or ''
-    _calls = set(re.findall(r'L\.T\(\s*"([^"]*)"', _panel))
+    # L.T 的 key 可以是拼接出来的（"A" + "B"），编译期会合并成一个串。
+    # 所以按括号配对取出完整实参再做字面量合并 —— 直接抓第一个引号会把这种条目截断，
+    # 结果表里那条完整的 key 反而被判成孤儿。
+    def _lt_keys(text):
+        keys = set()
+        for _m in re.finditer(r'L\.T\(\s*', text):
+            _i = _m.end()
+            _depth, _j, _instr = 1, _i, False
+            while _j < len(text) and _depth > 0:
+                _c = text[_j]
+                if _c == '"':
+                    _instr = not _instr
+                elif not _instr:
+                    if _c == '(':
+                        _depth += 1
+                    elif _c == ')':
+                        _depth -= 1
+                        if _depth == 0:
+                            break
+                    elif _c == ',' and _depth == 1:
+                        break       # 第一个实参到此为止，后面的 args 不参与 key
+                _j += 1
+            _inner = text[_i:_j]
+            # 第一个实参可能是 A + B 这类纯字面量拼接，编译期会合并
+            if re.fullmatch(r'\s*(?:"[^"]*"\s*(?:\+\s*)?)+\s*', _inner):
+                _key = ''.join(re.findall(r'"([^"]*)"', _inner))
+                if _key:
+                    keys.add(_key)
+        return keys
+
+    _calls = _lt_keys(_panel)
 
     # 面板上大部分文案不是直接包 L.T 的，而是当参数传给这四个绘制 helper ——
     # 翻译在 helper 内部统一做（一处改动覆盖所有调用点）。所以这里也要认。

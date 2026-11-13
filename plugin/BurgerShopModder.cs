@@ -243,7 +243,7 @@ namespace BurgerShopModder
             // 注意默认值必须是 0 —— 老用户的 cfg 里没有这个键，
             // BepInEx 会用默认值创建它；若默认写 1 就永远不会触发迁移。
             ConfigVersion = Config.Bind("0-System", "ConfigVersion", 0,
-                "配置版本号（自动迁移用）。不要手动改。");
+                L.T("配置版本号（自动迁移用）。不要手动改。"));
 
             // 界面语言。默认中文 —— 中文系统的用户不该被动切到英文。
             // 英文模式下，对照表里没翻到的条目会原样显示中文（见 Localization.cs）。
@@ -253,87 +253,97 @@ namespace BurgerShopModder
                     "英文还没翻完，没翻到的条目会显示中文，不会留空。",
                     new AcceptableValueList<string>("zh", "en")));
 
+            // 语言表必须在这里载入 —— 下面一百多条配置描述都要经过 L.T，
+            // 而 Bind 是在 Awake 里执行的，表晚一步载入，描述就全是中文。
+            // 代价：运行时在面板上切换语言，已经写进 cfg 的描述注释不会跟着变
+            // （面板与控件会变），描述要等改语言后的下一次启动才更新。
+            try
+            {
+                bool english = Language != null &&
+                               string.Equals(Language.Value, "en", StringComparison.OrdinalIgnoreCase);
+                string langOverride = System.IO.Path.Combine(
+                    BepInEx.Paths.ConfigPath, "nesarf.burgershop.modder", L.OverrideFileName);
+                Log.LogInfo("[i18n] " + L.Init(english, langOverride));
+            }
+            catch (Exception e)
+            {
+                Log.LogWarning("[i18n] 载入英文对照表失败，界面按中文显示：" + e.GetType().Name);
+            }
+
             GodMode = Config.Bind("1-Player", "GodMode", false,
-                "每帧把当前 HP 补满（走游戏自己的 HPChange，界面同步）。注意：这不阻止上限下降。");
+                L.T("每帧把当前 HP 补满（走游戏自己的 HPChange，界面同步）。注意：这不阻止上限下降。"));
             NoEcstasy = Config.Bind("1-Player", "NoEcstasy", false,
-                "每帧把绝顶值清零，对方无法让你进入射精状态。");
+                L.T("每帧把绝顶值清零，对方无法让你进入射精状态。"));
             LockMaxHp = Config.Bind("1-Player", "LockMaxHp", false,
-                "锁住 HP 上限。游戏会在被榨取时按 3%~5% 逐次削减 maxHP（吃汉堡只补当前值，开 DLC 才回涨上限）。");
+                L.T("锁住 HP 上限。游戏会在被榨取时按 3%~5% 逐次削减 maxHP（吃汉堡只补当前值，开 DLC 才回涨上限）。"));
             LockMaxEcstasy = Config.Bind("1-Player", "LockMaxEcstasy", false,
-                "锁住绝顶值上限。游戏会在被榨取时按 1%~5% 逐次削减 maxEcstasy。");
+                L.T("锁住绝顶值上限。游戏会在被榨取时按 1%~5% 逐次削减 maxEcstasy。"));
             TargetHp = Config.Bind("1-Player", "TargetHp", 100f,
-                new ConfigDescription("HP 上限的目标值（绝对值）。每帧朝它逼近，逼近多少由「逼近速度」决定；" +
-                    "0 = 不启用。注意：这是「设到多少」，不是「加百分之多少」——绝不会指数膨胀。",
+                new ConfigDescription(L.T("HP 上限的目标值（绝对值）。每帧朝它逼近，逼近多少由「逼近速度」决定；" +
+                    "0 = 不启用。注意：这是「设到多少」，不是「加百分之多少」——绝不会指数膨胀。"),
                     new AcceptableValueRange<float>(0f, 10000f)));
             TargetEcstasy = Config.Bind("1-Player", "TargetEcstasy", 100f,
-                new ConfigDescription("绝顶值上限的目标值（绝对值）。0 = 不启用。",
+                new ConfigDescription(L.T("绝顶值上限的目标值（绝对值）。0 = 不启用。"),
                     new AcceptableValueRange<float>(0f, 10000f)));
             CapStepPerSec = Config.Bind("1-Player", "CapStepPerSec", 20f,
-                new ConfigDescription("上限每帧逼近目标的速率（点/秒）。越大越快，越小越平滑。",
+                new ConfigDescription(L.T("上限每帧逼近目标的速率（点/秒）。越大越快，越小越平滑。"),
                     new AcceptableValueRange<float>(1f, 2000f)));
 
             // ---- 变化率：按「每次实际变化的具体量」按比例缩放 ----
             // 100% = 原版；0% = 这类变化完全不发生（例如 HP 永不下降）。
             HpDownRate = Config.Bind("1-Player", "HpDownRate", 100f,
-                new ConfigDescription("HP 下降率%（每次被榨取掉多少血，按此比例生效）。0 = 永不下降。",
+                new ConfigDescription(L.T("HP 下降率%（每次被榨取掉多少血，按此比例生效）。0 = 永不下降。"),
                     new AcceptableValueRange<float>(0f, 200f)));
             HpUpRate = Config.Bind("1-Player", "HpUpRate", 100f,
-                new ConfigDescription("HP 回复率%（吃汉堡回多少血，按此比例生效）。",
+                new ConfigDescription(L.T("HP 回复率%（吃汉堡回多少血，按此比例生效）。"),
                     new AcceptableValueRange<float>(0f, 200f)));
             EcstasyUpRate = Config.Bind("1-Player", "EcstasyUpRate", 100f,
-                new ConfigDescription("绝顶值上升率%。0 = 完全不增长（等价于不被吸精）。",
+                new ConfigDescription(L.T("绝顶值上升率%。0 = 完全不增长（等价于不被吸精）。"),
                     new AcceptableValueRange<float>(0f, 200f)));
             EcstasyDownRate = Config.Bind("1-Player", "EcstasyDownRate", 100f,
-                new ConfigDescription("绝顶值下降率%（自然消退与射精后清零按此比例生效）。0 = 不消退。",
+                new ConfigDescription(L.T("绝顶值下降率%（自然消退与射精后清零按此比例生效）。0 = 不消退。"),
                     new AcceptableValueRange<float>(0f, 200f)));
             EcstasyResist = Config.Bind("1-Player", "EcstasyResist", 0f,
-                new ConfigDescription("0 = 无抗性，1 = 完全免疫绝顶（原版仅按 R 时临时拉满）。",
+                new ConfigDescription(L.T("0 = 无抗性，1 = 完全免疫绝顶（原版仅按 R 时临时拉满）。"),
                     new AcceptableValueRange<float>(0f, 1f)));
 
             // ---- 绝顶动摇（Tremor）：绝顶值累积时随机触发的衰减正弦波动 ----
             TremorEnabled = Config.Bind("1-Player", "TremorEnabled", true,
-                "启用「绝顶动摇」：绝顶值每次累积时，按概率触发一次衰减正弦波动，最终落点低于原本会达到的值。");
+                L.T("启用「绝顶动摇」：绝顶值每次累积时，按概率触发一次衰减正弦波动，最终落点低于原本会达到的值。"));
             TremorChance = Config.Bind("1-Player", "TremorChance", 22f,
-                new ConfigDescription("每次累积绝顶值时触发动摇的概率 %。", new AcceptableValueRange<float>(0f, 100f)));
+                new ConfigDescription(L.T("每次累积绝顶值时触发动摇的概率 %。"), new AcceptableValueRange<float>(0f, 100f)));
             TremorDuration = Config.Bind("1-Player", "TremorDuration", 1.6f,
-                new ConfigDescription("动摇持续时间（秒）。", new AcceptableValueRange<float>(0.3f, 6f)));
+                new ConfigDescription(L.T("动摇持续时间（秒）。"), new AcceptableValueRange<float>(0.3f, 6f)));
             TremorAmplitude = Config.Bind("1-Player", "TremorAmplitude", 90f,
-                new ConfigDescription("动摇振幅（占本次增益的 %）。越大晃得越狠。", new AcceptableValueRange<float>(0f, 200f)));
+                new ConfigDescription(L.T("动摇振幅（占本次增益的 %）。越大晃得越狠。"), new AcceptableValueRange<float>(0f, 200f)));
             TremorLoss = Config.Bind("1-Player", "TremorLoss", 85f,
-                new ConfigDescription("默认落点损失（占本次增益的 %，实际值在此上下随机 ±15）。"
-                    + "可以超过 100 —— 那样落点会压到【波动之前的值以下】，"
+                new ConfigDescription(L.T("默认落点损失（占本次增益的 %，实际值在此上下随机 ±15）。" + "可以超过 100 —— 那样落点会压到【波动之前的值以下】，")
                     + "也就是这一摇不但抹掉本次收益，还倒扣一截，才像「适应」。",
                     new AcceptableValueRange<float>(0f, 150f)));
             TremorCatch = Config.Bind("1-Player", "TremorCatch", 8f,
-                new ConfigDescription("动摇前半段按 R 稳住后的落点损失（%）。越小保住越多。",
+                new ConfigDescription(L.T("动摇前半段按 R 稳住后的落点损失（%）。越小保住越多。"),
                     new AcceptableValueRange<float>(0f, 90f)));
             TremorCooldown = Config.Bind("1-Player", "TremorCooldown", 2.5f,
-                new ConfigDescription("动摇冷却（秒）。上一次动摇结束后至少隔这么久才可能再次触发。"
-                    + "绝顶值是按角色攻击动作【脉冲式】累积的，攻速一快脉冲就密集；没有冷却会让条子一直在抖。",
+                new ConfigDescription(L.T("动摇冷却（秒）。上一次动摇结束后至少隔这么久才可能再次触发。" + "绝顶值是按角色攻击动作【脉冲式】累积的，攻速一快脉冲就密集；没有冷却会让条子一直在抖。"),
                     new AcceptableValueRange<float>(0f, 20f)));
             TremorResonate = Config.Bind("1-Player", "TremorResonate", true,
-                "让波动频率与攻击脉冲共振：攻速快则抖动更细更快，攻速慢则起伏更沉。");
+                L.T("让波动频率与攻击脉冲共振：攻速快则抖动更细更快，攻速慢则起伏更沉。"));
             TremorSlow = Config.Bind("1-Player", "TremorSlow", 30f,
-                new ConfigDescription("动摇期间角色动作速度的【最低】值（%）。"
-                    + "动摇让对手手一软：动作变慢 → 攻击脉冲变稀 → 绝顶值真的降下来，形成闭环。"
+                new ConfigDescription(L.T("动摇期间角色动作速度的【最低】值（%）。" + "动摇让对手手一软：动作变慢 → 攻击脉冲变稀 → 绝顶值真的降下来，形成闭环。")
                     + "实际速度按所选模板在 100% ~ 该值之间起伏。100 = 不减速。",
                     new AcceptableValueRange<float>(10f, 100f)));
             TremorPattern = Config.Bind("1-Player", "TremorPattern", 0,
-                new ConfigDescription("减速模板：0=每次随机；1=顿挫（短促方波）；2=痉挛（高频细抖）；"
-                    + "3=深陷（长而深，一次到底再慢慢回）；4=迟疑（两次犹豫）；5=潮汐（平滑起伏）。",
+                new ConfigDescription(L.T("减速模板：0=每次随机；1=顿挫（短促方波）；2=痉挛（高频细抖）；" + "3=深陷（长而深，一次到底再慢慢回）；4=迟疑（两次犹豫）；5=潮汐（平滑起伏）。"),
                     new AcceptableValueRange<int>(0, 5)));
             TremorAdaptTime = Config.Bind("1-Player", "TremorAdaptTime", 4f,
-                new ConfigDescription("「绝顶适应」持续时间（秒）。动摇结束后这段时间内，后续的绝顶值累积被削减 —— "
-                    + "这才是它作为防御手段的实际作用，而不只是动画变慢。",
+                new ConfigDescription(L.T("「绝顶适应」持续时间（秒）。动摇结束后这段时间内，后续的绝顶值累积被削减 —— " + "这才是它作为防御手段的实际作用，而不只是动画变慢。"),
                     new AcceptableValueRange<float>(0f, 30f)));
             TremorWeaken = Config.Bind("1-Player", "TremorWeaken", 25f,
-                new ConfigDescription("动摇【期间】的攻击削弱（%）。手一软：这段时间里打进来的绝顶值只剩这么多。"
-                    + "和「绝顶下降率」一起决定净效果 —— 削弱压住累积、消退照常跑，"
+                new ConfigDescription(L.T("动摇【期间】的攻击削弱（%）。手一软：这段时间里打进来的绝顶值只剩这么多。" + "和「绝顶下降率」一起决定净效果 —— 削弱压住累积、消退照常跑，")
                     + "下降率高的时候绝顶值就会【持续下降】。100 = 不削弱。",
                     new AcceptableValueRange<float>(0f, 100f)));
             TremorSafetyGate = Config.Bind("1-Player", "TremorSafetyGate", 90f,
-                new ConfigDescription("【安全闸】绝顶值到达上限的这个百分比之后，动摇/适应【不再削弱】累积。"
-                    + "必须保留这道闸：绝顶值一旦永远到不了上限，"
+                new ConfigDescription(L.T("【安全闸】绝顶值到达上限的这个百分比之后，动摇/适应【不再削弱】累积。" + "必须保留这道闸：绝顶值一旦永远到不了上限，")
                     + "Update_Syasei() 就不会置位 Syaseing，榨取循环永远不会收束（表现为「持续被榨精」）。"
                     + "100 = 闸门关闭（不推荐）。", new AcceptableValueRange<float>(50f, 100f)));
             // ---- 清零后保持波动 ----
@@ -347,42 +357,40 @@ namespace BurgerShopModder
             //                     + "但上限压在安全闸之下，避免连榨一结束就又触发一次。")
             ChainEcstasyGain3 = BindP3Bool("ChainEcstasyGain", true, "连榨本身也累积绝顶值。游戏原码 EcstasyChange() 的守卫是 ");
             ChainGainCap = Config.Bind("1-Player", "ChainGainCap", 90f,
-                new ConfigDescription("上面那条的封顶（占上限的 %）。必须低于触发线，"
-                    + "否则连榨结束的瞬间会立刻又触发一次榨取。",
+                new ConfigDescription(L.T("上面那条的封顶（占上限的 %）。必须低于触发线，" + "否则连榨结束的瞬间会立刻又触发一次榨取。"),
                     new AcceptableValueRange<float>(10f, 98f)));
 // [已迁移到按姿势三份]             ChainGainPerHp = Config.Bind("1-Player", "ChainGainPerHp", 100f,
-            //                 new ConfigDescription("连榨的绝顶值【按这次榨取对生命值的影响】折算的比例（%）。"
+            //                 new ConfigDescription(L.T("连榨的绝顶值【按这次榨取对生命值的影响】折算的比例（%）。")
             //                     + "算法：伤害占最大生命的百分比 × 这个比例 = 绝顶值增量（占最大值 %）。"
             //                     + "例：骑乘位每次 5 点伤害 / 200 最大生命 = 2.5% → 比例 100% 时每次 +2.5%。"
             //                     + "用的是伤害【常量本身】而非实际掉血量，所以开了无敌 / 锁血也照样计算。"
             //                     + "设为 0 则改用下面的固定值模式。", new AcceptableValueRange<float>(0f, 2000f)))
             ChainGainPerHp3 = BindP3("ChainGainPerHp", 100f, "连榨的绝顶值【按这次榨取对生命值的影响】折算的比例（%）。", 0f, 2000f);
 // [已迁移到按姿势三份]             ChainGainPerDrain = Config.Bind("1-Player", "ChainGainPerDrain", 8f,
-            //                 new ConfigDescription("每一次连榨给绝顶值加多少（占最大值的 %）。"
+            //                 new ConfigDescription(L.T("每一次连榨给绝顶值加多少（占最大值的 %）。")
             //                     + "注意：榨取动画本身【不产生】绝顶值增量（Event_Osiri吸精Damage 只扣血），"
             //                     + "所以这个量必须由插件自己加。",
             //                     new AcceptableValueRange<float>(0f, 100f)))
             ChainGainPerDrain3 = BindP3("ChainGainPerDrain", 8f, "每一次连榨给绝顶值加多少（占最大值的 %）。", 0f, 100f);;
 // [已迁移到按姿势三份]             ChainSoftCap = Config.Bind("1-Player", "ChainSoftCap", 60f,
-            //                 new ConfigDescription("连榨期间绝顶值的【软上限】（占最大值的 %）。"
+            //                 new ConfigDescription(L.T("连榨期间绝顶值的【软上限】（占最大值的 %）。")
             //                     + "涨到这个数值后不再继续上涨。", new AcceptableValueRange<float>(10f, 98f)))
             ChainSoftCap3 = BindP3("ChainSoftCap", 60f, "连榨期间绝顶值的【软上限】（占最大值的 %）。", 10f, 98f);
 // [已迁移到按姿势三份]             ChainWobble = Config.Bind("1-Player", "ChainWobble", 20f,
-            //                 new ConfigDescription("到位后的波动幅度（占最大值的 %）。软上限 60 + 幅度 20 "
+            //                 new ConfigDescription(L.T("到位后的波动幅度（占最大值的 %）。软上限 60 + 幅度 20 ")
             //                     + "= 在 40~80% 之间起伏。0 = 不波动、定在软上限。",
             //                     new AcceptableValueRange<float>(0f, 40f)))
             ChainWobble3 = BindP3("ChainWobble", 20f, "到位后的波动幅度（占最大值的 %）。软上限 60 + 幅度 20 ", 0f, 40f);
 // [已迁移到按姿势三份]             ChainWobbleHz = Config.Bind("1-Player", "ChainWobbleHz", 0.8f,
-            //                 new ConfigDescription("到位后波动的频率（Hz）。", new AcceptableValueRange<float>(0.05f, 8f)))
+            //                 new ConfigDescription(L.T("到位后波动的频率（Hz）。"), new AcceptableValueRange<float>(0.05f, 8f)))
             ChainWobbleHz3 = BindP3("ChainWobbleHz", 0.8f, "到位后波动的频率（Hz）。", 0.05f, 8f);
             TremorZeroHold = Config.Bind("1-Player", "TremorZeroHold", true,
                 "绝顶值被清零后，让它继续在一段低位上振荡（而不是死平在 0）。"
                     + "这样值永远够不到上限，Update_Syasei() 不再触发，连榨循环就出不来。");
             TremorZeroHoldTime = Config.Bind("1-Player", "TremorZeroHoldTime", 8f,
-                new ConfigDescription("清零后的持续振荡时长（秒）。", new AcceptableValueRange<float>(1f, 60f)));
+                new ConfigDescription(L.T("清零后的持续振荡时长（秒）。"), new AcceptableValueRange<float>(1f, 60f)));
             TremorZeroHoldAmp = Config.Bind("1-Player", "TremorZeroHoldAmp", 8f,
-                new ConfigDescription("清零后振荡的幅度（占上限的 %）。必须远小于安全闸，"
-                    + "否则又会把值顶到上限。", new AcceptableValueRange<float>(1f, 50f)));
+                new ConfigDescription(L.T("清零后振荡的幅度（占上限的 %）。必须远小于安全闸，" + "否则又会把值顶到上限。"), new AcceptableValueRange<float>(1f, 50f)));
             // ---- 连榨上限：按【姿势 × 是否索取/榨取模式】分成四套 ----
             // 原来只有一个 KyuseiMaxChain，两种姿势、两种模式共用同一个上限与同一个计数，
             // 调一个会连带影响另外三个场景。
@@ -401,7 +409,7 @@ namespace BurgerShopModder
             DemandDurationMax3 = BindP3("DemandDurationMax", 25.0f, "{模式}模式最长持续（秒）", 2.0f, 300.0f);
             DemandTriggerMode3 = BindP3Int("DemandTriggerMode", 0, "叠层判定方式：0=概率模式，1=阈值模式", 0, 1);
 // [已迁移到按姿势三份]             DemandMaxStackRefreshMul = Config.Bind("1-Player", "DemandMaxStackRefreshMul", 100f,
-            //                 new ConfigDescription("叠满段数上限后，达成叠层条件时【刷新持续时间】给多少（%）。"
+            //                 new ConfigDescription(L.T("叠满段数上限后，达成叠层条件时【刷新持续时间】给多少（%）。")
             //                     + "0 = 刷新不给时间（保持原行为：什么都不做）。",
             //                     new AcceptableValueRange<float>(0f, 300f)))
             DemandMaxStackRefreshMul3 = BindP3("DemandMaxStackRefreshMul", 100f, "叠满段数上限后，达成叠层条件时【刷新持续时间】给多少（%）。", 0f, 300f);;
@@ -412,23 +420,22 @@ namespace BurgerShopModder
             DemandSpeedSplit3 = BindP3Bool("DemandSpeedSplit", true, "分阶段加速（避免与 osiri 加速叠加）");
             DemandBlockFella3 = BindP3Bool("DemandBlockFella", true, "{模式}模式期间不回口交");
             ChainMaxFella = Config.Bind("1-Player", "ChainMaxFella", 6,
-                new ConfigDescription("【口交】的连榨次数上限。0 = 不限。",
+                new ConfigDescription(L.T("【口交】的连榨次数上限。0 = 不限。"),
                     new AcceptableValueRange<int>(0, 50)));
             ChainMaxOsiriNormal = Config.Bind("1-Player", "ChainMaxOsiriNormal", 6,
-                new ConfigDescription("【骑乘位·常规】的连榨次数上限。0 = 不限（有卡死游戏的风险）。",
+                new ConfigDescription(L.T("【骑乘位·常规】的连榨次数上限。0 = 不限（有卡死游戏的风险）。"),
                     new AcceptableValueRange<int>(0, 50)));
             ChainMaxOsiriDemand = Config.Bind("1-Player", "ChainMaxOsiriDemand", 6,
-                new ConfigDescription("【骑乘位·索取模式】的连榨次数上限。0 = 不限。",
+                new ConfigDescription(L.T("【骑乘位·索取模式】的连榨次数上限。0 = 不限。"),
                     new AcceptableValueRange<int>(0, 50)));
             ChainMaxSitNormal = Config.Bind("1-Player", "ChainMaxSitNormal", 6,
-                new ConfigDescription("【坐姿·常规】的连榨次数上限。0 = 不限。",
+                new ConfigDescription(L.T("【坐姿·常规】的连榨次数上限。0 = 不限。"),
                     new AcceptableValueRange<int>(0, 50)));
             ChainMaxSitDemand = Config.Bind("1-Player", "ChainMaxSitDemand", 6,
-                new ConfigDescription("【坐姿·榨取模式】的连榨次数上限。0 = 不限。",
+                new ConfigDescription(L.T("【坐姿·榨取模式】的连榨次数上限。0 = 不限。"),
                     new AcceptableValueRange<int>(0, 50)));
             KyuseiMaxChain = Config.Bind("1-Player", "KyuseiMaxChain", 6,
-                new ConfigDescription("吸精【连续次数上限】。修正了游戏的整数除法 bug 之后，"
-                    + "发生率 100% 就真的意味着 100% 重播，会变成无限连榨（游戏卡死：Syaseing 永不清除）。"
+                new ConfigDescription(L.T("吸精【连续次数上限】。修正了游戏的整数除法 bug 之后，" + "发生率 100% 就真的意味着 100% 重播，会变成无限连榨（游戏卡死：Syaseing 永不清除）。")
                     + "这里兜一道：连到这个次数就强制收尾。0 = 不限。",
                     new AcceptableValueRange<int>(0, 50)));
 
@@ -441,7 +448,7 @@ namespace BurgerShopModder
             //                     + "  1 = 阈值模式：攒到该层门槛就【必定】叠层，索取欲变成纯进度条（可预期）",
             //                     new AcceptableValueRange<int>(0, 1)));
 // [已迁移到按姿势三份]             AfterglowUrgeScale = Config.Bind("1-Player", "AfterglowUrgeScale", 20f,
-            //                 new ConfigDescription("【余韵期间】所有来源累积索取欲的缩放（%）。"
+            //                 new ConfigDescription(L.T("【余韵期间】所有来源累积索取欲的缩放（%）。")
             //                     + "手动余韵可以当作「强制退出索取模式」的逃生阀，"
             //                     + "但余韵本身会连榨十几次、每次都涨索取欲，"
             //                     + "涨太满就会【余韵一结束马上又进索取模式】。"
@@ -489,38 +496,35 @@ namespace BurgerShopModder
                     + "正骑的榨取链（连榨/余韵）都建立在「人在坐姿」上，中途被切走会断链。"
                     + "关掉则恢复原版的自动切换。");
             CapSmoothEnabled = Config.Bind("1-Player", "CapSmoothEnabled", true,
-                "被上限/软上限拉回来时平滑过渡（而不是瞬间跳到目标）。");
+                L.T("被上限/软上限拉回来时平滑过渡（而不是瞬间跳到目标）。"));
             CapSmoothRate = Config.Bind("1-Player", "CapSmoothRate", 60f,
-                new ConfigDescription("平滑速率（每秒最多变化占上限的百分比）。"
-                    + "60 = 每秒最多挪上限的 60%；调大更接近原来的瞬间跳变。",
+                new ConfigDescription(L.T("平滑速率（每秒最多变化占上限的百分比）。" + "60 = 每秒最多挪上限的 60%；调大更接近原来的瞬间跳变。"),
                     new AcceptableValueRange<float>(5f, 1000f)));
             EcstasyDropWarn = Config.Bind("1-Player", "EcstasyDropWarn", 50f,
-                new ConfigDescription("绝顶值单帧掉幅超过多少就报警（绝对值）。0 = 关。"
-                    + "第 7 条那次是 −195.1，所以默认 50 足够灵敏。"
+                new ConfigDescription(L.T("绝顶值单帧掉幅超过多少就报警（绝对值）。0 = 关。" + "第 7 条那次是 −195.1，所以默认 50 足够灵敏。")
                     + "注意：射精（Syaseing）期间绝顶值会被正常消费掉，那种骤降已排除，不会报警。",
                     new AcceptableValueRange<float>(0f, 1000f)));
             KissSpeedEnabled = Config.Bind("1-Player", "KissSpeedEnabled", true,
                 "【正骑·束缚之吻】单独调速。只在【接吻中但没进榨取】时生效"
                     + "（进了榨取就交给榨取/绝顶那套倍速管，两者不叠加）。");
             KissSpeedMul = Config.Bind("1-Player", "KissSpeedMul", 100f,
-                new ConfigDescription("束缚之吻的动画速度（%）。100 = 原速。",
+                new ConfigDescription(L.T("束缚之吻的动画速度（%）。100 = 原速。"),
                     new AcceptableValueRange<float>(10f, 400f)));
             KissSpeedWobble = Config.Bind("1-Player", "KissSpeedWobble", 0f,
-                new ConfigDescription("速度波动幅度（%）。0 = 不波动。",
+                new ConfigDescription(L.T("速度波动幅度（%）。0 = 不波动。"),
                     new AcceptableValueRange<float>(0f, 90f)));
             KissSpeedHz = Config.Bind("1-Player", "KissSpeedHz", 0.5f,
-                new ConfigDescription("速度波动的频率（Hz）。",
+                new ConfigDescription(L.T("速度波动的频率（Hz）。"),
                     new AcceptableValueRange<float>(0.02f, 4f)));
             SitKissAutoPrepare = Config.Bind("1-Player", "SitKissAutoPrepare", true,
-                "【正骑】自动进入束缚之吻（不用再按 X）。坐姿常态下每隔一段时间自动触发一次 PrepareKissing。");
+                L.T("【正骑】自动进入束缚之吻（不用再按 X）。坐姿常态下每隔一段时间自动触发一次 PrepareKissing。"));
             SitKissAutoInterval = Config.Bind("1-Player", "SitKissAutoInterval", 6f,
-                new ConfigDescription("自动进入束缚之吻的间隔（秒）。", new AcceptableValueRange<float>(1f, 60f)));
+                new ConfigDescription(L.T("自动进入束缚之吻的间隔（秒）。"), new AcceptableValueRange<float>(1f, 60f)));
             SitKissNoDecay = Config.Bind("1-Player", "SitKissNoDecay", true,
                 "【正骑】阻止束缚之吻的窗口越玩越短。原版每次解除都会 KissPrepareTime *= 0.9，"
                     + "不开这个的话窗口会衰减到几乎没有。");
             SitKissWindowMul = Config.Bind("1-Player", "SitKissWindowMul", 200f,
-                new ConfigDescription("【正骑】束缚之吻窗口长度的倍数（%）。原版 4~5 秒，"
-                    + "200% 即 8~10 秒，够你点几下头部。", new AcceptableValueRange<float>(50f, 1000f)));
+                new ConfigDescription(L.T("【正骑】束缚之吻窗口长度的倍数（%）。原版 4~5 秒，" + "200% 即 8~10 秒，够你点几下头部。"), new AcceptableValueRange<float>(50f, 1000f)));
             HighlightHitAreas = Config.Bind("1-Player", "HighlightHitAreas", false,
                 "【实验性】把游戏的可点击区域全部高亮出来（按模型里 HitArea_* 那些 drawable 逐个画框）。"
                     + "口交 / 背榨 / 正骑三个模式共用这一个开关，各自栏里都有按钮。");
@@ -528,7 +532,7 @@ namespace BurgerShopModder
                 "素材绑定的名字筛选（子串匹配，不区分大小写）。留空 = 全部列出。"
                     + "提示：先填 HitArea 看那 5 个可点区，清空后就能绑到任意美术素材（身体/皮肤等）。");
             ManmanDrawablePage = Config.Bind("1-Player", "ManmanDrawablePage", 0,
-                new ConfigDescription("素材列表的页码（每页 40 个）。模型 drawable 很多，所以分页。",
+                new ConfigDescription(L.T("素材列表的页码（每页 40 个）。模型 drawable 很多，所以分页。"),
                     new AcceptableValueRange<int>(0, 200)));
             ManmanBindDrawable = Config.Bind("1-Player", "ManmanBindDrawable", "",
                 "【HitArea_Manman_By_Plugins · 素材绑定】填一个模型 drawable 的名字，判定区就直接用【那个素材的包围盒】。"
@@ -540,28 +544,27 @@ namespace BurgerShopModder
                 "【HitArea_Manman_By_Plugins · 拖动绑定】开着时，判定区中心实时跟随鼠标；"
                     + "把鼠标移到你想要的位置，再点面板上的「绑定到此位置」，中心就定在那里。");
             SitPussyAreaShowRect = Config.Bind("1-Player", "SitPussyAreaShowRect", true,
-                "在屏幕上画出 HitArea_Manman_By_Plugins 的框（粉色，与另外几个 HitArea 同一套可视化逻辑）。");
+                L.T("在屏幕上画出 HitArea_Manman_By_Plugins 的框（粉色，与另外几个 HitArea 同一套可视化逻辑）。"));
             SitPussyAreaEnabled = Config.Bind("1-Player", "SitPussyAreaEnabled", true,
                 "【坐姿】自建一个 HitArea_Manman_By_Plugins。功能与背榨的「打屁股」对称："
                     + "点击涨榨取欲 + 给坐姿动作一个速度冲量（用 SpankSpeed* 那组，已按姿势三份）。"
                     + "【与头部的区别】头部是解除束缚之吻，两者互不干扰。模型里本来没有这块点按区，"
                     + "这个名字是游戏代码里残留的 HitArea_Manman。");
             SitPussyAreaCX = Config.Bind("1-Player", "SitPussyAreaCX", 0.5f,
-                new ConfigDescription("小穴点按区中心：屏幕宽度的百分比。", new AcceptableValueRange<float>(0f, 1f)));
+                new ConfigDescription(L.T("小穴点按区中心：屏幕宽度的百分比。"), new AcceptableValueRange<float>(0f, 1f)));
             SitPussyAreaCY = Config.Bind("1-Player", "SitPussyAreaCY", 0.62f,
-                new ConfigDescription("小穴点按区中心：屏幕高度的百分比（从下往上）。", new AcceptableValueRange<float>(0f, 1f)));
+                new ConfigDescription(L.T("小穴点按区中心：屏幕高度的百分比（从下往上）。"), new AcceptableValueRange<float>(0f, 1f)));
             SitPussyAreaW = Config.Bind("1-Player", "SitPussyAreaW", 0.10f,
-                new ConfigDescription("小穴点按区宽度：屏幕宽度的百分比。", new AcceptableValueRange<float>(0.01f, 0.6f)));
+                new ConfigDescription(L.T("小穴点按区宽度：屏幕宽度的百分比。"), new AcceptableValueRange<float>(0.01f, 0.6f)));
             SitPussyAreaH = Config.Bind("1-Player", "SitPussyAreaH", 0.12f,
-                new ConfigDescription("小穴点按区高度：屏幕高度的百分比。", new AcceptableValueRange<float>(0.01f, 0.6f)));
+                new ConfigDescription(L.T("小穴点按区高度：屏幕高度的百分比。"), new AcceptableValueRange<float>(0.01f, 0.6f)));
             SitClickAlwaysAccumulate = Config.Bind("1-Player", "SitClickAlwaysAccumulate", true,
                 "【修 #6】坐姿下点头部即使在【非束缚之吻】状态也累积榨取欲。"
                     + "原版只有 kissing == 1 那个 4~5 秒窗口才认点击，"
                     + "导致坐姿几乎没有可用的手动累积手段（背面骑乘有「打屁股」这个大目标）。"
                     + "游戏自己的 SitGirlKiss叩く量 不受影响，仍只在原窗口增加。");
             SitSyaseiToDrainChance = Config.Bind("1-Player", "SitSyaseiToDrainChance", 40f,
-                new ConfigDescription("【修 #8】坐姿【射精收尾】时直接进入榨取的概率（%）。"
-                    + "原版 Event_SitSyasei_OnEnd() 永远 Play_Sit()（回坐姿攻击），"
+                new ConfigDescription(L.T("【修 #8】坐姿【射精收尾】时直接进入榨取的概率（%）。" + "原版 Event_SitSyasei_OnEnd() 永远 Play_Sit()（回坐姿攻击），")
                     + "而唯一的榨取入口要 kissing == 2（束缚之吻）——"
                     + "实际玩下来到不了接吻态，于是榨取→连榨→余韵整条链都摸不到。0 = 保持原版。",
                     new AcceptableValueRange<float>(0f, 100f)));
@@ -569,30 +572,30 @@ namespace BurgerShopModder
             //                 "【修 #1】角色攻击累积的索取欲也参与【叠层判定】。"
             //                     + "关掉则只有打屁股能叠（原行为：攻击只填进度条、从不消费）。");
             // [已废弃，改为按姿势三份 DemandThresholdBase3] DemandThresholdBase = Config.Bind("1-Player", "DemandThresholdBase", 20f,
-            //                 new ConfigDescription("【叠第 1 层索取状态所需的索取欲】（%）。"
+            //                 new ConfigDescription(L.T("【叠第 1 层索取状态所需的索取欲】（%）。")
             //                     + "索取欲低于它时不会叠层 —— 这就是原来【才攒到十几就叠了一层】的解法。",
             //                     new AcceptableValueRange<float>(0f, 300f)));
             // [已废弃，改为按姿势三份 DemandThresholdStep3] DemandThresholdStep = Config.Bind("1-Player", "DemandThresholdStep", 15f,
-            //                 new ConfigDescription("每多叠一层，所需的索取欲再增加多少（%）。"
+            //                 new ConfigDescription(L.T("每多叠一层，所需的索取欲再增加多少（%）。")
             //                     + "叠第 N 层所需的索取欲 = 首层 + 递增 × (N-1)。"
             //                     + "默认 20 / 15 → 叠各层分别需要 20 / 35 / 50 / 65 / 80 …",
             //                     new AcceptableValueRange<float>(0f, 300f)));
             // [已废弃，改为按姿势三份 DemandUrgeMin3] DemandUrgeMin = Config.Bind("1-Player", "DemandUrgeMin", 5f,
-            //                 new ConfigDescription("每次打屁股增加的「索取欲」下限（%）。索取欲本身就是进入索取模式的概率。",
+            //                 new ConfigDescription(L.T("每次打屁股增加的「索取欲」下限（%）。索取欲本身就是进入索取模式的概率。"),
             //                     new AcceptableValueRange<float>(0f, 30f)));
             // [已废弃，改为按姿势三份 DemandUrgeMax3] DemandUrgeMax = Config.Bind("1-Player", "DemandUrgeMax", 10f,
-            //                 new ConfigDescription("每次打屁股增加的「索取欲」上限（%）。", new AcceptableValueRange<float>(0f, 30f)));
+            //                 new ConfigDescription(L.T("每次打屁股增加的「索取欲」上限（%）。"), new AcceptableValueRange<float>(0f, 30f)));
             // [已废弃，改为按姿势三份 DemandEscapePenaltyChance3] DemandEscapePenaltyChance = Config.Bind("1-Player", "DemandEscapePenaltyChance", 35f,
-            //                 new ConfigDescription("每次打屁股时，有这个机会【大幅提高脱出背面骑乘位所需的点击次数】。",
+            //                 new ConfigDescription(L.T("每次打屁股时，有这个机会【大幅提高脱出背面骑乘位所需的点击次数】。"),
             //                     new AcceptableValueRange<float>(0f, 100f)));
             // [已废弃，改为按姿势三份 DemandEscapePenaltyMul3] DemandEscapePenaltyMul = Config.Bind("1-Player", "DemandEscapePenaltyMul", 135f,
-            //                 new ConfigDescription("上面那条的倍数（%）。135 = 脱出要求涨到 1.35 倍。",
+            //                 new ConfigDescription(L.T("上面那条的倍数（%）。135 = 脱出要求涨到 1.35 倍。"),
             //                     new AcceptableValueRange<float>(100f, 500f)));
             // [已废弃，改为按姿势三份 DemandBlockFella3] DemandBlockFella = Config.Bind("1-Player", "DemandBlockFella", true,
             //                 "索取模式期间【不回到口交状态】。游戏的 Event_OsiriSyaseiOnEnd() 里有 10% 概率"
             //                     + "走 Osiri解除() → ShowCenterGirlFella()，这里在索取模式期间把这一支掐掉。");
 // [已迁移到按姿势三份]             DemandFellaDecay = Config.Bind("1-Player", "DemandFellaDecay", 25f,
-            //                 new ConfigDescription("每进入一次索取模式，「回到口交」的概率衰减多少（%）。"
+            //                 new ConfigDescription(L.T("每进入一次索取模式，「回到口交」的概率衰减多少（%）。")
             //                     + "10% 的基准概率按 (1-衰减)^次数 递减。0 = 不衰减。",
             //                     new AcceptableValueRange<float>(0f, 90f)))
             DemandFellaDecay3 = BindP3("DemandFellaDecay", 25f, "每进入一次索取模式，「回到口交」的概率衰减多少（%）。", 0f, 90f);;
@@ -602,53 +605,53 @@ namespace BurgerShopModder
             //                     + "若此时游戏正准备进入坐姿，则把坐姿挂起，等这次骑乘位结束再进。")
             OsiriReturnEnabled3 = BindP3Bool("OsiriReturnEnabled", true, "从骑乘位回到口交后，角色每做一次【造成伤害的活动】（攻击 / 射精 / 吸精）");
 // [已迁移到按姿势三份]             OsiriReturnTrigger = Config.Bind("1-Player", "OsiriReturnTrigger", 30f,
-            //                 new ConfigDescription("每次造成伤害的活动，累积成功的【平均】概率（%）。",
+            //                 new ConfigDescription(L.T("每次造成伤害的活动，累积成功的【平均】概率（%）。"),
             //                     new AcceptableValueRange<float>(0f, 100f)))
             OsiriReturnTrigger3 = BindP3("OsiriReturnTrigger", 30f, "每次造成伤害的活动，累积成功的【平均】概率（%）。", 0f, 100f);
 // [已迁移到按姿势三份]             OsiriReturnGain = Config.Bind("1-Player", "OsiriReturnGain", 12f,
-            //                 new ConfigDescription("累积成功时，「再次进入骑乘位的概率」增加多少（平均 %）。",
+            //                 new ConfigDescription(L.T("累积成功时，「再次进入骑乘位的概率」增加多少（平均 %）。"),
             //                     new AcceptableValueRange<float>(0f, 100f)))
             OsiriReturnGain3 = BindP3("OsiriReturnGain", 12f, "累积成功时，「再次进入骑乘位的概率」增加多少（平均 %）。", 0f, 100f);
 // [已迁移到按姿势三份]             OsiriReturnJitter = Config.Bind("1-Player", "OsiriReturnJitter", 50f,
-            //                 new ConfigDescription("上面两项的波动幅度（%）：实际值在平均值的 (1-j)~(1+j) 之间随机，"
+            //                 new ConfigDescription(L.T("上面两项的波动幅度（%）：实际值在平均值的 (1-j)~(1+j) 之间随机，")
             //                     + "期望值仍是滑块设的平均值。", new AcceptableValueRange<float>(0f, 90f)))
             OsiriReturnJitter3 = BindP3("OsiriReturnJitter", 50f, "上面两项的波动幅度（%）：实际值在平均值的 (1-j)~(1+j) 之间随机，", 0f, 90f);
             // [已废弃，改为按姿势三份 DemandOsiriBoost3] DemandOsiriBoost = Config.Bind("1-Player", "DemandOsiriBoost", 1,
-            //                 new ConfigDescription("真正回到口交之后，把「骑乘位再次出现」的门槛 OsiriPenaltyToAppear "
+            //                 new ConfigDescription(L.T("真正回到口交之后，把「骑乘位再次出现」的门槛 OsiriPenaltyToAppear ")
             //                     + "降低多少（它原本是 第1~4天 = 10/9/8/7）。越低来得越快，0 = 不干预。",
             //                     new AcceptableValueRange<int>(0, 10)));
 // [已迁移到按姿势三份]             SyaseiUrgeChance = Config.Bind("1-Player", "SyaseiUrgeChance", 100f,
-            //                 new ConfigDescription("【射精时】累积索取欲的概率（平均 %）。骑乘位 / 坐姿 / 口交的射精都算。",
+            //                 new ConfigDescription(L.T("【射精时】累积索取欲的概率（平均 %）。骑乘位 / 坐姿 / 口交的射精都算。"),
             //                     new AcceptableValueRange<float>(0f, 100f)))
             SyaseiUrgeChance3 = BindP3("SyaseiUrgeChance", 100f, "【射精时】累积索取欲的概率（平均 %）。骑乘位 / 坐姿 / 口交的射精都算。", 0f, 100f);
 // [已迁移到按姿势三份]             SyaseiUrgeGain = Config.Bind("1-Player", "SyaseiUrgeGain", 8f,
-            //                 new ConfigDescription("【射精时】命中后索取欲增加多少（平均 %）。",
+            //                 new ConfigDescription(L.T("【射精时】命中后索取欲增加多少（平均 %）。"),
             //                     new AcceptableValueRange<float>(0f, 100f)))
             SyaseiUrgeGain3 = BindP3("SyaseiUrgeGain", 8f, "【射精时】命中后索取欲增加多少（平均 %）。", 0f, 100f);
 // [已迁移到按姿势三份]             KyuseiUrgeChance = Config.Bind("1-Player", "KyuseiUrgeChance", 100f,
-            //                 new ConfigDescription("【每次吸精 / 连榨】累积索取欲的概率（平均 %）。余韵走的就是同一条连榨链，所以余韵也照此累积。",
+            //                 new ConfigDescription(L.T("【每次吸精 / 连榨】累积索取欲的概率（平均 %）。余韵走的就是同一条连榨链，所以余韵也照此累积。"),
             //                     new AcceptableValueRange<float>(0f, 100f)))
             KyuseiUrgeChance3 = BindP3("KyuseiUrgeChance", 100f, "【每次吸精 / 连榨】累积索取欲的概率（平均 %）。余韵走的就是同一条连榨链，所以余韵也照此累积。", 0f, 100f);
 // [已迁移到按姿势三份]             KyuseiUrgeGain = Config.Bind("1-Player", "KyuseiUrgeGain", 5f,
-            //                 new ConfigDescription("【每次吸精 / 连榨】命中后索取欲增加多少（平均 %）。连榨一轮有多次，单次给小一点。",
+            //                 new ConfigDescription(L.T("【每次吸精 / 连榨】命中后索取欲增加多少（平均 %）。连榨一轮有多次，单次给小一点。"),
             //                     new AcceptableValueRange<float>(0f, 100f)))
             KyuseiUrgeGain3 = BindP3("KyuseiUrgeGain", 5f, "【每次吸精 / 连榨】命中后索取欲增加多少（平均 %）。连榨一轮有多次，单次给小一点。", 0f, 100f);
 // [已迁移到按姿势三份]             AttackUrgeJitter = Config.Bind("1-Player", "AttackUrgeJitter", 50f,
-            //                 new ConfigDescription("攻击涨索取欲时的【波动幅度】（%，围绕平均值上下浮动）。"
+            //                 new ConfigDescription(L.T("攻击涨索取欲时的【波动幅度】（%，围绕平均值上下浮动）。")
             //                     + "50 = 实际值在平均值的 50%~150% 之间随机；期望值仍是滑块设的平均值。",
             //                     new AcceptableValueRange<float>(0f, 90f)))
             AttackUrgeJitter3 = BindP3("AttackUrgeJitter", 50f, "攻击涨索取欲时的【波动幅度】（%，围绕平均值上下浮动）。", 0f, 90f);
 // [已迁移到按姿势三份]             AttackUrgeChance = Config.Bind("1-Player", "AttackUrgeChance", 8f,
-            //                 new ConfigDescription("骑乘位【常态】（attacking）时，角色每攻击一次有这个概率提升索取欲。"
+            //                 new ConfigDescription(L.T("骑乘位【常态】（attacking）时，角色每攻击一次有这个概率提升索取欲。")
             //                     + "挂点是 OsiriMixer 的循环事件 Event_OsiriGirlMainMixer，每个攻击循环触发一次。",
             //                     new AcceptableValueRange<float>(0f, 100f)))
             AttackUrgeChance3 = BindP3("AttackUrgeChance", 8f, "骑乘位【常态】（attacking）时，角色每攻击一次有这个概率提升索取欲。", 0f, 100f);
 // [已迁移到按姿势三份]             AttackUrgeGain = Config.Bind("1-Player", "AttackUrgeGain", 3f,
-            //                 new ConfigDescription("上面那条命中时，索取欲增加多少（%）。",
+            //                 new ConfigDescription(L.T("上面那条命中时，索取欲增加多少（%）。"),
             //                     new AcceptableValueRange<float>(0f, 100f)))
             AttackUrgeGain3 = BindP3("AttackUrgeGain", 3f, "上面那条命中时，索取欲增加多少（%）。", 0f, 100f);
             // [已废弃，改为按姿势三份 DemandMaxStacks3] DemandMaxStacks = Config.Bind("1-Player", "DemandMaxStacks", 5,
-            //                 new ConfigDescription("索取模式最多叠几段。已在索取模式中再次触发时，"
+            //                 new ConfigDescription(L.T("索取模式最多叠几段。已在索取模式中再次触发时，")
             //                     + "不重新计时，而是把一段时长【加在总时长上】。",
             //                     new AcceptableValueRange<int>(1, 20)));
 // [已迁移到按姿势三份]             SpankSpeedEnabled = Config.Bind("1-Player", "SpankSpeedEnabled", true,
@@ -657,18 +660,18 @@ namespace BurgerShopModder
             //                     + "Play_OsiriMainMixer 直接置 1，没有加成的余量。")
             SpankSpeedEnabled3 = BindP3Bool("SpankSpeedEnabled", true, "打屁股给攻击速度一个短促冲量：快速冲上去、缓慢消退。多次打按递减倍率叠加。");
 // [已迁移到按姿势三份]             SpankSpeedGain = Config.Bind("1-Player", "SpankSpeedGain", 12f,
-            //                 new ConfigDescription("第一次打屁股的冲量（%）。12 = 攻击动画速率冲到 1.12。",
+            //                 new ConfigDescription(L.T("第一次打屁股的冲量（%）。12 = 攻击动画速率冲到 1.12。"),
             //                     new AcceptableValueRange<float>(0f, 200f)))
             SpankSpeedGain3 = BindP3("SpankSpeedGain", 12f, "第一次打屁股的冲量（%）。12 = 攻击动画速率冲到 1.12。", 0f, 200f);
 // [已迁移到按姿势三份]             SpankSpeedStack = Config.Bind("1-Player", "SpankSpeedStack", 60f,
-            //                 new ConfigDescription("叠加倍率（%）：每次新增量 = 上一次新增量 × 这个值。"
+            //                 new ConfigDescription(L.T("叠加倍率（%）：每次新增量 = 上一次新增量 × 这个值。")
             //                     + "60 = 打越多每下加得越少（递减叠加）。", new AcceptableValueRange<float>(0f, 100f)))
             SpankSpeedStack3 = BindP3("SpankSpeedStack", 60f, "叠加倍率（%）：每次新增量 = 上一次新增量 × 这个值。", 0f, 100f);
 // [已迁移到按姿势三份]             SpankSpeedRise = Config.Bind("1-Player", "SpankSpeedRise", 9f,
-            //                 new ConfigDescription("冲上去的快慢（每秒逼近目标的比例）。", new AcceptableValueRange<float>(1f, 60f)))
+            //                 new ConfigDescription(L.T("冲上去的快慢（每秒逼近目标的比例）。"), new AcceptableValueRange<float>(1f, 60f)))
             SpankSpeedRise3 = BindP3("SpankSpeedRise", 9f, "冲上去的快慢（每秒逼近目标的比例）。", 1f, 60f);
 // [已迁移到按姿势三份]             SpankSpeedDecay = Config.Bind("1-Player", "SpankSpeedDecay", 0.25f,
-            //                 new ConfigDescription("消退的快慢（每秒衰减比例）。越小消得越慢、影响留得越久。",
+            //                 new ConfigDescription(L.T("消退的快慢（每秒衰减比例）。越小消得越慢、影响留得越久。"),
             //                     new AcceptableValueRange<float>(0.01f, 5f)))
             SpankSpeedDecay3 = BindP3("SpankSpeedDecay", 0.25f, "消退的快慢（每秒衰减比例）。越小消得越慢、影响留得越久。", 0.01f, 5f);
             // [已废弃，改为按姿势三份 DemandSpeedSplit3] DemandSpeedSplit = Config.Bind("1-Player", "DemandSpeedSplit", true,
@@ -676,48 +679,48 @@ namespace BurgerShopModder
             //                     + "绝顶/吸精阶段用「绝顶动画倍速」。"
             //                     + "关掉的话两边会同时生效 —— 实测会叠成过快。");
             // [已废弃，改为按姿势三份 DemandAnimSpeed3] DemandAnimSpeed = Config.Bind("1-Player", "DemandAnimSpeed", 150f,
-            //                 new ConfigDescription("索取模式期间【绝顶动画】的播放倍速（%）。"
+            //                 new ConfigDescription(L.T("索取模式期间【绝顶动画】的播放倍速（%）。")
             //                     + "游戏的 osiriSpeed 只喂给 OsiriMixer，而绝顶播的是同层上的另一个 clip —— "
             //                     + "主混合器被替换后 IsPlaying 为假，osiriSpeed 就完全没被应用，绝顶会回到常规速度。"
             //                     + "这里直接设正在播放的状态速度。100 = 不加速。",
             //                     new AcceptableValueRange<float>(50f, 800f)));
             // [已废弃，改为按姿势三份 DemandAttSpeedBonus3] DemandAttSpeedBonus = Config.Bind("1-Player", "DemandAttSpeedBonus", 60f,
-            //                 new ConfigDescription("索取期间【攻击力随攻击速度被动波动】的幅度（%）："
+            //                 new ConfigDescription(L.T("索取期间【攻击力随攻击速度被动波动】的幅度（%）：")
             //                     + "速度越快攻击力越高。驱动量是实际的攻击动画倍率（打屁股冲量推起来的那个），"
             //                     + "因为 osiriSpeed 被 Play_OsiriMainMixer 恒定置 1，没有变化量可用。"
             //                     + "0 = 不随速度变化。", new AcceptableValueRange<float>(0f, 500f)));
             // [已废弃，改为按姿势三份 DemandAttSpeedRef3] DemandAttSpeedRef = Config.Bind("1-Player", "DemandAttSpeedRef", 50f,
-            //                 new ConfigDescription("上面那条的参考速度增幅（%）：攻击动画倍率涨到这个幅度时"
+            //                 new ConfigDescription(L.T("上面那条的参考速度增幅（%）：攻击动画倍率涨到这个幅度时")
             //                     + "吃满速度加成。50 = 倍率到 1.5 时吃满。",
             //                     new AcceptableValueRange<float>(5f, 300f)));
             // [已废弃，改为按姿势三份 DemandAttBonus3] DemandAttBonus = Config.Bind("1-Player", "DemandAttBonus", 50f,
-            //                 new ConfigDescription("进入索取模式时【攻击力】提升（%）。攻击力就是 TabemiAtt，"
+            //                 new ConfigDescription(L.T("进入索取模式时【攻击力】提升（%）。攻击力就是 TabemiAtt，")
             //                     + "背面骑乘的伤害与绝顶值都按它算。0 = 不提升。",
             //                     new AcceptableValueRange<float>(0f, 500f)));
             // [已废弃，改为按姿势三份 DemandDurationMin3] DemandDurationMin = Config.Bind("1-Player", "DemandDurationMin", 12f,
-            //                 new ConfigDescription("索取模式最短持续（秒）。期间速度不因射精而减缓，且只能由角色自行退出。",
+            //                 new ConfigDescription(L.T("索取模式最短持续（秒）。期间速度不因射精而减缓，且只能由角色自行退出。"),
             //                     new AcceptableValueRange<float>(2f, 300f)));
             // [已废弃，改为按姿势三份 DemandDurationMax3] DemandDurationMax = Config.Bind("1-Player", "DemandDurationMax", 25f,
-            //                 new ConfigDescription("索取模式最长持续（秒）。", new AcceptableValueRange<float>(2f, 300f)));
+            //                 new ConfigDescription(L.T("索取模式最长持续（秒）。"), new AcceptableValueRange<float>(2f, 300f)));
 // [已迁移到按姿势三份]             AfterglowSpeedWobble = Config.Bind("1-Player", "AfterglowSpeedWobble", 25f,
-            //                 new ConfigDescription("余韵动画速度的波动幅度（%，围绕 AfterglowSpeed 上下浮动）。"
+            //                 new ConfigDescription(L.T("余韵动画速度的波动幅度（%，围绕 AfterglowSpeed 上下浮动）。")
             //                     + "余韵是【更低但更绵长】的连榨，速度本身也应该起伏，不该是一条直线。",
             //                     new AcceptableValueRange<float>(0f, 90f)))
             AfterglowSpeedWobble3 = BindP3("AfterglowSpeedWobble", 25f, "余韵动画速度的波动幅度（%，围绕 AfterglowSpeed 上下浮动）。", 0f, 90f);
 // [已迁移到按姿势三份]             AfterglowSpeedHz = Config.Bind("1-Player", "AfterglowSpeedHz", 0.35f,
-            //                 new ConfigDescription("余韵速度波动的频率（Hz）。慢一点更像【绵长的收尾】。",
+            //                 new ConfigDescription(L.T("余韵速度波动的频率（Hz）。慢一点更像【绵长的收尾】。"),
             //                     new AcceptableValueRange<float>(0.02f, 4f)))
             AfterglowSpeedHz3 = BindP3("AfterglowSpeedHz", 0.35f, "余韵速度波动的频率（Hz）。慢一点更像【绵长的收尾】。", 0.02f, 4f);
 // [已迁移到按姿势三份]             AfterglowSoftCap = Config.Bind("1-Player", "AfterglowSoftCap", 50f,
-            //                 new ConfigDescription("余韵期间绝顶值的【软上限】（占最大值 %），与连榨的软上限分开。"
+            //                 new ConfigDescription(L.T("余韵期间绝顶值的【软上限】（占最大值 %），与连榨的软上限分开。")
             //                     + "余韵是收尾，理应比连榨更克制。", new AcceptableValueRange<float>(5f, 98f)))
             AfterglowSoftCap3 = BindP3("AfterglowSoftCap", 50f, "余韵期间绝顶值的【软上限】（占最大值 %），与连榨的软上限分开。", 5f, 98f);
 // [已迁移到按姿势三份]             AfterglowEcstasyWobble = Config.Bind("1-Player", "AfterglowEcstasyWobble", 15f,
-            //                 new ConfigDescription("余韵到位后绝顶值的波动幅度（%）：在 软上限 ± 这个幅度 之间起伏。",
+            //                 new ConfigDescription(L.T("余韵到位后绝顶值的波动幅度（%）：在 软上限 ± 这个幅度 之间起伏。"),
             //                     new AcceptableValueRange<float>(0f, 40f)))
             AfterglowEcstasyWobble3 = BindP3("AfterglowEcstasyWobble", 15f, "余韵到位后绝顶值的波动幅度（%）：在 软上限 ± 这个幅度 之间起伏。", 0f, 40f);
 // [已迁移到按姿势三份]             AfterglowSpeed = Config.Bind("1-Player", "AfterglowSpeed", 70f,
-            //                 new ConfigDescription("余韵期间的动画速度（%）。"
+            //                 new ConfigDescription(L.T("余韵期间的动画速度（%）。")
             //                     + "余韵可以理解为【基础速度更低、单次持续时间更长】的连榨 —— "
             //                     + "降低速度本身就同时拉长了每一次的持续时间，所以这一个旋钮管两件事。"
             //                     + "100 = 与常速相同。", new AcceptableValueRange<float>(10f, 400f)))
@@ -726,67 +729,66 @@ namespace BurgerShopModder
             //                 "余韵期间是否仍照常按射精累积余韵（一般应为否：余韵是收尾，不该自我延长）。")
             AfterglowUseDemandGain3 = BindP3Bool("AfterglowUseDemandGain", true, "余韵期间是否仍照常按射精累积余韵（一般应为否：余韵是收尾，不该自我延长）。");
 // [已迁移到按姿势三份]             AfterglowPerSyasei = Config.Bind("1-Player", "AfterglowPerSyasei", 2,
-            //                 new ConfigDescription("索取 / 榨取模式中【每射精一次】累积多少次余韵。"
+            //                 new ConfigDescription(L.T("索取 / 榨取模式中【每射精一次】累积多少次余韵。")
             //                     + "余韵只在索取/榨取模式中累积 —— 模式外的射精不计。",
             //                     new AcceptableValueRange<int>(0, 20)))
             AfterglowPerSyasei3 = BindP3Int("AfterglowPerSyasei", (int)(2f), "索取 / 榨取模式中【每射精一次】累积多少次余韵。", 0, 20);
 // [已迁移到按姿势三份]             AfterglowSettleDelay = Config.Bind("1-Player", "AfterglowSettleDelay", 0.6f,
-            //                 new ConfigDescription("最后一段结束到发动余韵之间，等待局面稳定的秒数。"
+            //                 new ConfigDescription(L.T("最后一段结束到发动余韵之间，等待局面稳定的秒数。")
             //                     + "设它是为了让最后一段的连榨、吸精、动画收尾都跑完再发动。",
             //                     new AcceptableValueRange<float>(0f, 5f)))
             AfterglowSettleDelay3 = BindP3("AfterglowSettleDelay", 0.6f, "最后一段结束到发动余韵之间，等待局面稳定的秒数。", 0f, 5f);
 
             DemandAfterglowMin = Config.Bind("1-Player", "DemandAfterglowMin", 8,
-                new ConfigDescription("索取模式结束后「余韵」的连续吸精次数下限。",
+                new ConfigDescription(L.T("索取模式结束后「余韵」的连续吸精次数下限。"),
                     new AcceptableValueRange<int>(0, 100)));
             DemandAfterglowMax = Config.Bind("1-Player", "DemandAfterglowMax", 20,
-                new ConfigDescription("「余韵」的连续吸精次数上限。", new AcceptableValueRange<int>(0, 100)));
+                new ConfigDescription(L.T("「余韵」的连续吸精次数上限。"), new AcceptableValueRange<int>(0, 100)));
             TremorAdaptFactor = Config.Bind("1-Player", "TremorAdaptFactor", 35f,
-                new ConfigDescription("适应期内的累积倍率（%）。35 = 只吃到 35% 的绝顶值。"
-                    + "100 = 不削减。", new AcceptableValueRange<float>(0f, 100f)));
+                new ConfigDescription(L.T("适应期内的累积倍率（%）。35 = 只吃到 35% 的绝顶值。" + "100 = 不削减。"), new AcceptableValueRange<float>(0f, 100f)));
             // ---- 「绝顶适应」的生命侧效果（都只在适应期内生效，结束严格还原）----
             TremorHpMaxBonus = Config.Bind("1-Player", "TremorHpMaxBonus", 20f,
-                new ConfigDescription("适应期内生命【上限】提升（占当前上限的 %）。结束立即还原。0 = 关闭。",
+                new ConfigDescription(L.T("适应期内生命【上限】提升（占当前上限的 %）。结束立即还原。0 = 关闭。"),
                     new AcceptableValueRange<float>(0f, 200f)));
             TremorHpGuard = Config.Bind("1-Player", "TremorHpGuard", 35f,
-                new ConfigDescription("适应期内受到的伤害倍率（%）。35 = 只吃 35% 的伤害。100 = 不减免。",
+                new ConfigDescription(L.T("适应期内受到的伤害倍率（%）。35 = 只吃 35% 的伤害。100 = 不减免。"),
                     new AcceptableValueRange<float>(0f, 100f)));
             TremorHpRegen = Config.Bind("1-Player", "TremorHpRegen", 6f,
-                new ConfigDescription("适应期内每秒回复（占上限的 %）。只在未满血时生效，不会超过上限。0 = 关闭。",
+                new ConfigDescription(L.T("适应期内每秒回复（占上限的 %）。只在未满血时生效，不会超过上限。0 = 关闭。"),
                     new AcceptableValueRange<float>(0f, 100f)));
             MaxBurgerNum = Config.Bind("1-Player", "MaxBurgerNum", 10,
-                new ConfigDescription("连吃汉堡上限，原版 10。", new AcceptableValueRange<int>(0, 200)));
+                new ConfigDescription(L.T("连吃汉堡上限，原版 10。"), new AcceptableValueRange<int>(0, 200)));
             SyaseiCount = Config.Bind("1-Player", "SyaseiCount", 0,
-                new ConfigDescription("射精次数。每天的具材数 = Base具材数 - 2 + 该值，改完回标题重进当天生效。",
+                new ConfigDescription(L.T("射精次数。每天的具材数 = Base具材数 - 2 + 该值，改完回标题重进当天生效。"),
                     new AcceptableValueRange<int>(0, 100)));
 
             PowerUnlock = Config.Bind("2-Girl", "PowerUnlock", false,
-                "把 tabemiPower / baseAtt / TabemiAtt 按倍率拉高，每次动作造成的伤害与绝顶值大幅提升。");
+                L.T("把 tabemiPower / baseAtt / TabemiAtt 按倍率拉高，每次动作造成的伤害与绝顶值大幅提升。"));
             TabemiPowerMul = Config.Bind("2-Girl", "TabemiPowerMul", 10f,
-                new ConfigDescription("配合 PowerUnlock 使用。", new AcceptableValueRange<float>(1f, 1000f)));
+                new ConfigDescription(L.T("配合 PowerUnlock 使用。"), new AcceptableValueRange<float>(1f, 1000f)));
             FellaSpeedPlus = Config.Bind("2-Girl", "FellaSpeedPlus", 0f,
-                new ConfigDescription("口交速度加成，原版 0，越大越快进入高速阶段。",
+                new ConfigDescription(L.T("口交速度加成，原版 0，越大越快进入高速阶段。"),
                     new AcceptableValueRange<float>(0f, 1f)));
             SitSpeedPlus = Config.Bind("2-Girl", "SitSpeedPlus", 0f,
-                new ConfigDescription("骑乘速度加成，原版 0。", new AcceptableValueRange<float>(0f, 1f)));
+                new ConfigDescription(L.T("骑乘速度加成，原版 0。"), new AcceptableValueRange<float>(0f, 1f)));
 
             FrozenClock = Config.Bind("3-Flow", "FrozenClock", false,
-                "停止白天倒计时，可以无限待在店里。");
+                L.T("停止白天倒计时，可以无限待在店里。"));
             ClockFullTime = Config.Bind("3-Flow", "ClockFullTime", 180,
-                new ConfigDescription("一天的总时长（秒），原版 180。", new AcceptableValueRange<int>(60, 3600)));
+                new ConfigDescription(L.T("一天的总时长（秒），原版 180。"), new AcceptableValueRange<int>(60, 3600)));
             GameSpeed = Config.Bind("3-Flow", "GameSpeed", 1f,
-                new ConfigDescription("1 = 原速（时钟也按此速度走）。", new AcceptableValueRange<float>(0.5f, 5f)));
+                new ConfigDescription(L.T("1 = 原速（时钟也按此速度走）。"), new AcceptableValueRange<float>(0.5f, 5f)));
             // ---- 汉堡制作倒计时 ----
             // 游戏里 MenuControl 每帧 timeLeft -= Time.deltaTime，归零就 TimeOut。
             // 每单时长是 timeAll（下单时 timeLeft = timeAll）。
             BurgerTimeAll = Config.Bind("2-Burger", "BurgerTimeAll", 0f,
-                new ConfigDescription("每单制作时长（秒）。0 = 用游戏原版（10 秒）。",
+                new ConfigDescription(L.T("每单制作时长（秒）。0 = 用游戏原版（10 秒）。"),
                     new AcceptableValueRange<float>(0f, 600f)));
             BurgerTimeSpeed = Config.Bind("2-Burger", "BurgerTimeSpeed", 100f,
-                new ConfigDescription("倒计时速度（%）。100 = 原速；50 = 慢一半；0 = 冻结（不倒计时）。",
+                new ConfigDescription(L.T("倒计时速度（%）。100 = 原速；50 = 慢一半；0 = 冻结（不倒计时）。"),
                     new AcceptableValueRange<float>(0f, 1000f)));
             UnlockAllDays = Config.Bind("3-Flow", "UnlockAllDays", false,
-                "把已通关天数写满，标题画面可选全部日期。写入 PlayerPrefs，重开仍生效。");
+                L.T("把已通关天数写满，标题画面可选全部日期。写入 PlayerPrefs，重开仍生效。"));
 
             // 【必须在所有配置绑定之后】迁移要读「三份副本的当前值」，
             // 绑定没做完就迁移的话，副本还不存在 —— 会漏掉一部分参数。
@@ -822,21 +824,6 @@ namespace BurgerShopModder
             catch (Exception e)
             {
                 Log.LogError("Harmony 初始化失败：" + e);
-            }
-
-            // 界面语言：中文模式什么都不做；英文模式载入对照表。
-            // 放在 Awake 最后 —— 它依赖 Language 这个配置项已经 bind 过。
-            try
-            {
-                bool english = Language != null &&
-                               string.Equals(Language.Value, "en", StringComparison.OrdinalIgnoreCase);
-                string langOverride = System.IO.Path.Combine(
-                    BepInEx.Paths.ConfigPath, "nesarf.burgershop.modder", L.OverrideFileName);
-                Log.LogInfo("[i18n] " + L.Init(english, langOverride));
-            }
-            catch (Exception e)
-            {
-                Log.LogWarning("[i18n] 载入英文对照表失败，界面按中文显示：" + e.GetType().Name);
             }
         }
 
