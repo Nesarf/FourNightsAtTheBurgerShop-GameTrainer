@@ -469,3 +469,42 @@ HP 回复率%（吃汉堡回多少血，按此比例生效）。	HP recovery rat
 每单制作时长（秒）。0 = 用游戏原版（10 秒）。	Time allowed per order in seconds. 0 = use the game's own 10 seconds.
 倒计时速度（%）。100 = 原速；50 = 慢一半；0 = 冻结（不倒计时）。	Countdown speed in percent. 100 = normal, 50 = half speed, 0 = frozen with no countdown.
 把已通关天数写满，标题画面可选全部日期。写入 PlayerPrefs，重开仍生效。	Fill in every cleared day so all dates are selectable on the title screen. It writes to PlayerPrefs and survives a restart.
+
+# ---- 自检与日志 ----
+贴图探针：{0} {1}x{2} fmt={3} isReadable={4} rawBytes={5} {6}	Texture probe: {0} {1}x{2} fmt={3} isReadable={4} rawBytes={5} {6}
+  贴图 {0} id={1} {2}x{3} fmt={4} 被 {5} 个 drawable 使用	  Texture {0} id={1} {2}x{3} fmt={4} used by {5} drawables
+    内容占比 {0:0.0}%（{1}/{2} 个 4x4 采样格）	    Coverage {0:0.0}% ({1}/{2} of the 4x4 sample cells)
+{0,-34} 真实下标 = {1}	{0,-34} real index = {1}
+[骤降溯源] 连榨软上限：cur={0:0.#} target={1:0.#} soft={2:0.#} wob={3:0.#} maxE={4:0.#}	[drop trace] chain soft cap: cur={0:0.#} target={1:0.#} soft={2:0.#} wob={3:0.#} maxE={4:0.#}
+[绝顶骤降 #{0}] {1:0.#} → {2:0.#}（Δ{3:0.#}）  姿势={4}  模式={5}(入于{6})  段={7}  sitState={8}  kissing={9:0}  osiriState={10}  Syaseing={11}  余韵剩={12}  连榨={13}	[ecstasy drop #{0}] {1:0.#} -> {2:0.#} (delta {3:0.#})  pose={4}  mode={5}(entered at {6})  segment={7}  sitState={8}  kissing={9:0}  osiriState={10}  Syaseing={11}  afterglow left={12}  chain={13}
+[HitArea_Manman_By_Plugins] 鼠标进入判定区（屏幕 {0:0},{1:0}；矩形 {2:0}~{3:0} × {4:0}~{5:0}）	[HitArea_Manman_By_Plugins] mouse entered the hit area (screen {0:0},{1:0}; rect {2:0}~{3:0} x {4:0}~{5:0})
+osiriState={0}  实际速率={1:0.###}  索取倍速已套用={2}  用过的成员={3}  片段={4}	osiriState={0}  actual rate={1:0.###}  demand boost applied={2}  members used={3}  clip={4}
+{0}  索取欲={1:0.#}%（叠下一层需 {16:0.#}%）  攻击力={2:0.##}(+{3:0}%)  动画倍速={7:0}%[{8}]  回口交基准={9:0.#}%  已回口交={10}次  回归累积={12:0.#}%{13}  余韵剩={4}(待发动{14}{15})  触发过{5}次	{0}  demand urge={1:0.#}% (next layer needs {16:0.#}%)  attack={2:0.##}(+{3:0}%)  anim speed={7:0}%[{8}]  fellatio-return base={9:0.#}%  returned={10} times  return accumulation={12:0.#}%{13}  afterglow left={4}(pending {14}{15})  triggered {5} times
+maxHP={0:0.#} maxEcstasy={1:0.#} 天花板={2:0}	maxHP={0:0.#} maxEcstasy={1:0.#} ceiling={2:0}
+加成 -{0:0.##} 仍挂在上限上，适应期剩余 {1:0.##}s（应 > 0）	Bonus -{0:0.##} is still hanging on the cap, adaptation has {1:0.##}s left (should be above 0)
+Syaseing={0:0} 已持续={1:0.##}s 值={2:0.##}/{3:0.##}  timeScale={4:0.###} 动摇={5} 近10s榨取={6}次  本次会话最长={7:0.##}s{8}	Syaseing={0:0} running for={1:0.##}s value={2:0.##}/{3:0.##}  timeScale={4:0.###} tremor={5} drains in last 10s={6}  longest this session={7:0.##}s{8}
+drive={0} rate={1} fx={2}（都应为 false）	drive={0} rate={1} fx={2} (all should be false)
+_tremorActive={0} 模板={1} 剩余={2:0.##}s	_tremorActive={0} template={1} remaining={2:0.##}s
+maxEcstasy={0:0.##} 本次会话见过的最小值={1}	maxEcstasy={0:0.##} lowest seen this session={1}
+近 3 秒：绝顶红光 {0} 次、吸精红光 {1} 次、受伤红光 {2} 次（Syaseing 已持续 {3:0.##}s）{4}	Last 3 seconds: ecstasy flash {0}, absorb flash {1}, damage flash {2} (Syaseing running {3:0.##}s){4}
+矩形 {0:0}~{1:0} × {2:0}~{3:0}	Rect {0:0}~{1:0} x {2:0}~{3:0}
+动摇：未在波动{0}  概率={1:0}%  冷却={2:0.#}s  剩余冷却={3:0.#}s  脉冲间隔={4:0.###}s  手感计数={5}	Tremor: not shaking{0}  chance={1:0}%  cooldown={2:0.#}s  cooldown left={3:0.#}s  pulse interval={4:0.###}s  feel count={5}
+动摇中：已过 {0:0.00}/{1:0.00}s  振幅={2:0.##}  中心线={8:0.##}(降 {9:0.##})  落点={3:0.##}（v1={4:0.##} 增益={5:0.##} 损失={6:0.#}%）{7}	Shaking: elapsed {0:0.00}/{1:0.00}s  amplitude={2:0.##}  centre line={8:0.##}(drop {9:0.##})  landing={3:0.##} (v1={4:0.##} gain={5:0.##} loss={6:0.#}%){7}
+注入 {0:0.##} → 实际增加 {1:0.###}（前 {2:0.##} 后 {3:0.##}，上升率 {4:0}%，适应倍率 {5:0.##}）	Injected {0:0.##} -> actually added {1:0.###} (before {2:0.##} after {3:0.##}, gain rate {4:0}%, adaptation multiplier {5:0.##})
+[骤降溯源] {0}：清前值={1:0.#}  姿势={2}  模式={3}(入于{4})  段={5}  sitState={6}  kissing={7:0}  osiriState={8}  Syaseing={9}  连榨={10}	[drop trace] {0}: value before={1:0.#}  pose={2}  mode={3}(entered at {4})  segment={5}  sitState={6}  kissing={7:0}  osiriState={8}  Syaseing={9}  chain={10}
+tabshot [{0}] {1} -> {2}.png  面板 {3},{4} {5}x{6}	tabshot [{0}] {1} -> {2}.png  panel {3},{4} {5}x{6}
+HitArea_Manman_By_Plugins 中心已绑定到模型相对位置 ({0:0.000}, {1:0.000})	HitArea_Manman_By_Plugins centre bound to model-relative position ({0:0.000}, {1:0.000})
+[HitArea_Manman_By_Plugins] 中心绑定到模型相对位置 ({0:0.000}, {1:0.000})	[HitArea_Manman_By_Plugins] centre bound to model-relative position ({0:0.000}, {1:0.000})
+    屏幕矩形：{0:0}~{1:0} × {2:0}~{3:0}	    Screen rect: {0:0}~{1:0} x {2:0}~{3:0}
+    当前矩形：x {0:0.000}~{1:0.000}  y {2:0.000}~{3:0.000}（屏幕比例）	    Current rect: x {0:0.000}~{1:0.000}  y {2:0.000}~{3:0.000} (screen fraction)
+  矩形={0:0}~{1:0}x{2:0}~{3:0}	  rect={0:0}~{1:0}x{2:0}~{3:0}
+  {0}  maxHP 被削 10% 后 → {1:0.##}（基线 {2:0.##}）	  {0}  after maxHP is shaved 10% -> {1:0.##} (baseline {2:0.##})
+  {0}  maxEcstasy 被削 10% 后 → {1:0.##}（基线 {2:0.##}）	  {0}  after maxEcstasy is shaved 10% -> {1:0.##} (baseline {2:0.##})
+  {0}  HP 上限 {1:0.##} → {2:0.##}（目标 {3:0.##}）	  {0}  HP cap {1:0.##} -> {2:0.##} (target {3:0.##})
+  {0}  绝顶上限 {1:0.##} → {2:0.##}（目标 {3:0.##}）	  {0}  ecstasy cap {1:0.##} -> {2:0.##} (target {3:0.##})
+  {0}  HP 下降率 0%：HPChange(-10) → {1:0.###}（原 {2:0.###}）	  {0}  HP loss rate 0%: HPChange(-10) -> {1:0.###} (was {2:0.###})
+  {0}  绝顶上升率 0%：EcstasyChange(+10) → {1:0.###}（原 {2:0.###}）	  {0}  ecstasy gain rate 0%: EcstasyChange(+10) -> {1:0.###} (was {2:0.###})
+  {0}  HP 下降率 50%：HPChange(-10) 实际生效 {1:0.##}（期望 5）	  {0}  HP loss rate 50%: HPChange(-10) actually applied {1:0.##} (expected 5)
+  已还原：HP {0:0.##}/{1:0.##}  绝顶 {2:0.##}/{3:0.##}  连吃上限 {4}  射精 {5}	  Restored: HP {0:0.##}/{1:0.##}  ecstasy {2:0.##}/{3:0.##}  burger cap {4}  ejaculations {5}
+  {0,-8} → {1,-34} 置1后={2:0.##}  置0后={3:0.##}  {4}	  {0,-8} -> {1,-34} after set-to-1={2:0.##}  after set-to-0={3:0.##}  {4}
+  {0}  丝袜基础层未被插件干预 _Op_..._Tights = {1:0.#}（Tights={2}，应为 0）	  {0}  tights base layer untouched by the plugin _Op_..._Tights = {1:0.#} (Tights={2}, should be 0)
