@@ -92,11 +92,11 @@ namespace BurgerShopModder
             try
             {
                 var cfg = Plugin.ConfigPublic();
-                if (cfg == null) return "ERR 拿不到配置对象";
+                if (cfg == null) return L.T("ERR 拿不到配置对象");
 
                 string dir = DirPath();
                 string path = PathOf(name);
-                if (dir == null || path == null) return "ERR 预设名不合法（只允许中英文、数字、空格、- 和 _）";
+                if (dir == null || path == null) return L.T("ERR 预设名不合法（只允许中英文、数字、空格、- 和 _）");
 
                 Directory.CreateDirectory(dir);
 
@@ -118,10 +118,11 @@ namespace BurgerShopModder
                     lines.Add(def.Section + "\t" + def.Key + "\t" + cfg[def].GetSerializedValue());
 
                 File.WriteAllLines(path, lines.ToArray(), new UTF8Encoding(false));
-                return "已保存预设「" + SafeName(name) + "」（" + (lines.Count - 3) + " 项）"
-                     + (backup != null ? "，原同名预设已备份" : "");
+                return L.T("已保存预设「{0}」（{1} 项）{2}",
+                           SafeName(name), lines.Count - 3,
+                           backup != null ? L.T("，原同名预设已备份") : "");
             }
-            catch (Exception e) { return "ERR 保存预设失败：" + e.Message; }
+            catch (Exception e) { return L.T("ERR 保存预设失败：{0}", e.Message); }
         }
 
         /// <summary>
@@ -133,10 +134,10 @@ namespace BurgerShopModder
             try
             {
                 var cfg = Plugin.ConfigPublic();
-                if (cfg == null) return "ERR 拿不到配置对象";
+                if (cfg == null) return L.T("ERR 拿不到配置对象");
 
                 string path = PathOf(name);
-                if (path == null || !File.Exists(path)) return "ERR 没有这个预设：" + name;
+                if (path == null || !File.Exists(path)) return L.T("ERR 没有这个预设：{0}", name);
 
                 // (1) 覆盖之前先把当前状态存下来
                 string dir = DirPath();
@@ -176,11 +177,12 @@ namespace BurgerShopModder
                 }
 
                 cfg.Save();
-                return "已应用预设「" + SafeName(name) + "」：" + applied + " 项"
-                     + (missing > 0 ? "（" + missing + " 项预设里没有，保持当前值）" : "")
-                     + "；应用前的状态已备份为 " + Path.GetFileName(before);
+                return L.T("已应用预设「{0}」：{1} 项{2}；应用前的状态已备份为 {3}",
+                           SafeName(name), applied,
+                           missing > 0 ? L.T("（{0} 项预设里没有，保持当前值）", missing) : "",
+                           Path.GetFileName(before));
             }
-            catch (Exception e) { return "ERR 应用预设失败：" + e.Message; }
+            catch (Exception e) { return L.T("ERR 应用预设失败：{0}", e.Message); }
         }
 
         internal static string Delete(string name)
@@ -188,13 +190,14 @@ namespace BurgerShopModder
             try
             {
                 string path = PathOf(name);
-                if (path == null || !File.Exists(path)) return "ERR 没有这个预设：" + name;
+                if (path == null || !File.Exists(path)) return L.T("ERR 没有这个预设：{0}", name);
                 string dir = DirPath();
                 string bak = Path.Combine(dir, SafeName(name) + ".deleted-" + Stamp() + ".preset");
                 File.Move(path, bak);
-                return "已删除预设「" + SafeName(name) + "」（文件改名为 " + Path.GetFileName(bak) + "，想找回就改回去）";
+                return L.T("已删除预设「{0}」（文件改名为 {1}，想找回就改回去）",
+                           SafeName(name), Path.GetFileName(bak));
             }
-            catch (Exception e) { return "ERR 删除预设失败：" + e.Message; }
+            catch (Exception e) { return L.T("ERR 删除预设失败：{0}", e.Message); }
         }
 
         private static string Stamp()

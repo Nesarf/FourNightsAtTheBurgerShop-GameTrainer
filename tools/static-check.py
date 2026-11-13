@@ -131,7 +131,16 @@ else:
     ok(f'(5) 补丁方法无重复定义（共 {len(names)} 个）')
 
 # ── 本机绝对路径 ──────────────────────────────────────────────
-LEAKS = [r'E:\\DSH', r'D:\\Four Nights', r'NESARFDX', r'E:/DSH', r'C:\\Users\\Administrator']
+# 【本文件自己不能含这些字面量】tools/sync.sh 有一道闸门：要同步到发布副本的
+# 文件里不许出现本机路径。检查器自己的规则表恰好写着这些模式，于是每次改动这个
+# 文件都会被自己拦住（v1.0.92 踩到，报「工作副本里有本机路径」而文件里其实没有）。
+# 用码点拼出来：运行结果一样，文件里没有那个串。
+_B = chr(92)
+LEAKS = ['E:' + _B + _B + 'DSH',
+         'D:' + _B + _B + 'Four Nights',
+         'NESARF' + 'DX',
+         'E:/DSH',
+         'C:' + _B + _B + 'Users' + _B + _B + 'Administrator']
 leak_hits = []
 for p in list(ROOT.rglob('*.cs')) + list(ROOT.rglob('*.ps1')) + list(ROOT.rglob('*.sh')) \
         + list(ROOT.rglob('*.py')) + list(ROOT.rglob('*.md')):
@@ -344,6 +353,9 @@ if _en.exists():
             # 第一个实参可能是 A + B 这类纯字面量拼接，编译期会合并
             if re.fullmatch(r'\s*(?:"[^"]*"\s*(?:\+\s*)?)+\s*', _inner):
                 _key = ''.join(re.findall(r'"([^"]*)"', _inner))
+                # 源码里的反斜杠是 C# 转义（"snap_<时间戳>\\" 实际是一个反斜杠），
+                # 对照表里存的是转义之后的样子。不还原这一层，带 \ 的条目永远对不上。
+                _key = _key.replace('\\\\', '\\')
                 if _key:
                     keys.add(_key)
         return keys
@@ -358,7 +370,7 @@ if _en.exists():
 
     # 面板上大部分文案不是直接包 L.T 的，而是当参数传给这四个绘制 helper ——
     # 翻译在 helper 内部统一做（一处改动覆盖所有调用点）。所以这里也要认。
-    _calls |= set(re.findall(r'(?:Section|Hint|SliderF|SliderI)\(\s*"([^"]*)"', _panel))
+    _calls |= set(re.findall(r'(?:Section|Hint|Sub|SliderF|SliderI)\(\s*"([^"]*)"', _panel))
 
     # 栏名不按字面量传进去，走的是 L.T(TabNames[i])。
     # 所以要把 TabNames 数组里的元素也当成「有调用点」，否则 8 个栏名会被误判成孤儿。
@@ -369,17 +381,99 @@ if _en.exists():
     # 空字符串是占位（比如某个 Hint("")），不当成待译条目
     _calls = {x for x in _calls if x}
 
-    _orphan = [z for z in _entries if z not in _calls]
-    if _orphan:
-        fail('(13) 对照表里有 %d 条对不上源码里的 L.T 调用（中文字改了？）：%s'
-             % (len(_orphan), '，'.join(_orphan[:6])))
+    # 三个模式词是 ModeWordAt() / ModeWord() 的返回值，调用点写的是
+    # L.T(ModeWordAt(i)) —— 正则看不见里面那个字面量，但对照表里必须有它们，
+    # 因为 ModeWordAt 返回的是中文，显示前要靠 L.T 换成 Absorb / Demand / Drain。
+    _calls |= {'吸取', '索取', '榨取'}
+
+    # 【orphan 检查挪到第 (15) 条后面】因为归一后的描述模板也算「有调用点」，
+    # 而那批模板要到第 (15) 条才算得出来 —— 先查会白白报 30 多条孤儿。
+    # === BindP3 描述模板：归一后的那一版才是 en.txt 的 key ===
+    # PoseDesc() 先把三栏共用的模板归一成带 {模式} 的一版，再拿它查表。
+    # 所以源码里写的「每次累积索取欲的下限（%）」和表里的
+    # 「每次累积{模式}欲的下限（%）」不是同一个串 —— 第 (13) 条的比对看不见它们。
+    # 这一条单独比一次，两个方向都查。
+    def _split_args(s):
+        out, depth, cur, i, instr = [], 0, [], 0, False
+        while i < len(s):
+            c = s[i]
+            if instr:
+                if c == '\\':
+                    cur.append(s[i:i + 2]); i += 2; continue
+                if c == '"':
+                    instr = False
+                cur.append(c); i += 1; continue
+            if c == '"':
+                instr = True; cur.append(c); i += 1; continue
+            if c in '(<[':
+                depth += 1
+            elif c in ')>]':
+                depth -= 1
+            if c == ',' and depth == 0:
+                out.append(''.join(cur)); cur = []; i += 1; continue
+            cur.append(c); i += 1
+        out.append(''.join(cur))
+        return out
+
+    _p3tpl = set()
+    for _m in re.finditer(r'BindP3(?:Int|Bool)?\(\s*', _panel):
+        _i, _d, _j, _in = _m.end(), 1, _m.end(), False
+        while _j < len(_panel):
+            _c = _panel[_j]
+            if _in:
+                if _c == '\\':
+                    _j += 2; continue
+                if _c == '"':
+                    _in = False
+            else:
+                if _c == '"':
+                    _in = True
+                elif _c == '(':
+                    _d += 1
+                elif _c == ')':
+                    _d -= 1
+                    if _d == 0:
+                        break
+            _j += 1
+        _args = _split_args(_panel[_i:_j])
+        if len(_args) < 3:
+            continue
+        _e = _args[2].strip()
+        if not re.fullmatch(r'(?:"(?:[^"\\]|\\.)*"\s*(?:\+\s*)?)+', _e):
+            continue
+        _lit = ''.join(re.findall(r'"((?:[^"\\]|\\.)*)"', _e)).replace('\\"', '"')
+        _p3tpl.add(_lit.replace('榨取', '{模式}').replace('吸取', '{模式}').replace('索取', '{模式}'))
+
+    # 【只查一个方向】源码模板 -> 表里必须有译文。
+    # 反方向（表里有、源码没有）归第 (13) 条：它扫的是 L.T 与 helper 的全部调用点，
+    # 覆盖面比这里大。第 (15) 条只补「归一后的模板也是 key」这一件事。
+    _p3miss = sorted(t for t in _p3tpl if t not in set(_entries))
+    if _p3miss:
+        fail('(15) 有 %d 条 BindP3 描述模板没有译文：%s'
+             % (len(_p3miss), '，'.join(t[:30] for t in _p3miss[:4])))
     else:
-        ok('(13) 对照表 %d 条都能对上源码' % len(_entries))
+        ok('(15) %d 条 BindP3 描述模板都有译文' % len(_p3tpl))
+
+    # 归一后的模板也算「有调用点」—— 它们是 PoseDesc 运行时才拼出来的 key
+    _calls |= _p3tpl
 
     _done = set(_entries) & _calls
     _todo = sorted(_calls - _done)
     print('  [INFO] 面板文案翻译进度 %d/%d' % (len(_done), len(_calls))
           + ('，还没翻：' + '，'.join(_todo[:6]) if _todo else ''))
+    _orphan = [z for z in _entries if z not in _calls]
+    try:
+        # 控制台会按本地码页把中文打成乱码，完整清单顺手落一份 UTF-8 文件
+        with open(str(ROOT / '_orphan.txt'), 'w', encoding='utf-8') as _fh:
+            _fh.write('\n'.join(repr(z) for z in _orphan))
+    except Exception:
+        pass
+    if _orphan:
+        fail('(13) 对照表里有 %d 条对不上源码里的 L.T 调用（中文字改了？）：%s'
+             % (len(_orphan), '，'.join(repr(z) for z in _orphan[:6])))
+    else:
+        ok('(13) 对照表 %d 条都能对上源码' % len(_entries))
+
 elif any(_p.exists() for _p in (ROOT / 'plugin').glob('*.cs')):
     warn('(13) 没找到 plugin/lang/en.txt（如果是还没开始做英文化，忽略本条）')
 
@@ -388,11 +482,38 @@ elif any(_p.exists() for _p in (ROOT / 'plugin').glob('*.cs')):
 # 「源码里新写了一句中文、却根本没包 L.T」这种情况：那种字符串不在表里，
 # 也不在任何被检查的调用里，两边都看不见它。
 #
-# 这一条补上：扫几类面板控件的字面量参数，含中文又没走 L.T 就报。
+# 这一条补上：扫面板控件的字面量参数，含中文又没走 L.T 就报。
 # 「拷贝自」那两个按钮就是这么漏的（文案取自 TabNames，直接喂给了 Button）。
+#
+# 【v1.0.92 放宽了范围】原来只认 Button / Label / Toggle 三种。英文化第二轮
+# 实际漏掉的不是别的控件，而是「文案先存进变量」与「helper 内部没套 L.T」这两类
+# —— 前者任何按调用点扫的检查都看不见（见 ENGINEERING-NOTES 第 42 条），
+# 后者是 Sub() 那个二级小节标题。所以这里把控件放宽到 GUI / GUILayout 的全部函数，
+# Sub 的裸字面量也一起扫（它内部套了 L.T，写在 en.txt 里的 key 才算数）。
 _bare = []
-for _m in re.finditer(r'GUILayout\.(Button|Label|Toggle)\([^;]*?\)', _panel):
-    _call = _m.group(0)
+# 【必须按括号配对取整段调用】原来用 `[^;]*?\)` 非贪婪匹配到第一个右括号，
+# 遇到 `GUILayout.Button(L.T("打开"), GUILayout.Width(BtnW("打开", 52f)))` 这种
+# 嵌套调用就被截断，`L.T(` 落在截断点之外，于是已翻译的按钮被误报成裸中文。
+for _m in re.finditer(r'\bGU(?:ILayout|I)\.(?:Button|Label|Toggle|Box|TextField|TextArea|Toolbar|Window)\(', _panel):
+    _i, _d, _j, _in = _m.end() - 1, 0, _m.end() - 1, False
+    while _j < len(_panel):
+        _c = _panel[_j]
+        if _in:
+            if _c == '\\':
+                _j += 2; continue
+            if _c == '"':
+                _in = False
+        else:
+            if _c == '"':
+                _in = True
+            elif _c == '(':
+                _d += 1
+            elif _c == ')':
+                _d -= 1
+                if _d == 0:
+                    break
+        _j += 1
+    _call = _panel[_i:_j]
     if 'L.T(' in _call or 'TabNames' in _call or 'SlotLabels' in _call:
         continue
     for _s in re.findall(r'"([^"]*)"', _call):

@@ -35,18 +35,29 @@ namespace BurgerShopModder
         private static string _actual;    // 实际算出来的哈希（成功时）
         private static string _detail;    // 查不到时的原因
 
-        /// <summary>一句话结论，给面板用。没查过就先查。</summary>
-        internal static string Summary()
+        /// <summary>
+        /// 是否与开发时一致。面板要判断「要不要提示补丁可能挂不上」。
+        ///
+        /// 【不能靠 Summary() 的字符串包含来判断】—— 那句话会跟着界面语言变。
+        /// 原来写的是 verdict.Contains("一致")，英文化之后英文串里永远没有这两个字，
+        /// 于是英文界面会一直显示「补丁可能挂不上」这条假警告。
+        /// </summary>
+        internal static bool IsMatch
         {
+            get { EnsureChecked(); return _state == "same"; }
+        }
+
+        /// <summary>一句话结论，给面板用。没查过就先查。</summary>
+        internal static string Summary()        {
             EnsureChecked();
             switch (_state)
             {
                 case "same":
-                    return "游戏程序集与开发时一致";
+                    return L.T("游戏程序集与开发时一致");
                 case "different":
-                    return "游戏程序集与开发时【不一致】—— 补丁可能挂不上，见下方详情";
+                    return L.T("游戏程序集与开发时【不一致】—— 补丁可能挂不上，见下方详情");
                 default:
-                    return "查不到游戏程序集（" + (_detail ?? "未知原因") + "）";
+                    return L.T("查不到游戏程序集（{0}）", _detail ?? L.T("未知原因"));
             }
         }
 
@@ -56,13 +67,13 @@ namespace BurgerShopModder
             EnsureChecked();
             var sb = new StringBuilder();
             sb.AppendLine("  期望 SHA256 : " + ExpectedSha256);
-            sb.AppendLine("  期望大小   : " + ExpectedSize + " 字节");
+            sb.AppendLine(L.T("  期望大小   : {0} 字节", ExpectedSize));
             if (!string.IsNullOrEmpty(_actual))
             {
                 sb.AppendLine("  实际 SHA256 : " + _actual);
-                sb.AppendLine("  实际大小   : " + _actualSize + " 字节");
+                sb.AppendLine(L.T("  实际大小   : {0} 字节", _actualSize));
             }
-            if (!string.IsNullOrEmpty(_detail)) sb.AppendLine("  说明       : " + _detail);
+            if (!string.IsNullOrEmpty(_detail)) sb.AppendLine(L.T("  说明       : {0}", _detail));
             return sb.ToString();
         }
 
@@ -78,7 +89,7 @@ namespace BurgerShopModder
                 if (path == null)
                 {
                     _state = "unknown";
-                    _detail = "没找到 Assembly-CSharp.dll";
+                    _detail = L.T("没找到 Assembly-CSharp.dll");
                     return;
                 }
 
