@@ -1,0 +1,35 @@
+# 面板英文对照表
+#
+# 格式：中文原文 <TAB> 英文
+#   · 中文那列必须和源码里 L.T(...) 括号里的字【一模一样】，
+#     差一个字就匹配不上，那句会安静地回落成中文显示。
+#     tools/static-check.py 的第 (13) 条会查这件事。
+#   · 井号开头的行是注释，空行会跳过。
+#   · 还没翻的条目可以整行不写 —— 缺了就是显示中文，不会报错。
+#
+# 这个文件是嵌入资源，编进 DLL 里随插件分发。
+# 想临时校对某几句又不想重编，可以在
+#   BepInEx/config/nesarf.burgershop.modder/zh-en.txt
+# 放一份同名格式的文件，它会覆盖这里同名的条目。
+
+# ---- 面板栏名 ----
+玩家	Player
+口交	Fellatio
+背榨	Rear
+正骑	Riding
+换装	Outfit
+系统	System
+预设	Presets
+关于	About
+
+# ---- 预设栏按钮 ----
+打开	Open
+复制	Copy
+存为预设	Save as preset
+应用	Apply
+覆盖	Overwrite
+删除	Delete
+
+# ---- 系统栏 ----
+界面语言	Language
+切换立刻生效，不用重启。英文还没翻完，没翻到的地方会显示中文。	Applied immediately, no restart needed. English is not complete yet - anything untranslated stays in Chinese.

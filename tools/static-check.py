@@ -298,6 +298,48 @@ else:
     else:
         ok(f'(12) dist 里 3 个产物都带版本 {_now}')
 
+# === 英文对照表与源码是否还对得上 ===
+# 【为什么需要】对照表拿「中文原文」当 key。源码里把那句中文改了字（哪怕只多一个
+# 「的」），表里那行就永远匹配不上。而缺译文时是【回落成中文】—— 不报错、不崩溃，
+# 只是那句永远翻不成英文。这种失效只能靠检查抓，人眼看不出来。
+#
+# 只查一个方向：表里有、源码没有 → 说明表漂移了，报失败。
+# 反方向（源码有、表里没有）是正常的，那是还没翻，只报个进度。
+_en = ROOT / 'plugin' / 'lang' / 'en.txt'
+if _en.exists():
+    _entries = []
+    for _line in _en.read_text(encoding='utf-8').splitlines():
+        if not _line or _line.startswith('#'):
+            continue
+        if '\t' not in _line:
+            continue
+        _zh = _line.split('\t', 1)[0]
+        if _zh:
+            _entries.append(_zh)
+
+    _panel = read(ROOT / 'plugin' / 'BurgerShopModder.cs') or ''
+    _calls = set(re.findall(r'L\.T\(\s*"([^"]*)"', _panel))
+
+    # 栏名不按字面量传进去，走的是 L.T(TabNames[i])。
+    # 所以要把 TabNames 数组里的元素也当成「有调用点」，否则 8 个栏名会被误判成孤儿。
+    _tabarr = re.search(r'TabNames\s*=\s*\{([^}]*)\}', _panel)
+    if _tabarr:
+        _calls |= set(re.findall(r'"([^"]*)"', _tabarr.group(1)))
+
+    _orphan = [z for z in _entries if z not in _calls]
+    if _orphan:
+        fail('(13) 对照表里有 %d 条对不上源码里的 L.T 调用（中文字改了？）：%s'
+             % (len(_orphan), '，'.join(_orphan[:6])))
+    else:
+        ok('(13) 对照表 %d 条都能对上源码' % len(_entries))
+
+    _done = set(_entries) & _calls
+    _todo = sorted(_calls - _done)
+    print('  [INFO] 面板文案翻译进度 %d/%d' % (len(_done), len(_calls))
+          + ('，还没翻：' + '，'.join(_todo[:6]) if _todo else ''))
+elif any(_p.exists() for _p in (ROOT / 'plugin').glob('*.cs')):
+    warn('(13) 没找到 plugin/lang/en.txt（如果是还没开始做英文化，忽略本条）')
+
 # ── 汇总 ──────────────────────────────────────────────────────
 print()
 print(f'结论：{len(fails)} 项失败，{len(warns)} 项提醒')

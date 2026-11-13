@@ -82,6 +82,8 @@ CODE=(
   plugin/ActivityLogger.cs
   plugin/GameBuild.cs
   plugin/PresetStore.cs
+  plugin/Localization.cs
+  plugin/lang/en.txt
   trainer/BurgerShopTrainer.cs
   trainer/BurgerShopTrainer.csproj
   tools/static-check.py

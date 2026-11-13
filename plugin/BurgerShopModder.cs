@@ -26,6 +26,8 @@ namespace BurgerShopModder
 
         // ---- 玩家（被喂食的一方） ----
         internal static ConfigEntry<int> ConfigVersion;
+        /// <summary>界面语言：zh = 中文（默认），en = 英文。没翻到的条目会回落成中文。</summary>
+        internal static ConfigEntry<string> Language;
         internal static ConfigEntry<bool> GodMode;
         internal static ConfigEntry<bool> NoEcstasy;
         internal static ConfigEntry<bool> LockMaxHp;
@@ -242,6 +244,14 @@ namespace BurgerShopModder
             // BepInEx 会用默认值创建它；若默认写 1 就永远不会触发迁移。
             ConfigVersion = Config.Bind("0-System", "ConfigVersion", 0,
                 "配置版本号（自动迁移用）。不要手动改。");
+
+            // 界面语言。默认中文 —— 中文系统的用户不该被动切到英文。
+            // 英文模式下，对照表里没翻到的条目会原样显示中文（见 Localization.cs）。
+            Language = Config.Bind("0-System", "Language", "zh",
+                new ConfigDescription(
+                    "界面语言。zh = 中文（默认），en = 英文。" +
+                    "英文还没翻完，没翻到的条目会显示中文，不会留空。",
+                    new AcceptableValueList<string>("zh", "en")));
 
             GodMode = Config.Bind("1-Player", "GodMode", false,
                 "每帧把当前 HP 补满（走游戏自己的 HPChange，界面同步）。注意：这不阻止上限下降。");
@@ -812,6 +822,21 @@ namespace BurgerShopModder
             catch (Exception e)
             {
                 Log.LogError("Harmony 初始化失败：" + e);
+            }
+
+            // 界面语言：中文模式什么都不做；英文模式载入对照表。
+            // 放在 Awake 最后 —— 它依赖 Language 这个配置项已经 bind 过。
+            try
+            {
+                bool english = Language != null &&
+                               string.Equals(Language.Value, "en", StringComparison.OrdinalIgnoreCase);
+                string langOverride = System.IO.Path.Combine(
+                    BepInEx.Paths.ConfigPath, "nesarf.burgershop.modder", L.OverrideFileName);
+                Log.LogInfo("[i18n] " + L.Init(english, langOverride));
+            }
+            catch (Exception e)
+            {
+                Log.LogWarning("[i18n] 载入英文对照表失败，界面按中文显示：" + e.GetType().Name);
             }
         }
 
@@ -9240,12 +9265,12 @@ namespace BurgerShopModder
             GUILayout.Label(value);
             // 邮箱不给「打开」：mailto: 在有些环境会弹「选择应用」，或者干脆没反应。
             // 一个点了没用的按钮比没有这个按钮更让人困惑，所以邮箱只留复制。
-            if (canOpen && GUILayout.Button("打开", GUILayout.Width(52f)))
+            if (canOpen && GUILayout.Button(L.T("打开"), GUILayout.Width(BtnW("打开", 52f))))
             {
                 try { Application.OpenURL(value); _aboutHint = "已用系统浏览器打开"; }
                 catch (Exception e) { _aboutHint = "打不开：" + e.Message; }
             }
-            if (GUILayout.Button("复制", GUILayout.Width(52f)))
+            if (GUILayout.Button(L.T("复制"), GUILayout.Width(BtnW("复制", 52f))))
             {
                 GUIUtility.systemCopyBuffer = value;
                 _aboutHint = "已复制到剪贴板";
@@ -9275,7 +9300,7 @@ namespace BurgerShopModder
             GUILayout.BeginHorizontal();
             GUILayout.Label("名字", GUILayout.Width(44f));
             _presetName = GUILayout.TextField(_presetName ?? "", 24);
-            if (GUILayout.Button("存为预设", GUILayout.Width(90f)))
+            if (GUILayout.Button(L.T("存为预设"), GUILayout.Width(BtnW("存为预设", 90f))))
                 _presetHint = PresetStore.Save(_presetName);
             GUILayout.EndHorizontal();
             Hint("存的时候如果同名已存在，旧的那份会先自动备份。");
@@ -9294,13 +9319,13 @@ namespace BurgerShopModder
                 {
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("  " + n);
-                    if (GUILayout.Button("应用", GUILayout.Width(56f))) _presetHint = PresetStore.Apply(n);
-                    if (GUILayout.Button("覆盖", GUILayout.Width(56f)))
+                    if (GUILayout.Button(L.T("应用"), GUILayout.Width(BtnW("应用", 56f)))) _presetHint = PresetStore.Apply(n);
+                    if (GUILayout.Button(L.T("覆盖"), GUILayout.Width(BtnW("覆盖", 56f))))
                     {
                         _presetName = n;
                         _presetHint = PresetStore.Save(n);
                     }
-                    if (GUILayout.Button("删除", GUILayout.Width(56f))) _presetHint = PresetStore.Delete(n);
+                    if (GUILayout.Button(L.T("删除"), GUILayout.Width(BtnW("删除", 56f)))) _presetHint = PresetStore.Delete(n);
                     GUILayout.EndHorizontal();
                 }
                 GUILayout.EndScrollView();
@@ -9607,7 +9632,7 @@ namespace BurgerShopModder
                 {
                     GUIStyle st = GUI.skin.button;
                     if (_tab == i) st = HighlightStyle(st);
-                    if (GUILayout.Button(TabNames[i], st, GUILayout.Width(62f))) _tab = i;
+                    if (GUILayout.Button(L.T(TabNames[i]), st, GUILayout.Width(62f))) _tab = i;
                 }
                 GUILayout.EndHorizontal();
                 GUILayout.Space(4f);
@@ -10403,6 +10428,31 @@ namespace BurgerShopModder
         /// <summary>「系统」栏：先上限，再系统。</summary>
         private void DrawTabSystemWithCaps(object player, object clock)
         {
+            // ---- 界面语言 ----
+            // 放最前面：切到英文之后想切回来的人，一进系统栏就能看到，不用滚动去翻。
+            // 面板是手画的，不会自动把 Config 项画出来 —— 所以这里必须有控件，
+            // 否则只剩改 cfg 或开修改器两条路。
+            Section(L.T("界面语言"));
+            GUILayout.BeginHorizontal();
+            {
+                bool isEn = Language != null &&
+                            string.Equals(Language.Value, "en", StringComparison.OrdinalIgnoreCase);
+                if (GUILayout.Button("中文", isEn ? GUI.skin.button : HighlightStyle(GUI.skin.button)))
+                {
+                    SetLanguage("zh");
+                }
+                if (GUILayout.Button("English", isEn ? HighlightStyle(GUI.skin.button) : GUI.skin.button))
+                {
+                    SetLanguage("en");
+                }
+            }
+            GUILayout.EndHorizontal();
+            Hint(L.T("切换立刻生效，不用重启。英文还没翻完，没翻到的地方会显示中文。"));
+
+            GUILayout.Space(6f);
+            Rule();
+            GUILayout.Space(6f);
+
             DrawTabCaps(player);
             GUILayout.Space(10f);
             Rule();
@@ -11347,6 +11397,41 @@ namespace BurgerShopModder
 
             Log.LogInfo("活动记录：已挂 " + ok + "/" + targets.Length + " 个游戏事件记录点"
                         + (missed.Count > 0 ? "；未找到：" + string.Join(", ", missed.ToArray()) : ""));
+        }
+
+        /// <summary>
+        /// 按钮宽度：至少 min，文字比 min 宽时按实际排版宽度给。
+        ///
+        /// 【为什么需要】面板原来给按钮写死宽度（比如「存为预设」90px）。
+        /// 中文 4 个字绰绰有余，换成英文 "Save as preset" 就被截成 "Save as prese"。
+        /// 写死宽度在只有一种语言时看不出问题，一加语言就成了布局 bug。
+        /// </summary>
+        private static float BtnW(string zh, float min)
+        {
+            float w = GUI.skin.button.CalcSize(new GUIContent(L.T(zh))).x + 14f;
+            return w > min ? w : min;
+        }
+
+        /// <summary>
+        /// 切换界面语言，立刻重载对照表，不用重启。
+        /// 写 Language.Value 会连带把 cfg 落盘（BepInEx 的 SaveOnConfigSet），
+        /// 所以下次进游戏保持这次选择。
+        /// </summary>
+        private void SetLanguage(string lang)
+        {
+            if (Language == null) return;
+            Language.Value = lang;
+            bool english = string.Equals(lang, "en", StringComparison.OrdinalIgnoreCase);
+            try
+            {
+                string p = System.IO.Path.Combine(
+                    BepInEx.Paths.ConfigPath, "nesarf.burgershop.modder", L.OverrideFileName);
+                Log.LogInfo("[i18n] " + L.Init(english, p));
+            }
+            catch (Exception e)
+            {
+                Log.LogWarning("[i18n] 切换语言失败：" + e.GetType().Name);
+            }
         }
 
         private void DrawTabSystem(object player, object clock)

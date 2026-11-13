@@ -23,6 +23,16 @@
     <Compile Include="GameBindings.cs" />
     <Compile Include="PresetStore.cs" />
     <Compile Include="GameBuild.cs" />
+    <Compile Include="Localization.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 英文对照表：编进 DLL，装上就能用。
+         LogicalName 钉死成 lang/en.txt，免得资源名受 RootNamespace 影响
+         （Localization.cs 里的 L.ResourceName 就是照这个名字找的）。 -->
+    <EmbeddedResource Include="lang\en.txt">
+      <LogicalName>lang/en.txt</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
