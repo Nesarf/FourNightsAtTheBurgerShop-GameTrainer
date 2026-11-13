@@ -207,14 +207,34 @@ namespace BurgerShopInstaller
             return null;
         }
 
+        /// <summary>
+        /// 游戏是否正在运行。
+        ///
+        /// 【这里曾经有过一条 IndexOf("Burger") 的宽匹配，它把自家程序也兜了进去】
+        /// 安装程序的进程名是 BurgerShopModder-Installer，修改器是 BurgerShopModder-Trainer，
+        /// 都含 Burger —— 于是一打开安装程序，这个函数立刻返回 true，
+        /// 点安装永远弹「游戏正在运行，请先关闭游戏」。用户报告在 issue #1。
+        ///
+        /// 宽匹配的初衷是兜住游戏（游戏名是 Four Nights at the Burger Shop），
+        /// 但游戏自己的名字就能精确匹配上，宽匹配只会误伤。
+        /// 所以现在只做两件事：排除自己，然后精确比对游戏进程名。
+        /// </summary>
         internal static bool GameRunning()
         {
-            string want = Path.GetFileNameWithoutExtension(Program.GameExe);
+            string want = Path.GetFileNameWithoutExtension(Program.GameExe);   // Four Nights at the Burger Shop
+
+            int selfId;
+            using (Process self = Process.GetCurrentProcess()) selfId = self.Id;
+
             foreach (Process p in Process.GetProcesses())
             {
                 try
                 {
-                    if (p.ProcessName.IndexOf("Burger", StringComparison.OrdinalIgnoreCase) >= 0) return true;
+                    // 排除安装程序自己 —— 它的进程名里也带着 Burger
+                    if (p.Id == selfId) continue;
+
+                    // 精确匹配游戏进程名（大小写不敏感）。
+                    // 不再用 IndexOf 做子串匹配：那样会把自家两个 exe 一起算进去。
                     if (string.Equals(p.ProcessName, want, StringComparison.OrdinalIgnoreCase)) return true;
                 }
                 catch { }
