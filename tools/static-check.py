@@ -253,6 +253,51 @@ else:
     else:
         ok('(10) README 里的 %d 个 SHA256 与 dist 一致' % len(_sha_lines))
 
+# === 版本号一致性 ===
+# 【为什么需要】v1.0.9 发版时，工作副本升到了 1.0.9，发布副本却整棵停在 1.0.8：
+# 源码的 [BepInPlugin]、PluginVersion、Installer.Version、三个 csproj 全是旧的，
+# dist 里三个二进制也是旧的，README 的校验和跟着旧 —— 三方一起旧。
+# 第 (10) 条问的是"README 与 dist 是否互洽"，两边一起旧它就只能报通过。
+# 于是用户从 release 下载 v1.0.9、照 README 核对，三条全不符。
+#
+# 这一条问的是另一个问题：这一棵树里，所有地方说的是不是同一个版本。
+def _ver(rel, pat):
+    m = re.search(pat, read(ROOT / rel) or '')
+    return m.group(1) if m else None
+
+PLUG = 'plugin/BurgerShopModder.cs'
+_named = {
+    'PluginVersion': _ver(PLUG, r'PluginVersion\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+)"'),
+    'BepInPlugin':   _ver(PLUG, r'BepInPlugin\([^)]*"([0-9]+\.[0-9]+\.[0-9]+)"\)'),
+    'Installer':     _ver('installer/Installer.cs', r'internal const string Version\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+)"'),
+}
+for _p in ('plugin/BurgerShopModder.csproj', 'trainer/BurgerShopTrainer.csproj', 'installer/Installer.csproj'):
+    _named['csproj:' + _p.split('/')[-1]] = _ver(_p, r'<Version>([0-9]+\.[0-9]+\.[0-9]+)</Version>')
+
+_seen = {v for v in _named.values() if v}
+if None in _named.values():
+    fail('(11) 有地方读不到版本号：' + '，'.join(f'{k}={v}' for k, v in _named.items()))
+elif len(_seen) != 1:
+    fail('(11) 版本号不一致：' + '，'.join(f'{k}={v}' for k, v in _named.items()))
+else:
+    _now = _seen.pop()
+    ok(f'(11) 源码版本号统一为 {_now}（{len(_named)} 处）')
+
+    # dist 里的二进制是不是同一版编译的：版本资源一定以 UTF-16 存在 PE 里，
+    # 找不到就说明那份产物是别的版本编出来的。粗检，所以只报提醒。
+    _want = _now.encode('utf-16-le')
+    _miss = []
+    for _n in ('2×9+9L+6[ED]+7+2×45→1[C]+LS.dll', '数值修改器.exe', '汉堡店修改器-安装程序.exe'):
+        _f = ROOT / 'dist' / _n
+        if not _f.exists():
+            _miss.append(f'{_n}（dist 里没有）')
+        elif _want not in _f.read_bytes():
+            _miss.append(f'{_n}（找不到 {_now}）')
+    if _miss:
+        warn('(12) dist 里的产物不是这一版编出来的（发版前须重建）：' + '，'.join(_miss))
+    else:
+        ok(f'(12) dist 里 3 个产物都带版本 {_now}')
+
 # ── 汇总 ──────────────────────────────────────────────────────
 print()
 print(f'结论：{len(fails)} 项失败，{len(warns)} 项提醒')

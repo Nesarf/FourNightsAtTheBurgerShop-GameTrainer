@@ -65,7 +65,7 @@ Copy-Item (Join-Path $bepSrc '.doorstop_version')    $staging -Force -ErrorActio
 Copy-Item (Join-Path $dist '数值修改器.exe')         $staging -Force
 Copy-Item (Join-Path $dist '数值修改器.exe.config')  $staging -Force -ErrorAction SilentlyContinue
 Copy-Item (Join-Path $dist '卸载还原.ps1')           $staging -Force
-Copy-Item (Join-Path $dist '使用说明.md')            $staging -Force
+Copy-Item (Join-Path $build '使用说明.md')           $staging -Force
 
 $payload = Join-Path $root 'payload.zip'
 if (Test-Path $payload) { Remove-Item $payload -Force }

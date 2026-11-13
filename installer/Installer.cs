@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -15,7 +15,7 @@ namespace BurgerShopInstaller
     internal static class Program
     {
         internal const string AppTitle = "汉堡店 数值修改器 · 安装程序";
-        internal const string Version = "1.0.8";
+        internal const string Version = "1.0.9";
         internal const string GameExe = "Four Nights at the Burger Shop.exe";
 
         /// <summary>插件的 BepInPlugin GUID。用来识别"这个 dll 是我们的旧版"。</summary>

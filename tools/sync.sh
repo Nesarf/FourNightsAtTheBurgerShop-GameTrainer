@@ -39,10 +39,40 @@ set -u
 
 # 从脚本自身位置推，不写死绝对路径 ——
 # 写死的话 static-check 的规则 (6) 会（正确地）报本机路径，也就没法进仓库了。
-WORK="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PUB="$(cd "$WORK/../burger-shop-publish" && pwd)"
+#
+# 【这里曾经有个会让整个脚本静默失效的写法】
+# 原来是 WORK=<自身>/.. 、PUB=$WORK/../burger-shop-publish。
+# 从这个公式看，脚本只应该在工作副本里跑。可它两边都放了一份 ——
+# 在发布副本里跑时 WORK 会算成发布副本自己，PUB 又算成
+# "发布副本/../burger-shop-publish"，还是发布副本自己。
+# 于是【两个变量指向同一个目录】，每条 diff 都相等，脚本打印
+# "同" 一片、最后 "共 0 个文件"，看起来像同步成功了。
+# v1.0.9 就是这样漏掉的：源码停在 v1.0.8，dist 停在 v1.0.8，README 的
+# 校验和跟着旧，三方一致，静态检查也没话说。
+#
+# 所以现在按【目录名】认出自己在哪一棵树，另一棵就是它的兄弟目录。
+SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+case "$(basename "$SELF")" in
+  burger-shop-publish) PUB="$SELF"; WORK="$(cd "$SELF/../burger-shop" && pwd)" ;;
+  burger-shop)         WORK="$SELF"; PUB="$(cd "$SELF/../burger-shop-publish" && pwd)" ;;
+  *) echo "无法判断这是哪一棵树（目录名是 $(basename "$SELF")），停止。" >&2; exit 2 ;;
+esac
+if [ "$WORK" = "$PUB" ]; then
+  echo "两棵树算出来是同一个目录（$WORK），停止 —— 这一定是路径推导出了问题。" >&2
+  exit 2
+fi
 
 # 代码与工具：工作 → 发布
+#
+# 【这份清单曾经漏过东西】
+# v1.0.9 发版时它还没有 GameBuild.cs 与 PresetStore.cs，也没有 dist 里那三个
+# 编译产物。结果是：源码在发布副本里停在 v1.0.8，dist 里的二进制也停在 v1.0.8，
+# 而 README 的校验和跟着一起旧 —— 三方都旧，静态检查第 (10) 条比的是 README 与
+# dist 是否互洽，两边一致于是报"通过"。用户从 release 下载新文件、照 README
+# 核对，会看到三条全不符。
+#
+# 所以：凡是要进发布副本的文件，都必须在这一份清单里。
+# 新增一个 .cs 却忘了加进来，就等于给自己留了一个只有发版才暴露的洞。
 CODE=(
   plugin/BurgerShopModder.cs
   plugin/BurgerShopModder.csproj
@@ -50,15 +80,25 @@ CODE=(
   plugin/GameCommandServer.cs
   plugin/CfgGuard.cs
   plugin/ActivityLogger.cs
+  plugin/GameBuild.cs
+  plugin/PresetStore.cs
   trainer/BurgerShopTrainer.cs
   trainer/BurgerShopTrainer.csproj
   tools/static-check.py
+  tools/sync.sh
   dist/2×9+9L+6[ED]+7+2×45→1[C]+LS.dll
+  dist/数值修改器.exe
+  dist/数值修改器.exe.config
+  dist/汉堡店修改器-安装程序.exe
+  dist/汉堡店修改器-安装程序.exe.config
+  dist/卸载还原.ps1
 )
 
 # installer/：曾经两边都有对方没有的东西（发布副本有清理时加的注释，
-# 工作副本有后来的改动），只能人工看 diff。
-# 后来把写死的路径改成可推导的，两边终于一致了 —— 现在可以自动同步。
+# 工作副本有后来的改动），所以以前只能人工看 diff。
+# 现在两边已经收敛到"只差版本号"这种机械差异了，就并进自动同步 ——
+# 人工看 diff 这件事靠不住：v1.0.9 就是没人看，于是发布副本里的
+# make_payload.ps1 还指着早就删掉的 dist/使用说明.md，在那边打包必然断。
 INSTALLER=(
   installer/Installer.cs
   installer/Installer.csproj
@@ -99,13 +139,13 @@ do_check() {
     fi
   done
   echo
-  echo "=== installer/（需人工看 diff，脚本不自动同步）==="
+  echo "=== installer/（同样 工作 → 发布）==="
   for f in "${INSTALLER[@]}"; do
     if [ ! -f "$WORK/$f" ] || [ ! -f "$PUB/$f" ]; then echo "  缺     $f"; continue; fi
     if diff -q "$WORK/$f" "$PUB/$f" >/dev/null 2>&1; then
       echo "  同      $f"
     else
-      echo "  异      $f   (工作 $(wc -c < "$WORK/$f") / 发布 $(wc -c < "$PUB/$f"))  << 人工确认"
+      echo "  异      $f   (工作 $(wc -c < "$WORK/$f") / 发布 $(wc -c < "$PUB/$f"))"
     fi
   done
   echo
@@ -131,15 +171,27 @@ has_leak() {
   grep -qE "$LEAKPAT" "$1" 2>/dev/null
 }
 
+# 二进制文件（exe/dll/ico）没法用文本规则判断"里面有没有本机路径"：
+# grep 碰到 NUL 字节会直接宣布 Binary file matches，结果是随机命中。
+# 所以先认出是不是二进制，是的话跳过这道闸门 ——
+# 它们的来源是编译产物，路径问题由 static-check 的源码检查负责。
+is_binary() {
+  local a b
+  a=$(head -c 8192 "$1" 2>/dev/null | wc -c)
+  b=$(head -c 8192 "$1" 2>/dev/null | tr -d '\000' | wc -c)
+  [ "$a" -ne "$b" ]
+}
+
 do_code() {
   echo "=== 代码：工作 → 发布 ==="
   local n=0
   local blocked=0
-  for f in "${CODE[@]}"; do
+  for f in "${CODE[@]}" "${INSTALLER[@]}"; do
     [ -f "$WORK/$f" ] || { echo "  跳过（工作没有）: $f"; continue; }
     if [ -f "$PUB/$f" ] && diff -q "$WORK/$f" "$PUB/$f" >/dev/null 2>&1; then continue; fi
     # 【闸门】要同步过去的文件里不允许有本机路径
-    if has_leak "$WORK/$f"; then
+    # 二进制跳过：那里面查不了文本，而且它们本来就是编译产物
+    if ! is_binary "$WORK/$f" && has_leak "$WORK/$f"; then
       echo "  拒绝 $f —— 工作副本里有本机路径，先清干净再同步"
       blocked=$((blocked+1))
       continue
