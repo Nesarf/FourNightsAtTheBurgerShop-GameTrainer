@@ -15,7 +15,7 @@ namespace BurgerShopModder
     /// Four Nights at the Burger Shop — 数值修改器
     /// 用反射操作游戏托管字段，不修改原始 Assembly-CSharp.dll，卸载 BepInEx 即完全还原。
     /// </summary>
-    [BepInPlugin(Guid, "Burger Shop 数值修改器", "1.0.9")]
+    [BepInPlugin(Guid, "Burger Shop 数值修改器", "1.0.91")]
     [BepInProcess("Four Nights at the Burger Shop.exe")]
     public class Plugin : BaseUnityPlugin
     {
@@ -9235,7 +9235,7 @@ namespace BurgerShopModder
         private string _aboutHint = "";
 
         /// <summary>插件版本。与 [BepInPlugin] 里那个字符串保持一致。</summary>
-        internal const string PluginVersion = "1.0.9";
+        internal const string PluginVersion = "1.0.91";
 
         private const string UrlRepo = "https://github.com/Nesarf/FourNightsAtTheBurgerShop-GameTrainer";
         private const string UrlBili = "https://space.bilibili.com/11247581";
@@ -9245,19 +9245,19 @@ namespace BurgerShopModder
         private void AboutRow(string label, string value, bool canOpen = true)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label(label, GUILayout.Width(74f));
+            GUILayout.Label(L.T(label), GUILayout.Width(LabelW(label, 74f)));
             GUILayout.Label(value);
             // 邮箱不给「打开」：mailto: 在有些环境会弹「选择应用」，或者干脆没反应。
             // 一个点了没用的按钮比没有这个按钮更让人困惑，所以邮箱只留复制。
             if (canOpen && GUILayout.Button(L.T("打开"), GUILayout.Width(BtnW("打开", 52f))))
             {
-                try { Application.OpenURL(value); _aboutHint = "已用系统浏览器打开"; }
-                catch (Exception e) { _aboutHint = "打不开：" + e.Message; }
+                try { Application.OpenURL(value); _aboutHint = L.T("已用系统浏览器打开"); }
+                catch (Exception e) { _aboutHint = L.T("打不开：") + e.Message; }
             }
             if (GUILayout.Button(L.T("复制"), GUILayout.Width(BtnW("复制", 52f))))
             {
                 GUIUtility.systemCopyBuffer = value;
-                _aboutHint = "已复制到剪贴板";
+                _aboutHint = L.T("已复制到剪贴板");
             }
             GUILayout.EndHorizontal();
         }
@@ -10334,10 +10334,10 @@ namespace BurgerShopModder
             Hint("本栏的设置与另外两栏【相互独立】，改一个不影响其他");
             Hint("（按姿势各存一份：_Fella / _Osiri / _Sit）");
             GUILayout.BeginHorizontal();
-            GUILayout.Label(L.T("拷贝自："), GUILayout.Width(56f));
+            GUILayout.Label(L.T("拷贝自："), GUILayout.Width(LabelW("拷贝自：", 56f)));
             foreach (string o in others)
             {
-                if (GUILayout.Button(o))
+                if (GUILayout.Button(L.T(o)))
                 {
                     CopyPoseSettings(o, self);
                     _snapHint = "已把「" + o + "」的设置拷到「" + self + "」";
@@ -10505,7 +10505,7 @@ namespace BurgerShopModder
             Hint("(自然) = 自然可见（游戏在管）；(手动) = 已手动强制显示；空 = 隐藏");
             GUILayout.Label(L.T("强制列表：{0} 项   总开关：{1}{2}",
                 _partForceOn.Count,
-                _partOverrideEnabled ? "开" : "关",
+                _partOverrideEnabled ? L.T("开") : L.T("关"),
                 _forceAllParts ? "   ← 「全部显示」生效中" : ""));
 
             if (GUILayout.Button(L.T("列出当前显示的部件")))
@@ -10548,7 +10548,7 @@ namespace BurgerShopModder
                 bool forced = _partForceOn.Contains(n);
 
                 GUILayout.BeginHorizontal();
-                string mark = natural ? "(自然)" : (forced ? "(手动)" : "·");
+                string mark = natural ? L.T("(自然)") : (forced ? L.T("(手动)") : "·");
                 GUILayout.Label(mark + " " + n, GUILayout.Width(190f));
                 bool newForced = GUILayout.Toggle(forced, L.T("强制"), GUILayout.Width(60f));
                 if (newForced != forced)
@@ -11386,6 +11386,18 @@ namespace BurgerShopModder
         }
 
         /// <summary>
+        /// 标签宽度：至少 min，译文比 min 宽时按实际排版给。
+        ///
+        /// 和 BtnW 是同一个问题的两种表现：写死宽度在单语言下看不出毛病，
+        /// 英文一长就换行（"Feedback email" 在 74px 里会拆成两行）。
+        /// </summary>
+        private static float LabelW(string zh, float min)
+        {
+            float w = GUI.skin.label.CalcSize(new GUIContent(L.T(zh))).x + 10f;
+            return w > min ? w : min;
+        }
+
+        /// <summary>
         /// 切换界面语言，立刻重载对照表，不用重启。
         /// 写 Language.Value 会连带把 cfg 落盘（BepInEx 的 SaveOnConfigSet），
         /// 所以下次进游戏保持这次选择。
@@ -11526,8 +11538,8 @@ namespace BurgerShopModder
             if (GUILayout.Button(L.T("列出隐藏部件"))) _snapHint = ListHiddenParts();
             GUILayout.EndHorizontal();
             GUILayout.Label(_forceAllParts
-                ? "实验中：所有部件透明度被拉到 1（用于判断某件衣服到底有没有图）"
-                : "「强制显示」可判断某件衣服是不是只是透明度没开");
+                ? L.T("实验中：所有部件透明度被拉到 1（用于判断某件衣服到底有没有图）")
+                : L.T("「强制显示」可判断某件衣服是不是只是透明度没开"));
 
             GUILayout.Space(4f);
             Sub("危险操作");
@@ -11578,7 +11590,7 @@ namespace BurgerShopModder
             for (int i = 0; i < SlotFields.Length; i++)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(SlotLabels[i], _slotLabelStyle);
+                GUILayout.Label(L.T(SlotLabels[i]), _slotLabelStyle);
 
                 int cur = (int)GetFloat(tabemi, SlotFields[i]);
                 for (int v = 0; v < SlotCounts[i]; v++)

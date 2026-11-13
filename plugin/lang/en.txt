@@ -508,3 +508,27 @@ HitArea_Manman_By_Plugins 中心已绑定到模型相对位置 ({0:0.000}, {1:0.
   已还原：HP {0:0.##}/{1:0.##}  绝顶 {2:0.##}/{3:0.##}  连吃上限 {4}  射精 {5}	  Restored: HP {0:0.##}/{1:0.##}  ecstasy {2:0.##}/{3:0.##}  burger cap {4}  ejaculations {5}
   {0,-8} → {1,-34} 置1后={2:0.##}  置0后={3:0.##}  {4}	  {0,-8} -> {1,-34} after set-to-1={2:0.##}  after set-to-0={3:0.##}  {4}
   {0}  丝袜基础层未被插件干预 _Op_..._Tights = {1:0.#}（Tights={2}，应为 0）	  {0}  tights base layer untouched by the plugin _Op_..._Tights = {1:0.#} (Tights={2}, should be 0)
+
+# ---- 关于栏 ----
+仓库	Repository
+反馈邮箱	Feedback email
+已用系统浏览器打开	Opened in your browser
+
+# ---- 换装 / 部件 ----
+(自然)	(auto)
+(手动)	(manual)
+实验中：所有部件透明度被拉到 1（用于判断某件衣服到底有没有图）	Experimental: every part's alpha is forced to 1, to tell whether a garment has any texture at all
+「强制显示」可判断某件衣服是不是只是透明度没开	Force-show tells you whether a garment is merely sitting at zero alpha
+头部	Head
+上半身	Upper body
+下半身	Lower body
+裤袜	Tights
+眼镜	Glasses
+
+# ---- 关于栏提示 ----
+打不开：	Could not open: 
+已复制到剪贴板	Copied to the clipboard
+
+# ---- 开关状态 ----
+开	On
+关	Off

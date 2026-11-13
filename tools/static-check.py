@@ -350,6 +350,12 @@ if _en.exists():
 
     _calls = _lt_keys(_panel)
 
+    # 还有些文案是通过 helper 或数组交给内部翻的，正则看不到字面量
+    _calls |= set(re.findall(r'AboutRow\(\s*"([^"]*)"', _panel))
+    _slot = re.search(r'SlotLabels\s*=\s*\{([^}]*)\}', _panel)
+    if _slot:
+        _calls |= set(re.findall(r'"([^"]*)"', _slot.group(1)))
+
     # 面板上大部分文案不是直接包 L.T 的，而是当参数传给这四个绘制 helper ——
     # 翻译在 helper 内部统一做（一处改动覆盖所有调用点）。所以这里也要认。
     _calls |= set(re.findall(r'(?:Section|Hint|SliderF|SliderI)\(\s*"([^"]*)"', _panel))
@@ -376,6 +382,31 @@ if _en.exists():
           + ('，还没翻：' + '，'.join(_todo[:6]) if _todo else ''))
 elif any(_p.exists() for _p in (ROOT / 'plugin').glob('*.cs')):
     warn('(13) 没找到 plugin/lang/en.txt（如果是还没开始做英文化，忽略本条）')
+
+# === 面板控件里还有没有裸中文 ===
+# 第 (13) 条查的是「表里的 key 能不能对上源码」—— 它抓不到
+# 「源码里新写了一句中文、却根本没包 L.T」这种情况：那种字符串不在表里，
+# 也不在任何被检查的调用里，两边都看不见它。
+#
+# 这一条补上：扫几类面板控件的字面量参数，含中文又没走 L.T 就报。
+# 「拷贝自」那两个按钮就是这么漏的（文案取自 TabNames，直接喂给了 Button）。
+_bare = []
+for _m in re.finditer(r'GUILayout\.(Button|Label|Toggle)\([^;]*?\)', _panel):
+    _call = _m.group(0)
+    if 'L.T(' in _call or 'TabNames' in _call or 'SlotLabels' in _call:
+        continue
+    for _s in re.findall(r'"([^"]*)"', _call):
+        if _s in ('中文', 'English'):
+            continue          # 语言按钮在各语言下都显示自己的名字
+        if re.search(r'[一-鿿]', _s):
+            _line = _panel[: _m.start()].count(chr(10)) + 1
+            _bare.append('%d：%s' % (_line, _s[:40]))
+
+if _bare:
+    fail('(14) 面板控件里有 %d 处中文字面量没走 L.T：%s'
+         % (len(_bare), '，'.join(_bare[:5])))
+else:
+    ok('(14) 面板控件里没有裸中文')
 
 # ── 汇总 ──────────────────────────────────────────────────────
 print()
