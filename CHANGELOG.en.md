@@ -11,6 +11,46 @@ the `#N` after an entry is its number in that file.
 
 ---
 
+## v1.0.95 — repository hygiene
+
+**Temporary artefacts removed, signing records completed, the uninstall script made bilingual.**
+
+After v1.0.94 shipped, the repository itself got a second sweep. Four stale things turned up —
+none of them functional, but each one made what sits in the repository disagree with what was
+actually released.
+
+### The four
+
+- **`_orphan.txt` removed from the repository.** It is a temporary list that `static-check.py`
+  rewrites on every run, yet it sat in the repository root — so every check dirtied the working
+  tree. Output now goes to `_tmp/orphan.txt`, and both are in `.gitignore`.
+- **`SIGNINGS.ndjson` went from 32 to 138 records.** The copy in the repository had stopped at
+  v1.0.9; the signing records for v1.0.91 through v1.0.94 (12 signings across the plugin, the
+  editor and the installer) were missing. It is meant to be an export of the signing ledger and
+  had simply not been re-exported for a long time.
+- **`卸载还原.ps1` is bilingual.** It is a script users actually double-click and it only
+  printed Chinese; it now picks Chinese or English from the system UI language, with both sets
+  of comments.
+- **README said "41 historical entries", now 42.** Entry 42 was added back in v1.0.92 and the
+  README had not caught up.
+
+### Installer rebuilt
+
+`卸载还原.ps1` ships inside the installer payload, so the payload and the installer were rebuilt
+and re-signed — the v1.0.94 installer still carried the Chinese-only uninstall script.
+
+### Verification
+
+```
+static check   15 rules, 0 failed
+regression     install 27 / uninstall 27 and fully clean
+signing        3 files Valid + DigiCert timestamp
+```
+
+**No tuned value was touched**; `Language` is still `zh`.
+
+---
+
 ## v1.0.94 — runtime-side English
 
 **Beyond the panel: logs, command replies, the installer, the editor, the static checker and CI are English now too.**
@@ -85,23 +125,6 @@ signing        3 files Valid + DigiCert timestamp
 ```
 
 **No tuned value was touched**; `Language` is still `zh`.
-
-### Post-release tidy-up (same version, repository hygiene)
-
-A second sweep over the repository itself found a few stale things:
-
-- **`_orphan.txt` removed from the repository.** It is a temporary list that `static-check.py`
-  rewrites on every run, yet it sat in the repository root — so every check dirtied the working
-  tree. The output now goes to `_tmp/orphan.txt`, and both are in `.gitignore`.
-- **`SIGNINGS.ndjson` went from 32 to 138 records.** The file in the repository had stopped at
-  v1.0.9; the signing records for v1.0.91 through v1.0.94 (12 signings across the plugin, the
-  editor and the installer) were missing. It is meant to be an export of the signing ledger
-  and had simply not been re-exported for a long time.
-- **`卸载还原.ps1` is bilingual.** It is a script users actually double-click, and it only
-  printed Chinese; it now picks Chinese or English from the system UI language, with both sets
-  of comments.
-- **README said "41 historical entries", now 42.** Entry 42 was added back in v1.0.92 and the
-  README had not caught up.
 
 ---
 
