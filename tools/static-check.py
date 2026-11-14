@@ -18,6 +18,7 @@ This file turns that consistency into rules a machine can check.
   (5) the plugin source must contain no absolute local paths
   (6) pose wording that should not be hard-coded ("索取" must not appear in a shared template)
   (7) the mount count must not drop below the expected figure (guards against "half the patches hooked")
+  (16) every panel button must carry an explicit width (no full-row stretching)
 
 Usage:
     python tools/static-check.py [repo root]
@@ -64,6 +65,16 @@ def read(p):
         return p.read_text(encoding='utf-8', errors='ignore')
     except FileNotFoundError:
         return None
+
+# Comments mention `GUILayout.Button(text)` and Chinese copy while explaining the rules, so the
+# panel is also kept as a copy with comments blanked out. Newlines are preserved, so any line
+# number reported from it stays correct.
+def _strip_comments(text):
+    text = re.sub(r'/\*.*?\*/', lambda m: re.sub(r'[^\n]', ' ', m.group(0)), text, flags=re.S)
+    return re.sub(r'//[^\n]*', lambda m: re.sub(r'[^\n]', ' ', m.group(0)), text)
+
+
+_panel_nc = _strip_comments(read(ROOT / 'plugin' / 'BurgerShopModder.cs') or '')
 
 
 src = read(PLUGIN)
@@ -388,7 +399,7 @@ if _en.exists():
 
     # most panel copy is not wrapped in L.T directly; it is passed as an argument to these
     # drawing helpers, which translate inside (one change covers every call site).
-    _calls |= set(re.findall(r'(?:Section|Hint|Sub|SliderF|SliderI)\(\s*"([^"]*)"', _panel))
+    _calls |= set(re.findall(r'(?:Section|Hint|Sub|SliderF|SliderI|ProbeWhy)\(\s*"([^"]*)"', _panel))
 
     # tab names are not passed as literals; they go through L.T(TabNames[i]).
     # So the elements of the TabNames array count as call sites, or all eight names are
@@ -523,6 +534,47 @@ _bare = []
 # fell outside the captured span, and an already translated button was reported as bare Chinese.
 for _m in re.finditer(r'\bGU(?:ILayout|I)\.(?:Button|Label|Toggle|Box|TextField|TextArea|Toolbar|Window)\(', _panel_main):
     _i, _d, _j, _in = _m.end() - 1, 0, _m.end() - 1, False
+    while _j < len(_panel_nc):
+        _c = _panel_nc[_j]
+        if _in:
+            if _c == '\\':
+                _j += 2; continue
+            if _c == '"':
+                _in = False
+        else:
+            if _c == '"':
+                _in = True
+            elif _c == '(':
+                _d += 1
+            elif _c == ')':
+                _d -= 1
+                if _d == 0:
+                    break
+        _j += 1
+    _call = _panel_nc[_i:_j]
+    if 'L.T(' in _call or 'TabNames' in _call or 'SlotLabels' in _call:
+        continue
+    for _s in re.findall(r'"([^"]*)"', _call):
+        if _s in ('中文', 'English'):
+            continue          # the language buttons show their own name in every language
+        if re.search(r'[一-鿿]', _s):
+            _line = _panel_nc[: _m.start()].count(chr(10)) + 1
+            _bare.append('%d：%s' % (_line, _s[:40]))
+
+if _bare:
+    fail("(14) %d Chinese literals in panel controls bypass L.T: %s"
+         % (len(_bare), ", ".join(_bare[:4])))
+else:
+    ok("(14) no bare Chinese in panel controls")
+
+# === any panel button without an explicit width ===
+# [Why] `GUILayout.Button(text)` without a width expands to fill the row, so inside a 540 px
+# panel even a two-character button took the whole line (fixed in v1.0.97). Reading the code
+# does not show it — it looks exactly like a normal button — so a check has to watch it.
+# `Btn(text)` and `BtnW(text, min)` are the two helpers that produce a width.
+_btn_bare = []
+for _m in re.finditer(r'\bGUILayout\.Button\(', _panel_nc):
+    _i, _d, _j, _in = _m.end() - 1, 0, _m.end() - 1, False
     while _j < len(_panel_main):
         _c = _panel_main[_j]
         if _in:
@@ -541,20 +593,16 @@ for _m in re.finditer(r'\bGU(?:ILayout|I)\.(?:Button|Label|Toggle|Box|TextField|
                     break
         _j += 1
     _call = _panel_main[_i:_j]
-    if 'L.T(' in _call or 'TabNames' in _call or 'SlotLabels' in _call:
+    if 'GUILayout.Width(' in _call or 'Btn(' in _call or 'BtnText(' in _call:
         continue
-    for _s in re.findall(r'"([^"]*)"', _call):
-        if _s in ('中文', 'English'):
-            continue          # the language buttons show their own name in every language
-        if re.search(r'[一-鿿]', _s):
-            _line = _panel_main[: _m.start()].count(chr(10)) + 1
-            _bare.append('%d：%s' % (_line, _s[:40]))
+    _line = _panel_main[: _m.start()].count(chr(10)) + 1
+    _btn_bare.append('%d: %s' % (_line, ' '.join(_call.split())[:60]))
 
-if _bare:
-    fail("(14) %d Chinese literals in panel controls bypass L.T: %s"
-         % (len(_bare), ", ".join(_bare[:4])))
+if _btn_bare:
+    fail("(16) %d panel buttons have no explicit width (they stretch across the whole row): %s"
+         % (len(_btn_bare), ", ".join(_btn_bare[:4])))
 else:
-    ok("(14) no bare Chinese in panel controls")
+    ok("(16) every panel button carries an explicit width")
 
 # ── summary ─────────────────────────────────────────────────
 print()

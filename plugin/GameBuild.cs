@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -166,20 +166,20 @@ namespace BurgerShopModder
                 EnsureChecked();
                 if (_state == "same")
                 {
-                    if (log != null) log.LogInfo("游戏程序集核对：与开发时一致");
+                    if (log != null) log.LogInfo(L.T("游戏程序集核对：与开发时一致"));
                 }
                 else if (_state == "different")
                 {
                     if (log != null)
-                        log.LogWarning("游戏程序集核对：与开发时【不一致】。"
-                            + "补丁可能挂不上，面板「系统 → 取证 / 自检」里有详情。"
-                            + " 期望 " + ExpectedSha256.Substring(0, 16) + "…"
-                            + "，实际 " + (_actual != null ? _actual.Substring(0, 16) : "?") + "…");
+                        log.LogWarning(L.T("游戏程序集核对：与开发时【不一致】。")
+                            + L.T("补丁可能挂不上，面板「系统 → 取证 / 自检」里有详情。")
+                            + L.T(" 期望 ") + ExpectedSha256.Substring(0, 16) + "…"
+                            + L.T("，实际 ") + (_actual != null ? _actual.Substring(0, 16) : "?") + "…");
                 }
                 else
                 {
                     if (log != null)
-                        log.LogWarning("游戏程序集核对：查不到（" + (_detail ?? "未知") + "）—— 这不等于不匹配，只是没能核对。");
+                        log.LogWarning(L.T("游戏程序集核对：查不到（") + (_detail ?? L.T("未知")) + L.T("）—— 这不等于不匹配，只是没能核对。"));
                 }
             }
             catch { }

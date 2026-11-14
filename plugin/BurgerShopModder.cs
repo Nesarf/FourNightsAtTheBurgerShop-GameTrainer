@@ -15,7 +15,7 @@ namespace BurgerShopModder
     /// Four Nights at the Burger Shop — 数值修改器
     /// 用反射操作游戏托管字段，不修改原始 Assembly-CSharp.dll，卸载 BepInEx 即完全还原。
     /// </summary>
-    [BepInPlugin(Guid, "Burger Shop Trainer / 数值修改器", "1.0.97")]
+    [BepInPlugin(Guid, "Burger Shop Trainer / 数值修改器", "1.0.98")]
     [BepInProcess("Four Nights at the Burger Shop.exe")]
     public class Plugin : BaseUnityPlugin
     {
@@ -233,10 +233,6 @@ namespace BurgerShopModder
               _pluginInstance = this;
             Log = Logger;
 
-            // 游戏构建核对：这个游戏没有版本号，所以核程序集指纹。
-            // 只报告、不拦截 —— 版本不同不一定坏，硬拦会把"或许能用"变成"一定不能用"。
-            GameBuild.ReportOnce(Log);
-
             // 【配置版本】用于自动迁移。
             //   0 = 还没迁移过（老配置 / 全新配置都算 0）
             //   1 = 已经把「单份键」的值搬到「按姿势三份键」
@@ -269,6 +265,12 @@ namespace BurgerShopModder
             {
                 Log.LogWarning(L.T("[i18n] 载入英文对照表失败，界面按中文显示：") + e.GetType().Name);
             }
+
+            // 游戏构建核对：这个游戏没有版本号，所以核程序集指纹。
+            // 只报告、不拦截 —— 版本不同不一定坏，硬拦会把"或许能用"变成"一定不能用"。
+            // 【必须放在 L.Init 之后】否则这条日志过 L.T 时表还没载入，
+            // 英文模式下它仍会以中文打印（v1.0.98 修的就是这个）。
+            GameBuild.ReportOnce(Log);
 
             GodMode = Config.Bind("1-Player", "GodMode", false,
                 L.T("每帧把当前 HP 补满（走游戏自己的 HPChange，界面同步）。注意：这不阻止上限下降。"));
@@ -3280,7 +3282,7 @@ namespace BurgerShopModder
         {
             if (_probeWhyLogged.Contains(why)) return;
             _probeWhyLogged.Add(why);
-            Log.LogInfo(L.T("部件索引对照：暂不可用 —— ") + why);
+            Log.LogInfo(L.T("部件索引对照：暂不可用 —— ") + L.T(why));
         }
         private static string _probeInfo = "";
         private static string _exportBatch = "";
@@ -9234,7 +9236,7 @@ namespace BurgerShopModder
         private string _aboutHint = "";
 
         /// <summary>插件版本。与 [BepInPlugin] 里那个字符串保持一致。</summary>
-        internal const string PluginVersion = "1.0.97";
+        internal const string PluginVersion = "1.0.98";
 
         private const string UrlRepo = "https://github.com/Nesarf/FourNightsAtTheBurgerShop-GameTrainer";
         private const string UrlBili = "https://space.bilibili.com/11247581";
@@ -10100,7 +10102,8 @@ namespace BurgerShopModder
                 DemandAfterglowMax.Value = SliderI("手动余韵上限", DemandAfterglowMax.Value, 0, 100);
             }
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button(L.T("手动进入{0}", mw))) DemandCmd("fire");
+            string fireLabel = L.T("手动进入{0}", mw);
+            if (GUILayout.Button(fireLabel, BtnText(fireLabel))) DemandCmd("fire");
             if (GUILayout.Button(L.T("手动进入余韵"), Btn("手动进入余韵"))) DemandCmd("afterglow");
             GUILayout.EndHorizontal();
             Hint(L.T("当前：{0}", DemandCmd("status")));
@@ -10195,7 +10198,8 @@ namespace BurgerShopModder
                     {
                         string nm = all[i];
                         bool cur = (nm == ManmanBindDrawable.Value);
-                        if (GUILayout.Button((cur ? L.T("(记录) ") : "    ") + nm))
+                        string bindLabel = (cur ? L.T("(记录) ") : "    ") + nm;
+                        if (GUILayout.Button(bindLabel, BtnText(bindLabel)))
                         {
                             ManmanBindDrawable.Value = cur ? "" : nm;
                             _snapHint = cur ? L.T("已取消素材绑定")
@@ -10214,7 +10218,8 @@ namespace BurgerShopModder
                     ManmanDragMode.Value = GUILayout.Toggle(ManmanDragMode.Value, "  " + L.T("拖动模式（判定区中心实时跟随鼠标）"));
                     if (ManmanDragMode.Value)
                         Hint("开着时框会跟着鼠标跑；对准位置后点下面的「绑定」");
-                    if (GUILayout.Button(ManmanDragMode.Value ? L.T("绑定到此位置（并退出拖动）") : L.T("把中心设为当前鼠标位置")))
+                    string bindPos = ManmanDragMode.Value ? L.T("绑定到此位置（并退出拖动）") : L.T("把中心设为当前鼠标位置");
+                    if (GUILayout.Button(bindPos, BtnText(bindPos)))
                     {
                         float rx, ry;
                         if (ScreenToModelRel(Input.mousePosition, out rx, out ry))
@@ -10338,7 +10343,7 @@ namespace BurgerShopModder
             GUILayout.Label(L.T("拷贝自："), GUILayout.Width(LabelW("拷贝自：", 56f)));
             foreach (string o in others)
             {
-                if (GUILayout.Button(L.T(o)))
+                if (GUILayout.Button(L.T(o), BtnText(L.T(o), 72f)))
                 {
                     CopyPoseSettings(o, self);
                     _snapHint = L.T("已把「{0}」的设置拷到「{1}」", L.T(o), L.T(self));
@@ -10411,11 +10416,11 @@ namespace BurgerShopModder
             {
                 bool isEn = Language != null &&
                             string.Equals(Language.Value, "en", StringComparison.OrdinalIgnoreCase);
-                if (GUILayout.Button("中文", isEn ? GUI.skin.button : HighlightStyle(GUI.skin.button)))
+                if (GUILayout.Button("中文", isEn ? GUI.skin.button : HighlightStyle(GUI.skin.button), BtnText("中文", 72f)))
                 {
                     SetLanguage("zh");
                 }
-                if (GUILayout.Button("English", isEn ? HighlightStyle(GUI.skin.button) : GUI.skin.button))
+                if (GUILayout.Button("English", isEn ? HighlightStyle(GUI.skin.button) : GUI.skin.button, BtnText("English", 72f)))
                 {
                     SetLanguage("en");
                 }
@@ -11400,6 +11405,16 @@ namespace BurgerShopModder
         }
 
         /// <summary>
+        /// 同上，但参数是**已经翻译好的**字符串 —— 给文案是运行时拼出来、
+        /// 或者在三元里挑一个的按钮用（那种地方给不出中文字面量）。
+        /// </summary>
+        private static GUILayoutOption BtnText(string text, float min = 88f)
+        {
+            float w = GUI.skin.button.CalcSize(new GUIContent(text)).x + 14f;
+            return GUILayout.Width(w > min ? w : min);
+        }
+
+        /// <summary>
         /// 标签宽度：至少 min，译文比 min 宽时按实际排版给。
         ///
         /// 和 BtnW 是同一个问题的两种表现：写死宽度在单语言下看不出毛病，
@@ -11523,7 +11538,8 @@ namespace BurgerShopModder
             }
             GUILayout.EndHorizontal();
 
-            if (GUILayout.Button(_autoExport ? L.T("(停止) 停止连续记录") : L.T("(记录) 连续记录(0.5秒一次)")))
+            string recLabel = _autoExport ? L.T("(停止) 停止连续记录") : L.T("(记录) 连续记录(0.5秒一次)");
+            if (GUILayout.Button(recLabel, BtnText(recLabel)))
             {
                 _autoExport = !_autoExport;
                 if (_autoExport) _autoDir = "";      // 每次开始记录换一个新时间戳目录
@@ -11532,7 +11548,8 @@ namespace BurgerShopModder
             }
 
             Sub("记录");
-            if (GUILayout.Button(ActivityLogger.Running ? L.T("(停止) 停止活动记录") : L.T("(记录) 开始活动记录")))
+            string actLabel = ActivityLogger.Running ? L.T("(停止) 停止活动记录") : L.T("(记录) 开始活动记录");
+            if (GUILayout.Button(actLabel, BtnText(actLabel)))
             {
                 if (ActivityLogger.Running) ActivityLogger.StopLogging(); else ActivityLogger.StartLogging();
                 _snapHint = ActivityLogger.Running ? L.T("记录中：activity_<时间戳>\\") : L.T("已停止并写出 summary.txt");

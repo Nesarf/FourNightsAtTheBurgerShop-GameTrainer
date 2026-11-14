@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -59,11 +59,11 @@ namespace BurgerShopModder
             if (!english)
             {
                 // 切回中文时不卸表：下次再切回英文就不用重读磁盘。
-                return "中文模式，未载入英文对照表";
+                return "Chinese mode: English table not loaded";
             }
             if (_map != null)
             {
-                return "英文模式，沿用已载入的 " + _map.Count + " 条";
+                return "English mode: reusing the " + _map.Count + " entries already loaded";
             }
 
             _map = new Dictionary<string, string>(1024, StringComparer.Ordinal);
@@ -79,7 +79,7 @@ namespace BurgerShopModder
                 }
                 catch (Exception e)
                 {
-                    return "英文模式，内嵌 " + fromDll + " 条；外置表读取失败：" + e.GetType().Name;
+                    return "English mode: " + fromDll + " embedded entries; the external table failed to load: " + e.GetType().Name;
                 }
             }
 
@@ -88,12 +88,12 @@ namespace BurgerShopModder
             if (_map.Count == 0)
             {
                 _on = false;
-                return "英文模式但对照表是空的（嵌入资源 " + ResourceName +
-                       " 没找到？），已回退中文";
+                return "English requested but the table is empty (embedded " + ResourceName +
+                       " missing?), fell back to Chinese";
             }
 
-            return "英文模式，共 " + _map.Count + " 条（内嵌 " + fromDll +
-                   (fileExists ? "，外置覆盖 " + fromFile : "") + "）";
+            return "English mode: " + _map.Count + " entries (" + fromDll + " embedded" +
+                   (fileExists ? ", " + fromFile + " from the external override" : "") + ")";
         }
 
         /// <summary>

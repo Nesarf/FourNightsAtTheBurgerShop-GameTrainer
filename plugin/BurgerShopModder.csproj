@@ -8,7 +8,7 @@
     <OutputPath>..\dist\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <Version>1.0.97</Version>
+    <Version>1.0.98</Version>
     <Product>Four Nights at the Burger Shop Numeric Modifier</Product>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <DebugType>none</DebugType>

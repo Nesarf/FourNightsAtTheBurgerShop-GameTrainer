@@ -17,7 +17,7 @@ namespace BurgerShopInstaller
     {
         /// <summary>窗口标题。随界面语言走，所以是属性而不是 const。</summary>
         internal static string AppTitle { get { return Txt.T("汉堡店 数值修改器 · 安装程序"); } }
-        internal const string Version = "1.0.97";
+        internal const string Version = "1.0.98";
         internal const string GameExe = "Four Nights at the Burger Shop.exe";
 
         /// <summary>插件的 BepInPlugin GUID。用来识别"这个 dll 是我们的旧版"。</summary>

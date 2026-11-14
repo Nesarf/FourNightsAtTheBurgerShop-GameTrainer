@@ -11,6 +11,53 @@ the `#N` after an entry is its number in that file.
 
 ---
 
+## v1.0.98 — the last Chinese in runtime logs, plus a rule against layout regressions
+
+### Logs: the class v1.0.94 missed
+
+v1.0.94 wrapped every `Log.LogInfo` in `L.T`, but the pattern it used was `Log\.Log*` — it
+**never matched a lowercase `log.Log*`** (the `ILogger log` method parameter). So the three
+assembly-check lines in `GameBuild.cs` had never been translated and still printed Chinese.
+
+The second half was subtler: those three lines fire **before `L.Init`**. Even wrapped in `L.T`
+the table is not loaded yet, so `L.T` returns the Chinese unchanged. The fix is both things:
+wrap them, and move `GameBuild.ReportOnce(Log)` after `L.Init`.
+
+One more of the same shape: `ProbeWhy("没有 Live2D_ModelControl 实例")` — the reason is passed
+in as Chinese and translated inside. `ProbeWhy` now does `L.T(why)` and all nine reasons have
+translations.
+
+`L.Init`'s own diagnostic text ("English mode: N entries") is English now too; it never went
+through `L.T` in the first place.
+
+### Checker: rule (16)
+
+A `GUILayout.Button(text)` without a width expands to fill — v1.0.97 fixed 46 of them by hand,
+but the next bare button written would quietly bring the problem back, and it **does not show
+up when reading the code** (it looks exactly like a normal button).
+
+So there is a rule now: take each whole `GUILayout.Button(...)` call, and fail it if the span
+contains neither `GUILayout.Width(`, `Btn(` nor `BtnText(`. It caught 9 on its first run — 8 of
+them were buttons whose label is a variable or a ternary, given a width by hand this round;
+the ninth was an example inside a comment, and the rule blanks comments out.
+
+Rule (13) was widened to accept the argument of `ProbeWhy(...)` too, otherwise those nine
+translations would be reported as orphans.
+
+### Verification
+
+```
+static check   16 rules, 0 failed
+coverage       1014 / 1015 (the one left is bilibili)
+regression     install 27 / uninstall 27 and fully clean
+English run    no Chinese left in the 12 startup log lines (except the product name and game API names)
+signing        3 files Valid + DigiCert timestamp
+```
+
+**No tuned value was touched**; `Language` is still `zh`.
+
+---
+
 ## v1.0.97 — panel layout: buttons no longer stretch to full width
 
 **`GUILayout.Button(text)` without a width expands to fill**, so inside a 540 px panel even a

@@ -1055,3 +1055,24 @@ ERR 未知命令: 	ERR unknown command:
  秒 → cmd\xwatch.txt（每秒一次，只记异常）	 s → cmd\xwatch.txt (once per second, anomalies only)
   调用对象类型: 	  call target type: 
   参数: 	  argument: 
+
+# ---- 游戏程序集核对日志（v1.0.98 补，v1.0.94 只扫了 Log.* 漏掉 log.Log*）----
+游戏程序集核对：与开发时一致	Assembly check: matches the build this was developed against
+游戏程序集核对：与开发时【不一致】。	Assembly check: does NOT match the development build. 
+补丁可能挂不上，面板「系统 → 取证 / 自检」里有详情。	Patches may fail to hook; see System -> forensics / self-test in the panel.
+ 期望 	 expected 
+，实际 	, actual 
+游戏程序集核对：查不到（	Assembly check: cannot read it (
+）—— 这不等于不匹配，只是没能核对。	) - that is not a mismatch, the check simply could not run.
+未知	unknown
+
+# ---- 部件索引探针的失败原因（ProbeWhy，v1.0.98）----
+camType 为空	camType is null
+没有 CubismModel 实例（不在店内场景？）	no CubismModel instance (not in the shop scene?)
+找不到 Live2D_ModelControl 类型	Live2D_ModelControl type not found
+没有 Live2D_ModelControl 实例	no Live2D_ModelControl instance
+mcComp 为空	mcComp is null
+Live2D_ModelControl 上没有 IDs 字段	Live2D_ModelControl has no IDs field
+IDs 字段值为 null（组件未初始化？）	the IDs field is null (component not initialised?)
+没有 CubismModel 实例	no CubismModel instance
+找不到 Cubism 类型	Cubism type not found
