@@ -24,7 +24,7 @@ Many of the entries below stand for a reusable rule, for example:
 
 ## Table of contents
 
-**42** numbered entries in total, plus **5** appendices and **5** S-series entries. The order is **chronological** (in the order they were written), not by importance — it is kept because later entries frequently refer back to earlier conclusions.
+**44** numbered entries in total, plus **5** appendices and **5** S-series entries. The order is **chronological** (in the order they were written), not by importance — it is kept because later entries frequently refer back to earlier conclusions.
 
 `1-40` numbered entries
 
@@ -71,6 +71,9 @@ Many of the entries below stand for a reusable rule, for example:
 | 39 | Three-tab wording unified: description templates swap the word according to the tab |
 | 40 | Drop-tracing logs + three new sections in the manual |
 | 41 | UI English: the fallback mechanism and two silent failures |
+| 42 | The blind spot of the second English round: the checker sees call sites, not variables |
+| 43 | Three blind spots of the translation: concatenation, init order, the regex |
+| 44 | Layout: buttons that stretch across the row, and how to watch a shape you cannot see |
 
 Appendices (mechanism descriptions and rules, not defects)
 
