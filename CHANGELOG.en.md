@@ -11,6 +11,38 @@ the `#N` after an entry is its number in that file.
 
 ---
 
+## v1.0.96 — English product metadata and checker comments
+
+**Metadata and the checker's comments in English; the tail of this round's audit tidied up.**
+
+### Product names in English
+
+The three `.csproj` files carried `<Product>Four Nights at the Burger Shop 数值修改器</Product>`.
+That field shows up in Windows Explorer under Properties → Details, so an English user sees it.
+All three now read `Four Nights at the Burger Shop Numeric Modifier` (the installer adds `- Installer`).
+
+### The `static-check.py` comments are translated too
+
+Only its output and the 15 rule names had been translated (CI logs are English); the 146 lines
+of comments were still Chinese. They are all English now, including the pitfalls behind each
+rule. No code changed, and the 15 rules still pass after the edit.
+
+What remains in Chinese is what the code itself needs: the three mode words `吸取` / `索取` / `榨取`,
+file names (`使用说明.md`, `数值修改器.exe`), log tags and the `{模式}` placeholder — translating
+those would stop the program working.
+
+### Verification
+
+```
+static check   15 rules, 0 failed
+regression     install 27 / uninstall 27 and fully clean
+signing        3 files Valid + DigiCert timestamp
+```
+
+**No tuned value was touched**; `Language` is still `zh`.
+
+---
+
 ## v1.0.95 — repository hygiene
 
 **Temporary artefacts removed, signing records completed, the uninstall script made bilingual.**
