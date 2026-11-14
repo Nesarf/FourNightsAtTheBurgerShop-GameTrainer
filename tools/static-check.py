@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 静态一致性检查 —— 不需要游戏、不需要编译，可直接跑在 CI 上。
 
@@ -467,7 +467,9 @@ if _en.exists():
     _orphan = [z for z in _entries if z not in _calls]
     try:
         # 控制台会按本地码页把中文打成乱码，完整清单顺手落一份 UTF-8 文件
-        with open(str(ROOT / '_orphan.txt'), 'w', encoding='utf-8') as _fh:
+        _tmpdir = ROOT / '_tmp'
+        _tmpdir.mkdir(exist_ok=True)
+        with open(str(_tmpdir / 'orphan.txt'), 'w', encoding='utf-8') as _fh:
             _fh.write('\n'.join(repr(z) for z in _orphan))
     except Exception:
         pass

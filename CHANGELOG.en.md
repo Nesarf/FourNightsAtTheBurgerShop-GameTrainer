@@ -11,6 +11,100 @@ the `#N` after an entry is its number in that file.
 
 ---
 
+## v1.0.94 — runtime-side English
+
+**Beyond the panel: logs, command replies, the installer, the editor, the static checker and CI are English now too.**
+
+Earlier rounds translated what was drawn on the panel. English users also have to paste logs
+into an issue, run the installer, and read CI results — none of which live on the panel.
+This version aligns all of that.
+
+### Plugin: 426 log and reply literals go through L.T
+
+Every Chinese literal inside `Log.LogInfo` / `LogWarning` / `LogError`, `Say()` (command-channel
+replies) and `warn` / `info` (binding verification) is wrapped in `L.T`. 439 new translations,
+the table grows from 602 to 997 entries. In Chinese mode `L.T` returns the literal unchanged,
+so not a byte of the Chinese logs changed.
+
+### Two "nested L.T" cases had never actually been translated
+
+The `[绝顶骤降]` and `[骤降溯源]` log lines were written as
+`L.T("A" + "B" + L.T("C"), args)` — the outer `L.T` receives the concatenated string while the
+table stores the segment keys, so it never matched. Rewritten as
+`L.T("A" + "B" + "C", args)`, one key now covers the whole line.
+
+### Two escapes turned paths into control characters
+
+Two command replies were written as `cmd\anim.csv` and `cmd\tremor.csv`. In C#, `\a` is a bell
+and `\t` is a tab — those log paths had carried an invisible character all along.
+Corrected to `\\a` / `\\t`, so a real backslash is printed now.
+
+### Installer and editor: bilingual, following the in-game language switch
+
+Both executables were Chinese-only — translate the plugin all you like, the very first step
+still blocks an English user.
+
+New `shared/Locale.cs`, referenced by both projects (112 entries). The language is decided in
+three layers: `--lang` on the command line > `Language` in
+`<game folder>/BepInEx/config/nesarf.burgershop.modder.cfg` > the system UI language
+(Chinese systems get Chinese, everything else English). There is no cfg before the install,
+so the system language is the fallback.
+
+### Three pre-existing bugs in the editor
+
+Surfaced while checking the English layout; unrelated to translation:
+
+- **The four buttons had never been added to the window** — `MakeButton` built them and the
+  events were wired, but `Controls.Add` was missing. The window showed nothing but sliders
+  and the save button could not be clicked.
+- **The status line sat behind the scrolling panel** — the panel started at y=78, the status
+  line at 88.
+- **English is wider than Chinese, so names were clipped** — in English mode the label column
+  goes 122 to 150 px, the slider start moves 30 px right, and hint rows size themselves.
+
+### Tooling and CI
+
+All 15 rule messages and the result line of `tools/static-check.py` are English;
+the job / step names and every message in `.github/workflows/build.yml` are English too.
+
+### Documentation
+
+- `使用说明.en.md` brought up to the same structure as the Chinese manual
+- `KNOWN-ISSUES.en.md` and `CHANGELOG.en.md` added
+- `README.en.md` brought up to the same structure as the Chinese README
+- `ENGINEERING-NOTES.md` opens with an English reading note
+
+### Verification
+
+```
+static check   15 rules, 0 failed (release tree)
+coverage       997 / 998 (the one left is "bilibili", a product name)
+regression     install 27 / uninstall 27 and fully clean / reinstall 27
+UI             installer and editor each captured in both languages, item by item
+signing        3 files Valid + DigiCert timestamp
+```
+
+**No tuned value was touched**; `Language` is still `zh`.
+
+### Post-release tidy-up (same version, repository hygiene)
+
+A second sweep over the repository itself found a few stale things:
+
+- **`_orphan.txt` removed from the repository.** It is a temporary list that `static-check.py`
+  rewrites on every run, yet it sat in the repository root — so every check dirtied the working
+  tree. The output now goes to `_tmp/orphan.txt`, and both are in `.gitignore`.
+- **`SIGNINGS.ndjson` went from 32 to 138 records.** The file in the repository had stopped at
+  v1.0.9; the signing records for v1.0.91 through v1.0.94 (12 signings across the plugin, the
+  editor and the installer) were missing. It is meant to be an export of the signing ledger
+  and had simply not been re-exported for a long time.
+- **`卸载还原.ps1` is bilingual.** It is a script users actually double-click, and it only
+  printed Chinese; it now picks Chinese or English from the system UI language, with both sets
+  of comments.
+- **README said "41 historical entries", now 42.** Entry 42 was added back in v1.0.92 and the
+  README had not caught up.
+
+---
+
 ## v1.0.93 — runtime-built strings translated
 
 **After the second round, three more batches of text that is "only assembled at runtime" turned up.**

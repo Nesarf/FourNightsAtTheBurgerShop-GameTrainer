@@ -31,3 +31,7 @@ _*.py
 
 # 安装程序的编译中间产物（由 installer/make_payload.ps1 生成，嵌进 exe 后就没用了）
 installer/payload.zip
+
+# static-check 的孤儿清单（每次运行都会重写，不进仓库）
+_orphan.txt
+/_tmp/orphan.txt

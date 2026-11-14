@@ -388,7 +388,7 @@ The script needs `tools/gamepath.txt` pointing at your game folder (**that file 
 | **why a feature looks the way it does** (reverse-engineering findings, pitfalls) | [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) — Chinese working log, with an English reading note at the top |
 | what changed in each version | [`CHANGELOG.en.md`](CHANGELOG.en.md) |
 
-`ENGINEERING-NOTES.md` holds **41** historical entries + **5** appendices + **5** S-series entries,
+`ENGINEERING-NOTES.md` holds **42** historical entries + **5** appendices + **5** S-series entries,
 each written as **symptom / root cause / fix / lesson**. It opens with a **table of contents**,
 so you can jump straight to one entry.
 
