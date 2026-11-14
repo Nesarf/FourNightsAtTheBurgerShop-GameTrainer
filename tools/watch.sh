@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
-# 持续拉取游戏状态 —— 作为后台任务跑，留一条时间线下来。
+# Continuously pull game state — run it as a background job and you get a timeline.
 #
-# 动机：这个会话里我反复靠"让你玩一趟 → 我再看日志"来验证，
-# 而日志只在特定事件上打点，中间态（进了哪个姿势、索取欲多少、连榨走到第几段）
-# 全靠事后拼。持续拉取能把这条时间线补完整。
+# Why this exists: verification used to go "let the user play a round, then read the log",
+# but the log only fires on specific events, so the in-between states (which pose, how much
+# demand urge, which chain segment) had to be reconstructed afterwards. Polling fills that
+# timeline in.
 #
-# 用法：
-#   bash tools/watch.sh [轮数] [每轮间隔秒]     # 不给轮数 = 一直跑；后台跑请用 &
+# Usage:
+#   bash tools/watch.sh [rounds] [gap seconds]     # no rounds = run forever; use & for background
 #
-# 产出（都在 BepInEx/l2d_dump/cmd/）：
-#   watch.txt  每行 = 时间戳 + 完整状态块（状态机 / 索取模式 / 动画速率 / 绝顶值 / 动画层）
-#   watch.csv  紧凑时间线，便于直接看趋势
+# Output (both under BepInEx/l2d_dump/cmd/):
+#   watch.txt  one line = timestamp + full state block (state machine / demand mode / anim rate / ecstasy / anim layer)
+#   watch.csv  compact timeline, good for eyeballing trends
+#
+# NOTE: the grep patterns below are Chinese log literals on purpose. They only match while
+# the plugin's `Language` is `zh`; in English mode the same lines are English and these
+# patterns find nothing.
 set -u
 
 G='<游戏目录>'
@@ -18,7 +23,7 @@ C="$G/BepInEx/l2d_dump/cmd"
 TXT="$C/watch.txt"
 CSV="$C/watch.csv"
 
-ROUNDS="${1:-0}"          # 0 = 无限
+ROUNDS="${1:-0}"          # 0 = forever
 GAP="${2:-1.2}"
 
 mkdir -p "$C"
@@ -32,15 +37,17 @@ while true; do
   printf 'states\n' > "$C/in.txt"
   sleep "$GAP"
 
-  # 整个响应块都要 —— 只取最后一行会丢掉「状态机」那行，
-  # 而姿势与各状态机的值正是最需要连续观察的东西。
-  # 只取【最后一块】响应：从最后一次出现「状态机:」开始累积，
-  # 否则 tail 会连带上一轮的尾巴，txt 里就出现重复块。
+  # The whole response block is needed — taking only the last line drops the
+  # state-machine line, and that line holds the pose and per-state values this
+  # timeline exists to observe. Only the LAST block is kept: start accumulating
+  # from the last occurrence of the state-machine marker, otherwise tail drags in
+  # the previous round's tail and the txt file repeats blocks.
   BLOCK=$(tail -30 "$C/out.txt" 2>/dev/null | sed "s/^[0-9:.]*  //" \
           | awk '/^状态机:/{buf=""} {buf=buf $0 "|"} END{printf "%s", buf}' \
           | grep -aoE "(状态机|索取模式|动画速率|绝顶一览|动画层[^|]*):[^|]*" | tr "\n" "|")
 
-  # 绝顶一览（HP / 绝顶值 / 各种速率）在【另一个命令】里，states 不含它 —— 单独拉一次。
+  # The ecstasy overview (HP / ecstasy / the rates) lives in a DIFFERENT command —
+  # `states` does not include it, so pull it separately.
   printf 'ecs\n' > "$C/in.txt"
   sleep "$GAP"
   ECSLINE=$(tail -3 "$C/out.txt" 2>/dev/null | sed "s/^[0-9:.]*  //" \
@@ -68,7 +75,7 @@ while true; do
     "${URGE:-}" "${STK:-0}" "${LEFT:-}" "${AG:-0}" "${CH:-0}" >> "$CSV"
 
   if [ "$ROUNDS" -gt 0 ] && [ "$i" -ge "$ROUNDS" ]; then
-    echo "已拉取 $i 轮，结束"
+    echo "pulled $i rounds, stopping"
     break
   fi
 done

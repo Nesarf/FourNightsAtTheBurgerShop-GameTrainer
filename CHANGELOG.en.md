@@ -49,6 +49,26 @@ signing        3 files Valid + DigiCert timestamp
 
 **No tuned value was touched**; `Language` is still `zh`.
 
+### Documentation supplement (not a release)
+
+The English engineering notes and the English `tools/` scripts landed after v1.0.95.
+No code changed, so they do not take a version number of their own.
+
+- **`ENGINEERING-NOTES.en.md` added** — all 42 entries, 5 appendices and 5 S-series entries
+  translated. Code blocks and log samples are left as-is (they are the literals people grep
+  for). The Chinese version remains authoritative.
+- **`tools/` scripts in English** — comments and output of `cfgsnap.sh`, `cfgmerge-check.sh`,
+  `drive.sh`, `gcmd.sh`, `gcmd.ps1`, `holdkey.ps1`, `restore-user-cfg.sh`, `tabshot.sh`,
+  `watch.sh` and `sync.sh`. The Chinese grep patterns inside them are **deliberately kept**
+  (`状态机:`, `索取欲=` and the like are literals of the Chinese log; translating them would
+  break the match).
+- **Two stale things fixed in the engineering notes** — the table of contents said "40
+  numbered entries, 4 appendices, 4 S-series entries" while the file holds 42 / 5 / 5; and two
+  tree paths had been eaten into backspace characters by a `\b` escape.
+- **`static-check.py` comments are still Chinese** — its output and all 15 rule names have been
+  English for a while and CI logs are English; the comments are maintainer notes and were left
+  alone this round.
+
 ---
 
 ## v1.0.94 — runtime-side English

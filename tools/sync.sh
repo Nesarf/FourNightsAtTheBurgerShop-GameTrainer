@@ -1,78 +1,79 @@
 #!/usr/bin/env bash
 # ============================================================================
-# 两棵树之间的同步
+# Syncing between the two trees
 #
-# 【为什么需要这个脚本】
+# [Why this script exists]
 #
-# 这个项目有两棵树：
-#     <仓库上级>/burger-shop          工作副本（编译在这里）
-#     <仓库上级>/burger-shop-publish  发布副本（git 仓库在这里）
+# This project has two trees:
+#     <parent>/burger-shop          working copy (compilation happens here)
+#     <parent>/burger-shop-publish  release copy (the git repository lives here)
 #
-# 它们的流向【不是单向的】—— 按文件类别分：
+# The flow is NOT one-directional — it depends on the kind of file:
 #
-#     代码 / 工具   plugin/ trainer/ installer/ tools/
-#                   工作副本 为权威  →  工作 → 发布
+#     code / tools  plugin/ trainer/ installer/ tools/
+#                   the working copy is authoritative  ->  work -> release
 #
-#     文档          README / 使用说明 / KNOWN-ISSUES / CHANGELOG / ENGINEERING-NOTES
-#                   发布副本 为权威  →  发布 → 工作
+#     docs          README / 使用说明 / KNOWN-ISSUES / CHANGELOG / ENGINEERING-NOTES
+#                   the release copy is authoritative  ->  release -> work
 #
-#     安装包与 CI 都读根目录的 使用说明.md（dist/ 里不放副本）
-#     （dist/ 下不再放 KNOWN-ISSUES / CHANGELOG 的副本 —— 打包不用它们，留着只会各自漂移）（会被打进 payload.zip），
-#                   但内容归文档管 → 也走 发布 → 工作
+#     The installer and CI both read 使用说明.md at the root (no copy under dist/).
 #
-# 【为什么之前老出问题】
+# [Why this kept going wrong]
 #
-# 我一直用【一个方向】处理【两类文件】：
-#   - 拿发布副本覆盖工作副本 → 抽出来的方法丢了、拆分过的文档回退了
-#   - 拿工作副本覆盖发布副本 → 本机路径又混进说明书
-# 每一边都只对了一半。
+# One direction was used for both kinds of files:
+#   - copying the release copy over the working copy -> extracted methods lost, split docs reverted
+#   - copying the working copy over the release copy -> local paths leaked into the manual
+# Either way only half of it was right.
 #
-# 【用法】
-#     bash tools/sync.sh check    只看差异，不动文件
-#     bash tools/sync.sh code     代码：工作 → 发布
-#     bash tools/sync.sh docs     文档：发布 → 工作
-#     bash tools/sync.sh all      先 docs 再 code
+# [Usage]
+#     bash tools/sync.sh check     show the differences only, change nothing
+#     bash tools/sync.sh code      code: work -> release
+#     bash tools/sync.sh docs      docs: release -> work
+#     bash tools/sync.sh all       docs first, then code
 #
-# 【规矩】不要手工 cp。要走就走这里。
+# [Rule] Do not copy by hand. Go through this script.
 # ============================================================================
 set -u
 
-# 从脚本自身位置推，不写死绝对路径 ——
-# 写死的话 static-check 的规则 (6) 会（正确地）报本机路径，也就没法进仓库了。
+# Derive from the script's own location; never hard-code an absolute path —
+# a literal local path would (correctly) trip static-check rule (6) and the
+# file could not enter the repository.
 #
-# 【这里曾经有个会让整个脚本静默失效的写法】
-# 原来是 WORK=<自身>/.. 、PUB=$WORK/../burger-shop-publish。
-# 从这个公式看，脚本只应该在工作副本里跑。可它两边都放了一份 ——
-# 在发布副本里跑时 WORK 会算成发布副本自己，PUB 又算成
-# "发布副本/../burger-shop-publish"，还是发布副本自己。
-# 于是【两个变量指向同一个目录】，每条 diff 都相等，脚本打印
-# "同" 一片、最后 "共 0 个文件"，看起来像同步成功了。
-# v1.0.9 就是这样漏掉的：源码停在 v1.0.8，dist 停在 v1.0.8，README 的
-# 校验和跟着旧，三方一致，静态检查也没话说。
+# [There used to be a form here that silently disabled the whole script]
+# WORK=<self>/.. and PUB=$WORK/../burger-shop-publish. From that formula the script
+# only made sense in the working copy, yet a copy sat in both trees. Run from the
+# release copy, WORK resolved to the release copy itself and PUB to
+# "release copy/../burger-shop-publish", which is the release copy again.
+# So the two variables pointed at the SAME directory, every diff was equal, the script
+# printed "same" all the way down and ended with "0 files" — which looked like a
+# successful sync. v1.0.9 was lost exactly that way: sources stuck at v1.0.8, dist
+# stuck at v1.0.8, README checksums equally stale, three-way consistent, and the
+# static check had nothing to complain about.
 #
-# 所以现在按【目录名】认出自己在哪一棵树，另一棵就是它的兄弟目录。
+# So it now recognises which tree it is in by DIRECTORY NAME; the other one is its sibling.
 SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 case "$(basename "$SELF")" in
   burger-shop-publish) PUB="$SELF"; WORK="$(cd "$SELF/../burger-shop" && pwd)" ;;
   burger-shop)         WORK="$SELF"; PUB="$(cd "$SELF/../burger-shop-publish" && pwd)" ;;
-  *) echo "无法判断这是哪一棵树（目录名是 $(basename "$SELF")），停止。" >&2; exit 2 ;;
+  *) echo "cannot tell which tree this is (directory name is $(basename "$SELF")), stopping." >&2; exit 2 ;;
 esac
 if [ "$WORK" = "$PUB" ]; then
-  echo "两棵树算出来是同一个目录（$WORK），停止 —— 这一定是路径推导出了问题。" >&2
+  echo "the two trees resolve to the same directory ($WORK), stopping — the path derivation must be wrong." >&2
   exit 2
 fi
 
-# 代码与工具：工作 → 发布
+# Code and tools: work -> release
 #
-# 【这份清单曾经漏过东西】
-# v1.0.9 发版时它还没有 GameBuild.cs 与 PresetStore.cs，也没有 dist 里那三个
-# 编译产物。结果是：源码在发布副本里停在 v1.0.8，dist 里的二进制也停在 v1.0.8，
-# 而 README 的校验和跟着一起旧 —— 三方都旧，静态检查第 (10) 条比的是 README 与
-# dist 是否互洽，两边一致于是报"通过"。用户从 release 下载新文件、照 README
-# 核对，会看到三条全不符。
+# [This list has missed things before]
+# At v1.0.9 it had neither GameBuild.cs nor PresetStore.cs, nor the three compiled
+# artefacts under dist. The result: sources in the release copy stuck at v1.0.8, the
+# binaries under dist stuck at v1.0.8, and the README checksums equally old — all three
+# stale together. Static-check rule (10) compares README against dist for mutual
+# consistency, so both being old reported "passed". A user downloading the release and
+# verifying against the README would see all three mismatch.
 #
-# 所以：凡是要进发布副本的文件，都必须在这一份清单里。
-# 新增一个 .cs 却忘了加进来，就等于给自己留了一个只有发版才暴露的洞。
+# Therefore: every file that belongs in the release copy must appear in this list.
+# Adding a .cs and forgetting to list it here creates a hole that only a release exposes.
 CODE=(
   plugin/BurgerShopModder.cs
   plugin/BurgerShopModder.csproj
@@ -86,6 +87,7 @@ CODE=(
   plugin/lang/en.txt
   trainer/BurgerShopTrainer.cs
   trainer/BurgerShopTrainer.csproj
+  shared/Locale.cs
   tools/static-check.py
   tools/sync.sh
   dist/2×9+9L+6[ED]+7+2×45→1[C]+LS.dll
@@ -96,11 +98,12 @@ CODE=(
   dist/卸载还原.ps1
 )
 
-# installer/：曾经两边都有对方没有的东西（发布副本有清理时加的注释，
-# 工作副本有后来的改动），所以以前只能人工看 diff。
-# 现在两边已经收敛到"只差版本号"这种机械差异了，就并进自动同步 ——
-# 人工看 diff 这件事靠不住：v1.0.9 就是没人看，于是发布副本里的
-# make_payload.ps1 还指着早就删掉的 dist/使用说明.md，在那边打包必然断。
+# installer/: the two trees once held things the other did not (the release copy had
+# comments added during a cleanup, the working copy had later changes), so differences
+# could only be eyeballed. They have since converged to mechanical differences ("version
+# number only"), so this went into the automatic sync — eyeballing diffs is unreliable:
+# nobody looked at v1.0.9, and the release copy's make_payload.ps1 still pointed at a
+# dist/使用说明.md that had long been deleted, so packaging there was bound to fail.
 INSTALLER=(
   installer/Installer.cs
   installer/Installer.csproj
@@ -108,75 +111,79 @@ INSTALLER=(
   installer/fix_payload.py
 )
 
-# 文档：发布 → 工作
+# Docs: release -> work
 DOCS=(
   README.md
   README.en.md
   CHANGELOG.md
+  CHANGELOG.en.md
   KNOWN-ISSUES.md
+  KNOWN-ISSUES.en.md
   ENGINEERING-NOTES.md
+  ENGINEERING-NOTES.en.md
   LICENSE
 )
 
 do_check() {
-  echo "=== 代码（应 工作 → 发布）==="
+  echo "=== code (should be work -> release) ==="
   for f in "${CODE[@]}"; do
-    if [ ! -f "$WORK/$f" ]; then echo "  工作缺  $f"; continue; fi
-    if [ ! -f "$PUB/$f" ];  then echo "  发布缺  $f"; continue; fi
+    if [ ! -f "$WORK/$f" ]; then echo "  work missing  $f"; continue; fi
+    if [ ! -f "$PUB/$f" ];  then echo "  release missing  $f"; continue; fi
     if diff -q "$WORK/$f" "$PUB/$f" >/dev/null 2>&1; then
-      echo "  同      $f"
+      echo "  same    $f"
     else
-      echo "  异      $f   (工作 $(wc -c < "$WORK/$f") / 发布 $(wc -c < "$PUB/$f"))"
+      echo "  differs $f   (work $(wc -c < "$WORK/$f") / release $(wc -c < "$PUB/$f"))"
     fi
   done
   echo
-  echo "=== 文档（应 发布 → 工作）==="
+  echo "=== docs (should be release -> work) ==="
   for f in "${DOCS[@]}"; do
-    if [ ! -f "$PUB/$f" ]; then echo "  发布缺  $f"; continue; fi
-    if [ ! -f "$WORK/$f" ]; then echo "  工作缺  $f  (需从发布取)"; continue; fi
+    if [ ! -f "$PUB/$f" ]; then echo "  release missing  $f"; continue; fi
+    if [ ! -f "$WORK/$f" ]; then echo "  work missing  $f  (must come from release)"; continue; fi
     if diff -q "$WORK/$f" "$PUB/$f" >/dev/null 2>&1; then
-      echo "  同      $f"
+      echo "  same    $f"
     else
-      echo "  异      $f   (工作 $(wc -c < "$WORK/$f") / 发布 $(wc -c < "$PUB/$f"))"
+      echo "  differs $f   (work $(wc -c < "$WORK/$f") / release $(wc -c < "$PUB/$f"))"
     fi
   done
   echo
-  echo "=== installer/（同样 工作 → 发布）==="
+  echo "=== installer/ (also work -> release) ==="
   for f in "${INSTALLER[@]}"; do
-    if [ ! -f "$WORK/$f" ] || [ ! -f "$PUB/$f" ]; then echo "  缺     $f"; continue; fi
+    if [ ! -f "$WORK/$f" ] || [ ! -f "$PUB/$f" ]; then echo "  missing $f"; continue; fi
     if diff -q "$WORK/$f" "$PUB/$f" >/dev/null 2>&1; then
-      echo "  同      $f"
+      echo "  same    $f"
     else
-      echo "  异      $f   (工作 $(wc -c < "$WORK/$f") / 发布 $(wc -c < "$PUB/$f"))"
+      echo "  differs $f   (work $(wc -c < "$WORK/$f") / release $(wc -c < "$PUB/$f"))"
     fi
   done
   echo
   for f in 使用说明.md 使用说明.en.md; do
     if [ -f "$PUB/$f" ]; then
       if [ -f "$WORK/$f" ] && diff -q "$WORK/$f" "$PUB/$f" >/dev/null 2>&1; then
-        echo "  同      $f"
+        echo "  same    $f"
       else
-        echo "  异/缺   $f  (需从发布取)"
+        echo "  differs/missing $f  (must come from release)"
       fi
     fi
   done
 }
 
-# 本机路径：发布副本里必须一个都没有。
-# 踩过好几次：工作副本的 installer / 说明书里带着本机路径，
-# 一同步就把清理过的发布副本又弄脏了。
-# 注意：这里是【文件里的字面量】，ERE 里两个反斜杠才表示一个反斜杠。
-# 写成少了转义层的那个写法的话 \+ 是字面加号，永远匹配不到（踩过一次）。
+# Local paths: the release copy must contain none at all.
+# This has been hit several times: the working copy's installer / manual carried local
+# paths, and one sync re-dirtied a release copy that had already been cleaned.
+# Note: these are LITERALS IN THE FILE — in ERE two backslashes mean one backslash.
+# Writing the version with one less escaping layer makes \+ a literal plus sign, which
+# never matches (that happened once).
 LEAKPAT='E:\+DSH|D:\+Four Nights|NESARFDX'
 
 has_leak() {
   grep -qE "$LEAKPAT" "$1" 2>/dev/null
 }
 
-# 二进制文件（exe/dll/ico）没法用文本规则判断"里面有没有本机路径"：
-# grep 碰到 NUL 字节会直接宣布 Binary file matches，结果是随机命中。
-# 所以先认出是不是二进制，是的话跳过这道闸门 ——
-# 它们的来源是编译产物，路径问题由 static-check 的源码检查负责。
+# Binary files (exe/dll/ico) cannot be judged by a text rule for "does it contain a
+# local path": grep hits a NUL byte, announces "Binary file matches", and the result is
+# random. So detect binary first and skip the gate for those — they are build output, and
+# path problems are covered by static-check's source-side rule.
 is_binary() {
   local a b
   a=$(head -c 8192 "$1" 2>/dev/null | wc -c)
@@ -185,35 +192,35 @@ is_binary() {
 }
 
 do_code() {
-  echo "=== 代码：工作 → 发布 ==="
+  echo "=== code: work -> release ==="
   local n=0
   local blocked=0
   for f in "${CODE[@]}" "${INSTALLER[@]}"; do
-    [ -f "$WORK/$f" ] || { echo "  跳过（工作没有）: $f"; continue; }
+    [ -f "$WORK/$f" ] || { echo "  skipped (not in work): $f"; continue; }
     if [ -f "$PUB/$f" ] && diff -q "$WORK/$f" "$PUB/$f" >/dev/null 2>&1; then continue; fi
-    # 【闸门】要同步过去的文件里不允许有本机路径
-    # 二进制跳过：那里面查不了文本，而且它们本来就是编译产物
+    # [gate] a file about to be synced must not contain a local path
+    # binaries are skipped: text cannot be searched there, and they are build output anyway
     if ! is_binary "$WORK/$f" && has_leak "$WORK/$f"; then
-      echo "  拒绝 $f —— 工作副本里有本机路径，先清干净再同步"
+      echo "  refused $f — the working copy contains a local path; clean it before syncing"
       blocked=$((blocked+1))
       continue
     fi
     mkdir -p "$(dirname "$PUB/$f")"
-    cp "$WORK/$f" "$PUB/$f" && { echo "  复制 $f"; n=$((n+1)); }
+    cp "$WORK/$f" "$PUB/$f" && { echo "  copied $f"; n=$((n+1)); }
   done
-  echo "  共 $n 个文件"$([ $blocked -gt 0 ] && echo "，拒绝 $blocked 个（见上）")
+  echo "  $n files"$([ $blocked -gt 0 ] && echo ", $blocked refused (see above)")
 }
 
 do_docs() {
-  echo "=== 文档：发布 → 工作 ==="
+  echo "=== docs: release -> work ==="
   local n=0
   for f in "${DOCS[@]}" 使用说明.md 使用说明.en.md; do
     [ -f "$PUB/$f" ] || continue
     if [ -f "$WORK/$f" ] && diff -q "$WORK/$f" "$PUB/$f" >/dev/null 2>&1; then continue; fi
     mkdir -p "$(dirname "$WORK/$f")"
-    cp "$PUB/$f" "$WORK/$f" && { echo "  复制 $f"; n=$((n+1)); }
+    cp "$PUB/$f" "$WORK/$f" && { echo "  copied $f"; n=$((n+1)); }
   done
-  echo "  共 $n 个文件"
+  echo "  $n files"
 }
 
 case "${1:-check}" in
@@ -221,5 +228,5 @@ case "${1:-check}" in
   code)  do_code ;;
   docs)  do_docs ;;
   all)   do_docs; echo; do_code ;;
-  *)     echo "用法: bash tools/sync.sh [check|code|docs|all]"; exit 2 ;;
+  *)     echo "usage: bash tools/sync.sh [check|code|docs|all]"; exit 2 ;;
 esac

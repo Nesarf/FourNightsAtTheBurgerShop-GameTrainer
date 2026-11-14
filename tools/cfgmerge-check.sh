@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # =============================================================================
-# 配置并发写的合并路径 · 自检（KNOWN-ISSUES #2）
+# Concurrent config writes · the merge path self-test (KNOWN-ISSUES #2)
 #
-# 【为什么需要手动跑】这个检查要求"没有别的东西在写配置"。
-# 用户边玩边调参时，cfg 随时会被游戏落盘覆盖，测不出真实结果。
-# 所以做成一个可以【在安静窗口一键跑完】的脚本。
+# [Why it has to be run by hand] The check requires that nothing else is writing
+# the config. While the user is playing and tuning, the cfg gets rewritten by the
+# game at any moment, and the real result cannot be measured. So this is a script
+# you run in one go during a quiet window.
 #
-# 测什么：两个写入者（游戏内 set 命令 + 外部进程直接改文件）
-#         各自改【不同的键】，验证两边的改动都留下来、谁的都没丢。
+# What it tests: two writers (the in-game `set` command, and an external process
+# editing the file directly) each change a DIFFERENT key; both changes must survive.
 #
-# 判定：任一方的改动被对方覆盖 → FAIL
+# Verdict: if either side's change is overwritten by the other -> FAIL
 # =============================================================================
 set -u
 
@@ -18,53 +19,54 @@ GAME="$(cat "$ROOT/tools/gamepath.txt" 2>/dev/null | tr -d '\r')"
 CFG="$GAME/BepInEx/config/nesarf.burgershop.modder.cfg"
 CMD="$GAME/BepInEx/l2d_dump/cmd"
 
-[ -f "$CFG" ] || { echo "找不到配置：$CFG"; exit 1; }
+[ -f "$CFG" ] || { echo "config not found: $CFG"; exit 1; }
 
-echo "== 配置并发合并自检 =="
-echo "  配置：$CFG"
+echo "== concurrent config merge self-test =="
+echo "  config: $CFG"
 echo
 
-# ---- 0. 安静检查：cfg 最近有没有被动过 ----
+# ---- 0. quiet check: has the cfg been touched recently ----
 before_mtime=$(stat -c %Y "$CFG" 2>/dev/null || stat -f %m "$CFG")
-echo "  等 8 秒，确认没有别的东西在写（你现在别动修改器）..."
+echo "  waiting 8 s to confirm nothing else is writing (do not touch the trainer now)..."
 sleep 8
 after_mtime=$(stat -c %Y "$CFG" 2>/dev/null || stat -f %m "$CFG")
 if [ "$before_mtime" != "$after_mtime" ]; then
-  echo "   配置这 8 秒内被改过 —— 有别的写入者在活动。"
-  echo "    请【关掉修改器面板 / 停止调参】后重跑。"
+  echo "   the config changed within those 8 s — another writer is active."
+  echo "    Close the trainer panel / stop tuning, then run this again."
   exit 2
 fi
-echo "   安静（8 秒内无写入）"
+echo "   quiet (no writes in 8 s)"
 echo
 
-# ---- 1. 快照 ----
+# ---- 1. snapshot ----
 cp "$CFG" /tmp/cfgmerge.orig
-# 【姿势感知】set 命令写的是"当前姿势"那一份（PIdx 用 PoseIdx()），
-# 所以必须先问出当前姿势，否则会验错键 —— 第一次跑就栽在这上面。
+# [Pose aware] The `set` command writes the "current pose" copy (PIdx goes through
+# PoseIdx()), so the current pose has to be asked for first — otherwise the wrong
+# key is verified. The first run of this test failed exactly there.
 POSE_RAW=$(printf 'states
 ' > "$CMD/in.txt"; sleep 2.5; tail -6 "$CMD/out.txt" | grep -a '状态机' | tail -1)
 case "$POSE_RAW" in
-  *"centerGirlState=Sit"*)   SUF="_Sit";   PNAME="正骑" ;;
-  *"centerGirlState=Osiri"*) SUF="_Osiri"; PNAME="背榨" ;;
-  *)                         SUF="_Fella"; PNAME="口交" ;;
+  *"centerGirlState=Sit"*)   SUF="_Sit";   PNAME="Riding" ;;
+  *"centerGirlState=Osiri"*) SUF="_Osiri"; PNAME="Rear" ;;
+  *)                         SUF="_Fella"; PNAME="Fellatio" ;;
 esac
-echo "  当前姿势：$PNAME（set 会写 $SUF 那一份）"
+echo "  current pose: $PNAME (set writes the $SUF copy)"
 
 A_KEY="AttackUrgeChance$SUF"
 B_KEY="SpankSpeedGain$SUF"
 A_OLD=$(grep -a "^$A_KEY = " "$CFG" | head -1 | sed 's/.*= //')
 B_OLD=$(grep -a "^$B_KEY = " "$CFG" | head -1 | sed 's/.*= //')
-echo "  起始：$A_KEY=$A_OLD  $B_KEY=$B_OLD"
+echo "  start: $A_KEY=$A_OLD  $B_KEY=$B_OLD"
 
 A_NEW=$(python3 -c "print(round(float('${A_OLD:-20}')+7,4))")
 B_NEW=$(python3 -c "print(round(float('${B_OLD:-20}')+9,4))")
-echo "  将要写入：游戏侧 $A_KEY→$A_NEW（经 set 命令）  外部侧 $B_KEY→$B_NEW（直接改文件）"
+echo "  about to write: game side $A_KEY->$A_NEW (via the set command)  external side $B_KEY->$B_NEW (edit the file directly)"
 echo
 
-# ---- 2. 两个写入者，几乎同时 ----
-#   游戏侧：走 set 命令（会触发 Config.Save，重写整个 cfg）
+# ---- 2. two writers, almost simultaneously ----
+#   game side: through the set command (which triggers Config.Save and rewrites the whole cfg)
 printf 'set AttackUrgeChance %s\n' "$A_NEW" > "$CMD/in.txt" &
-#   外部侧：改文件里的另一个键
+#   external side: change a different key in the file
 sleep 0.4
 python3 - "$CFG" "$B_KEY" "$B_NEW" <<'PY' &
 import re, sys
@@ -76,34 +78,34 @@ PY
 wait
 sleep 3
 
-# ---- 3. 判定 ----
+# ---- 3. verdict ----
 A_END=$(grep -a "^$A_KEY = " "$CFG" | head -1 | sed 's/.*= //')
 B_END=$(grep -a "^$B_KEY = " "$CFG" | head -1 | sed 's/.*= //')
-echo "  结束：$A_KEY=$A_END  $B_KEY=$B_END"
+echo "  end: $A_KEY=$A_END  $B_KEY=$B_END"
 echo
 
 fail=0
 if [ "$(python3 -c "print(abs(float('${A_END:-0}')-float('${A_NEW:-0}'))<0.01)")" = "True" ]; then
-  echo "   游戏侧的改动保住了"
+  echo "   the game side's change survived"
 else
-  echo "   游戏侧的改动丢了（期望 $A_NEW，实际 $A_END）"; fail=1
+  echo "   the game side's change was lost (expected $A_NEW, got $A_END)"; fail=1
 fi
 if [ "$(python3 -c "print(abs(float('${B_END:-0}')-float('${B_NEW:-0}'))<0.01)")" = "True" ]; then
-  echo "   外部侧的改动保住了"
+  echo "   the external side's change survived"
 else
-  echo "   外部侧的改动被覆盖（期望 $B_NEW，实际 $B_END）"; fail=1
+  echo "   the external side's change was overwritten (expected $B_NEW, got $B_END)"; fail=1
 fi
 
 echo
 if [ $fail -eq 0 ]; then
-  echo "结果：PASS —— 两边都没丢，合并路径成立"
+  echo "result: PASS — neither side lost anything, the merge path holds"
   cp "$CFG" /tmp/cfgmerge.pass
 else
-  echo "结果：FAIL —— 存在覆盖。证据留在 /tmp/cfgmerge.orig（起始）"
-  echo "       当前配置：$CFG"
+  echo "result: FAIL — something was overwritten. Evidence in /tmp/cfgmerge.orig (the starting state)"
+  echo "       current config: $CFG"
 fi
 
-# ---- 4. 还原 ----
+# ---- 4. restore ----
 grep -a '^' /tmp/cfgmerge.orig > "$CFG"
-echo "已还原起始配置。"
+echo "starting config restored."
 exit $fail

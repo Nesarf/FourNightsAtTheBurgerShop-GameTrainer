@@ -1,5 +1,5 @@
-# 按住某个键 N 秒（系统级注入，Unity 的 Input.GetKey 能读到）
-# 用法: holdkey.ps1 -Vk 0x11 -Seconds 6      (0x11 = Left Ctrl)
+# Hold a key down for N seconds (system-level injection; Unity's Input.GetKey sees it)
+# Usage: holdkey.ps1 -Vk 0x11 -Seconds 6      (0x11 = Left Ctrl)
 param([int]$Vk = 0x11, [double]$Seconds = 5)
 Add-Type @"
 using System;using System.Runtime.InteropServices;

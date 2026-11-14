@@ -385,7 +385,7 @@ The script needs `tools/gamepath.txt` pointing at your game folder (**that file 
 | --- | --- |
 | how to use it, what each parameter is | [`使用说明.en.md`](使用说明.en.md) (Chinese original: [`使用说明.md`](使用说明.md)) |
 | **what is still unfixed right now** | [`KNOWN-ISSUES.en.md`](KNOWN-ISSUES.en.md) |
-| **why a feature looks the way it does** (reverse-engineering findings, pitfalls) | [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) — Chinese working log, with an English reading note at the top |
+| **why a feature looks the way it does** (reverse-engineering findings, pitfalls) | [`ENGINEERING-NOTES.en.md`](ENGINEERING-NOTES.en.md) (Chinese original: [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md)) |
 | what changed in each version | [`CHANGELOG.en.md`](CHANGELOG.en.md) |
 
 `ENGINEERING-NOTES.md` holds **42** historical entries + **5** appendices + **5** S-series entries,
