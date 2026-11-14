@@ -10,7 +10,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <UseWindowsForms>true</UseWindowsForms>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <Version>1.0.96</Version>
+    <Version>1.0.97</Version>
     <Product>Four Nights at the Burger Shop Numeric Modifier</Product>
     <DebugType>none</DebugType>
     <ApplicationManifest>app.manifest</ApplicationManifest>

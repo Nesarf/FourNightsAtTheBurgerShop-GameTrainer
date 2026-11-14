@@ -477,12 +477,12 @@ Get-FileHash "18-9L-6_ED-7-45-45_C-LS-Installer.exe" -Algorithm SHA256
 Those three comments count the steps: download the exe and `SHA256SUMS.txt` into one directory · compute your own
 hash · compare it with the matching line in `SHA256SUMS.txt`, and if it is the same the file was not touched.
 
-The values for v1.0.96 are:
+The values for v1.0.97 are:
 
 ```
-cfd1aefa133dfe4c3c87a253a6dce63159b754b91d72879176bf0713b6f31b38  18-9L-6_ED-7-45-45_C-LS-Installer.exe
-8c75201cb7d3c61046452de7d95a7902d78cde7a5cc5f885161eb467b6672aef  18-9L-6_ED-7-45-45_C-LS-Trainer.exe
-1668ef458c683c7c028fd24bfc15e1f038621cd34a0f1b22549c4e74badf72c6  18-9L-6_ED-7-45-45_C-LS.dll
+4880415c5d00763d353cfb0de96960f991dd5d8dec465e1c412caa7103bd029b  18-9L-6_ED-7-45-45_C-LS-Installer.exe
+ae708453211110b5d4761d099a0a73d5a27c5d349a4fb43c9e87976e1fd3a2f6  18-9L-6_ED-7-45-45_C-LS-Trainer.exe
+ab772b7d6ab7d7ff0674cdc7f058a15908c0975be135476a85d59887dfd4b542  18-9L-6_ED-7-45-45_C-LS.dll
 ```
 
 **If the checksum does not match, do not run it** — that means the file was modified on the way.

@@ -11,6 +11,36 @@ the `#N` after an entry is its number in that file.
 
 ---
 
+## v1.0.97 — panel layout: buttons no longer stretch to full width
+
+**`GUILayout.Button(text)` without a width expands to fill**, so inside a 540 px panel even a
+"Delete" button took the whole row. Buttons are now laid out at their actual text width
+(never below 88 px), left aligned.
+
+### The three places
+
+- **46 single-literal buttons with no width**: `Button(L.T("X"))` became `Button(L.T("X"), Btn("X"))`,
+  where `Btn` is `GUILayout.Width(BtnW(...))`.
+- **The hard-coded 62 px tab width**: English "Fellatio" / "Presets" were clipped to "Fellati…"
+  at 62 px. Now measured from the translated text.
+- **The 56 px "Expand / Collapse" button**: "Collapse" is wider than 收起, same fix.
+
+### Screens
+
+The panel was captured on the title screen in both languages: buttons compact, no clipped tabs.
+
+### Verification
+
+```
+static check   15 rules, 0 failed
+regression     install 27 / uninstall 27 and fully clean
+signing        3 files Valid + DigiCert timestamp
+```
+
+**No tuned value was touched**; `Language` is still `zh`.
+
+---
+
 ## v1.0.96 — English product metadata and checker comments
 
 **Metadata and the checker's comments in English; the tail of this round's audit tidied up.**
