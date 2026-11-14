@@ -234,7 +234,7 @@ Release 上那两个可执行文件仍是 ASCII 名，因为资产名放不下�
 | `dist/` | 编译好的成品 |
 | `使用说明.md` | **完整说明书**（功能、参数、排查） |
 | `KNOWN-ISSUES.md` | **当前未解决的问题**（只放还没修的） |
-| `ENGINEERING-NOTES.md` | **工程笔记**：每个坑的症状 / 根因 / 修法 / 教训（42 条编号记录 + 5 篇附录 + 5 条 S 系列，带目录） |
+| `ENGINEERING-NOTES.md` | **工程笔记**：每个坑的症状 / 根因 / 修法 / 教训（44 条编号记录 + 5 篇附录 + 5 条 S 系列，带目录） |
 | `CHANGELOG.md` | 版本级变更 |
 
 ## 直接下载用（不编译）
@@ -370,7 +370,7 @@ bash tools/gcmd.sh demand status   # 索取/榨取模式状态
 **英文读者**：上面带 `.en.md` 的那几份是完整英文版（说明书与中文版同结构）；
 `ENGINEERING-NOTES.md` 是中文工作日志，英文版没有对应文件，开头写了一段英文导读。
 
-`ENGINEERING-NOTES.md` 有 **42 条**历史记录 + **5 篇**附录 + **5 条** S 系列，
+`ENGINEERING-NOTES.md` 有 **44 条**历史记录 + **5 篇**附录 + **5 条** S 系列，
 每条都写了**症状 / 根因 / 修法 / 教训**。开头有一张**目录**，可以直接跳到某一条。
 
 `KNOWN-ISSUES.md` 是它的**派生视图** —— 只列还没解决的，
@@ -451,12 +451,12 @@ Get-FileHash "18-9L-6_ED-7-45-45_C-LS-Installer.exe" -Algorithm SHA256
 # 3. 和 SHA256SUMS.txt 里的那行比，一样就没被动过
 ```
 
-v1.0.98 的值是：
+v1.0.99 的值是：
 
 ```
-b37ddac34a8041f65c09dff641b7e2fa14d2775ccfe5ff0cd37609ca5dc6690e  18-9L-6_ED-7-45-45_C-LS-Installer.exe
-5007e084b9448093d748a0e112a2800b538d4465f4698f31b3ebf3813b1a63a9  18-9L-6_ED-7-45-45_C-LS-Trainer.exe
-a77fb3453332fcbdbb98ffebd65ed39bbeea67114880aaa16c2c993f6f85aa79  18-9L-6_ED-7-45-45_C-LS.dll
+d42ddff32f1571a86e020884f5353596610649d27b65dca760dfce0c1abb2321  18-9L-6_ED-7-45-45_C-LS-Installer.exe
+5ef6f43408343685a49227a80f22f848fc749ab75a5da2b3c2879740af9c6017  18-9L-6_ED-7-45-45_C-LS-Trainer.exe
+152af9ecf4afb29ca3ea6235b5c40bb4baf5295c25543fe368d89c4c8445b1c7  18-9L-6_ED-7-45-45_C-LS.dll
 ```
 
 **校验和对不上就别运行**，那说明文件在中途被改过。

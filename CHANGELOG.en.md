@@ -11,6 +11,48 @@ the `#N` after an entry is its number in that file.
 
 ---
 
+## v1.0.99 — command replies in English, plus three layout fixes
+
+### Command replies: the ones outside `Say(...)`
+
+v1.0.94 wrapped the arguments passed straight to `Say(...)`. But `StateLine()`, `states`, `ecs`,
+`parts` and `pix` build a `StringBuilder` first and `Say` it afterwards — everything inside was
+missed. In English mode a `state` reply read `scene=TabemiTitle （无 TabemiControl） 强制=OFF`.
+
+Thirty sites covered this round: every label in the state machine / click ownership / anim layer /
+ecstasy overview replies, plus the replies of `TabShotPublic`, `ScrollPublic`, `AboutPublic` and
+`DumpTabsPublic`.
+
+### Three layout fixes
+
+- **Tab labels fit on one row**: hard-coded at 62 px the English `Fellatio` / `Presets` were
+  clipped; with `TabW()` (4 px padding instead of 14) all eight fit, and ten more pixels would push
+  the last one off the panel
+- **`Hint()` actually wraps**: `wordWrap` was on all along, but a Label without a width constraint
+  does not wrap — long English sentences were cut at the right edge. `GUILayout.ExpandWidth(true)`
+  made it take effect
+- **The preset name field is 210 px wide**: it used to expand and pushed "Save as preset" off the row
+
+### Two new engineering notes
+
+`#43` the three blind spots of the translation (an `L.T` inside `L.T`, a log firing before
+`L.Init`, a regex that only knew the capitalised `Log.`), and `#44` layout: buttons that stretch
+across the row, and how to watch a shape you cannot see.
+
+### Verification
+
+```
+static check   16 rules, 0 failed
+coverage       1048 / 1049 (the one left is bilibili)
+regression     install 27 / uninstall 27 and fully clean
+in game        all eight English tabs captured: no clipped tab labels, hints wrap
+signing        3 files Valid + DigiCert timestamp
+```
+
+**No tuned value was touched**; `Language` is still `zh`.
+
+---
+
 ## v1.0.98 — the last Chinese in runtime logs, plus a rule against layout regressions
 
 ### Logs: the class v1.0.94 missed

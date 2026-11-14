@@ -15,7 +15,7 @@ namespace BurgerShopModder
     /// Four Nights at the Burger Shop — 数值修改器
     /// 用反射操作游戏托管字段，不修改原始 Assembly-CSharp.dll，卸载 BepInEx 即完全还原。
     /// </summary>
-    [BepInPlugin(Guid, "Burger Shop Trainer / 数值修改器", "1.0.98")]
+    [BepInPlugin(Guid, "Burger Shop Trainer / 数值修改器", "1.0.99")]
     [BepInProcess("Four Nights at the Burger Shop.exe")]
     public class Plugin : BaseUnityPlugin
     {
@@ -269,7 +269,7 @@ namespace BurgerShopModder
             // 游戏构建核对：这个游戏没有版本号，所以核程序集指纹。
             // 只报告、不拦截 —— 版本不同不一定坏，硬拦会把"或许能用"变成"一定不能用"。
             // 【必须放在 L.Init 之后】否则这条日志过 L.T 时表还没载入，
-            // 英文模式下它仍会以中文打印（v1.0.98 修的就是这个）。
+            // 英文模式下它仍会以中文打印（v1.0.99 修的就是这个）。
             GameBuild.ReportOnce(Log);
 
             GodMode = Config.Bind("1-Player", "GodMode", false,
@@ -9129,10 +9129,10 @@ namespace BurgerShopModder
         /// <summary>供命令通道用：切栏 + 本帧末尾截图。</summary>
         internal static string TabShotPublic(int tab, string name)
         {
-            if (_pluginInstance == null) return "ERR 插件实例不存在";
-            if (tab < 0 || tab >= TabNames.Length) return "ERR 没有这个页签：" + tab;
+            if (_pluginInstance == null) return L.T("ERR 插件实例不存在");
+            if (tab < 0 || tab >= TabNames.Length) return L.T("ERR 没有这个页签：") + tab;
             _pluginInstance.RequestTabShot(tab, name);
-            return "已请求截图 [" + tab + "] " + TabNames[tab] + " -> " + name + ".png（本帧末尾执行）";
+            return L.T("已请求截图 [{0}] {1} -> {2}.png（本帧末尾执行）", tab, L.T(TabNames[tab]), name);
         }
 
         /// <summary>供命令通道展开/收起「关于」—— 截图验证用。</summary>
@@ -9142,22 +9142,22 @@ namespace BurgerShopModder
             if (_pluginInstance == null) return "ERR 插件实例不存在";
             _pluginInstance._scroll = new Vector2(0f, y);
             _pluginInstance._pendingScroll = y;
-            return "面板滚动 = " + y.ToString("0");
+            return L.T("面板滚动 = ") + y.ToString("0");
         }
 
         internal static string AboutPublic(bool? on)
         {
             if (_pluginInstance == null) return "ERR 插件实例不存在";
-            return "关于现在是独立栏（第 7 栏），不需要展开了";
+            return L.T("关于现在是独立栏（第 7 栏），不需要展开了");
         }
 
         internal static void SetTabPublic(int i) { if (_pluginInstance != null) _pluginInstance._tab = i; }
         internal static string[] TabNamesPublic() { return TabNames; }
         internal static string DumpTabsPublic()
         {
-            var sb = new System.Text.StringBuilder("页签: ");
+            var sb = new System.Text.StringBuilder(L.T("页签: "));
             for (int i = 0; i < TabNames.Length; i++)
-                sb.Append(i).Append('=').Append(TabNames[i]).Append(i == _pluginInstance._tab ? "(当前) " : " ");
+                sb.Append(i).Append('=').Append(L.T(TabNames[i])).Append(i == _pluginInstance._tab ? L.T("(当前) ") : " ");
             return sb.ToString();
         }
         private bool _collapsed;
@@ -9236,7 +9236,7 @@ namespace BurgerShopModder
         private string _aboutHint = "";
 
         /// <summary>插件版本。与 [BepInPlugin] 里那个字符串保持一致。</summary>
-        internal const string PluginVersion = "1.0.98";
+        internal const string PluginVersion = "1.0.99";
 
         private const string UrlRepo = "https://github.com/Nesarf/FourNightsAtTheBurgerShop-GameTrainer";
         private const string UrlBili = "https://space.bilibili.com/11247581";
@@ -9284,7 +9284,7 @@ namespace BurgerShopModder
             GUILayout.Space(4f);
             GUILayout.BeginHorizontal();
             GUILayout.Label(L.T("名字"), GUILayout.Width(44f));
-            _presetName = GUILayout.TextField(_presetName ?? "", 24);
+            _presetName = GUILayout.TextField(_presetName ?? "", 24, GUILayout.Width(210f));
             if (GUILayout.Button(L.T("存为预设"), GUILayout.Width(BtnW("存为预设", 90f))))
                 _presetHint = PresetStore.Save(_presetName);
             GUILayout.EndHorizontal();
@@ -9617,7 +9617,7 @@ namespace BurgerShopModder
                 {
                     GUIStyle st = GUI.skin.button;
                     if (_tab == i) st = HighlightStyle(st);
-                    if (GUILayout.Button(L.T(TabNames[i]), st, GUILayout.Width(BtnW(TabNames[i], 62f)))) _tab = i;
+                    if (GUILayout.Button(L.T(TabNames[i]), st, GUILayout.Width(TabW(TabNames[i])))) _tab = i;
                 }
                 GUILayout.EndHorizontal();
                 GUILayout.Space(4f);
@@ -9939,7 +9939,7 @@ namespace BurgerShopModder
         private void Hint(string text)
         {
             EnsureStyles();
-            GUILayout.Label("     " + L.T(text), _hintStyle);
+            GUILayout.Label("     " + L.T(text), _hintStyle, GUILayout.ExpandWidth(true));
         }
 
         /// <summary>一条细分隔线（原来写成一串破折号）。</summary>
@@ -11412,6 +11412,16 @@ namespace BurgerShopModder
         {
             float w = GUI.skin.button.CalcSize(new GUIContent(text)).x + 14f;
             return GUILayout.Width(w > min ? w : min);
+        }
+
+        /// <summary>
+        /// 栏标签宽度：按钮的 14px padding 在这里太奢侈 —— 八个标签必须挤进一行，
+        /// 英文模式下每个多 10px 就把最后一栏挤出面板（v1.0.99 修的就是这个）。
+        /// </summary>
+        private static float TabW(string zh)
+        {
+            float w = GUI.skin.button.CalcSize(new GUIContent(L.T(zh))).x + 4f;
+            return w < 52f ? 52f : w;
         }
 
         /// <summary>

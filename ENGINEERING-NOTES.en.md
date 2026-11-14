@@ -2263,6 +2263,87 @@ One more thing worth stating: rule (14) used to grab call segments with `GUILayo
 
 Lesson: a checker's blind spot coincides with the implementer's, because they share one mental model. What actually finds the blind spot is **counting from a different direction** (the total minus what is covered), not writing the rule more finely.
 
+## 43. Three blind spots of the translation: concatenation, init order, the regex
+
+**Symptom**: after v1.0.94, `static-check` reported "all 997 table entries match", yet the
+English-mode log still contained Chinese, and so did command replies.
+
+### One: `L.T` nested inside its own argument
+
+```csharp
+Log.LogWarning(L.T("A" + "B" + L.T("C"), args));   // the outer call sees the concatenated string
+```
+
+The outer `L.T` looks up "A + B + C" while the table stores the segment keys — it can never match.
+`[绝顶骤降]` and `[骤降溯源]` failed silently that way, even though v1.0.93 had written their
+translations into the table.
+
+**Fix**: `L.T("A" + "B" + "C", args)` — one key for the whole line.
+**Lesson**: an `L.T` inside `L.T(...)` means someone mixed per-segment translation with
+per-sentence translation.
+
+### Two: the log fires before `L.Init`
+
+`GameBuild.ReportOnce(Log)` used to sit at the top of `Awake`, before the language table loads.
+Wrapping it in `L.T` would not have helped — `_on` is still false there, so `L.T` returns Chinese.
+
+**Fix**: move `ReportOnce` after `L.Init`.
+**Lesson**: translating a log line is not only "wrap it in `L.T`" — it also asks whether the
+table has been loaded by the time that line runs.
+
+### Three: the regex only knew the capitalised `Log.`
+
+The bulk wrapping in v1.0.94 used `Log\.Log(Info|Warning|Error)`.
+`GameBuild.cs` writes `log.LogInfo(...)` — `log` is the `ILogger` parameter, lowercase.
+Those three assembly-check lines were never matched, and neither the checker nor the table
+could see them.
+
+**Fix**: cover `log.Log*`, and widen rule (13) to accept `ProbeWhy(...)`.
+**Lesson**: a bulk replace is only as wide as its regex — a narrow one does not fail, it
+silently misses.
+
+One more of the same family: `Say(...)` arguments were wrapped, but strings built first and
+`Say`-ed later (`StateLine()`) were not, so command replies came out half English and half
+Chinese (`scene=TabemiTitle （无 TabemiControl） 强制=OFF`).
+
+### Two escape bugs along the way
+
+Writing `cmd\anim.csv` and `cmd\tremor.csv` as literals made C# read `\a` and `\t` as bell and
+tab — those log paths had carried an invisible character all along. `\\a` / `\\t` is the real
+backslash.
+
+---
+
+## 44. Layout: buttons that stretch across the row, and how to watch a shape you cannot see
+
+**Symptom**: every button in the panel filled the whole row — a two-character "Delete" was 540 px wide.
+
+**Cause**: `GUILayout.Button(text)` without a width expands to fill. Invisible with one language
+and few buttons; with eight tabs the panel looked wide and clumsy.
+
+**Fix**: two helpers, `Btn(zh)` and `BtnText(text)`, giving a width from
+`GUILayout.Button`'s `CalcSize` (never below 88 px). 46 buttons plus 8 dynamic-label ones converted.
+
+**Why fixing it was not enough**: the shape **does not show up in the code** — it looks exactly
+like a normal button, with no warning and no error, so the next person writes one and the problem
+is back. Hence rule (16): take each whole `GUILayout.Button(...)` call and fail it if the span
+contains no `GUILayout.Width(`, `Btn(` or `BtnText(`.
+
+It caught 9 on its first run — 8 real (the label was a variable or a ternary), 1 an example
+inside a comment. **Comments get scanned too**, so the rule blanks comment spans out first —
+otherwise `// GUILayout.Button(text)` becomes a false positive.
+
+### Two more found along the way: tab widths and wrapping
+
+- Tab labels were hard-coded at 62 px, so English `Fellatio` / `Presets` were clipped to
+  `Fellati…`. With `TabW()` (4 px padding instead of 14) all eight just fit inside 540 —
+  **ten more pixels and the last one falls off the panel**
+- `Hint()` had `wordWrap` on all along, but **a Label without a width constraint does not wrap**;
+  long English sentences were simply cut at the right edge. `GUILayout.ExpandWidth(true)` made
+  them actually wrap
+
+---
+
 ## Appendix: view dragging (a game mechanic, not a defect)
 
 **User report**: "moving the mouse up and down into a certain region moves the view"

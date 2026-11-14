@@ -1076,3 +1076,43 @@ Live2D_ModelControl 上没有 IDs 字段	Live2D_ModelControl has no IDs field
 IDs 字段值为 null（组件未初始化？）	the IDs field is null (component not initialised?)
 没有 CubismModel 实例	no CubismModel instance
 找不到 Cubism 类型	Cubism type not found
+
+# ---- state 命令回执的拼接片段（v1.0.98）----
+  （无 TabemiControl）	  (no TabemiControl)
+  | 部件39=	  | part39=
+ 部件19(Tights)=	 part19(Tights)=
+  | 强制=	  | forced=
+
+# ---- 命令回执的片段（states / ecs / parts / pix，v1.0.98）----
+状态机: 	state machine: 
+点击归属: 	click ownership: 
+（没找到该字段）	(field not found)
+动画层: 	anim layer: 
+动画层·	anim layer ·
+绝顶一览: 	ecstasy overview: 
+  | 吸精发生率KyuseiRate=	  | absorb rate KyuseiRate=
+% 吸精攻击率=	% absorb attack rate=
+% 加速率=	% speed-up rate=
+  | 上升率=	  | gain rate=
+% 下降率=	% decay rate=
+% 抗性=	% resistance=
+ 上限目标=	 cap target=
+ 锁上限=	 lock cap=
+ 无绝顶=	 no ecstasy=
+（没有活动按钮）	(no active buttons)
+: 空区域	: empty area
+{0}  矩形({1},{2})-({3},{4})  均值RGB=({5},{6},{7})  暗<60={8:0.0}%  亮>200={9:0.0}%	{0}  rect({1},{2})-({3},{4})  mean RGB=({5},{6},{7})  dark<60={8:0.0}%  bright>200={9:0.0}%
+ERR 找不到 Cubism 类型	ERR Cubism type not found
+ERR 没有 CubismModel（不在店内场景？）	ERR no CubismModel (not in the shop scene?)
+ERR 没有 Drawables	ERR no Drawables
+丝袜并集区域	tights union area
+（未能计算丝袜屏幕区域）	(could not compute the tights screen area)
+  调用: 	  calls: 
+
+# ---- 命令通道 Public 方法的回执（v1.0.99）----
+ERR 插件实例不存在	ERR the plugin instance does not exist
+已请求截图 [{0}] {1} -> {2}.png（本帧末尾执行）	screenshot requested [{0}] {1} -> {2}.png (runs at the end of this frame)
+面板滚动 = 	panel scroll = 
+关于现在是独立栏（第 7 栏），不需要展开了	About is its own tab now (tab 7); there is nothing to expand
+页签: 	tabs: 
+(当前) 	(current) 

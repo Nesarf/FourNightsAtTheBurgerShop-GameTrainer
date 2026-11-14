@@ -241,7 +241,7 @@ hold these characters.
 | `dist/` | the compiled products |
 | `使用说明.md` | **the full manual** (features, parameters, troubleshooting) |
 | `KNOWN-ISSUES.md` | **what is currently unresolved** (only the unfixed ones) |
-| `ENGINEERING-NOTES.md` | **engineering notes**: symptom / root cause / fix / lesson for every pitfall (42 numbered entries + 5 appendices + 5 S-series entries, with a table of contents) |
+| `ENGINEERING-NOTES.md` | **engineering notes**: symptom / root cause / fix / lesson for every pitfall (44 numbered entries + 5 appendices + 5 S-series entries, with a table of contents) |
 | `CHANGELOG.md` | per-version changes |
 
 ## Just download it (no build)
@@ -388,7 +388,7 @@ The script needs `tools/gamepath.txt` pointing at your game folder (**that file 
 | **why a feature looks the way it does** (reverse-engineering findings, pitfalls) | [`ENGINEERING-NOTES.en.md`](ENGINEERING-NOTES.en.md) (Chinese original: [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md)) |
 | what changed in each version | [`CHANGELOG.en.md`](CHANGELOG.en.md) |
 
-`ENGINEERING-NOTES.md` holds **42** historical entries + **5** appendices + **5** S-series entries,
+`ENGINEERING-NOTES.md` holds **44** historical entries + **5** appendices + **5** S-series entries,
 each written as **symptom / root cause / fix / lesson**. It opens with a **table of contents**,
 so you can jump straight to one entry.
 
@@ -477,12 +477,12 @@ Get-FileHash "18-9L-6_ED-7-45-45_C-LS-Installer.exe" -Algorithm SHA256
 Those three comments count the steps: download the exe and `SHA256SUMS.txt` into one directory · compute your own
 hash · compare it with the matching line in `SHA256SUMS.txt`, and if it is the same the file was not touched.
 
-The values for v1.0.98 are:
+The values for v1.0.99 are:
 
 ```
-b37ddac34a8041f65c09dff641b7e2fa14d2775ccfe5ff0cd37609ca5dc6690e  18-9L-6_ED-7-45-45_C-LS-Installer.exe
-5007e084b9448093d748a0e112a2800b538d4465f4698f31b3ebf3813b1a63a9  18-9L-6_ED-7-45-45_C-LS-Trainer.exe
-a77fb3453332fcbdbb98ffebd65ed39bbeea67114880aaa16c2c993f6f85aa79  18-9L-6_ED-7-45-45_C-LS.dll
+d42ddff32f1571a86e020884f5353596610649d27b65dca760dfce0c1abb2321  18-9L-6_ED-7-45-45_C-LS-Installer.exe
+5ef6f43408343685a49227a80f22f848fc749ab75a5da2b3c2879740af9c6017  18-9L-6_ED-7-45-45_C-LS-Trainer.exe
+152af9ecf4afb29ca3ea6235b5c40bb4baf5295c25543fe368d89c4c8445b1c7  18-9L-6_ED-7-45-45_C-LS.dll
 ```
 
 **If the checksum does not match, do not run it** — that means the file was modified on the way.

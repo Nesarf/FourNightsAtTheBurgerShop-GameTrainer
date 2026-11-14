@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -424,7 +424,7 @@ namespace BurgerShopModder
                 case "states":
                     {
                         // 直接读状态机字段 —— "状态被锁死"这类问题看字段最准，不用看图。
-                        var sb = new StringBuilder("状态机: ");
+                        var sb = new StringBuilder(L.T("状态机: "));
                         object tab = Plugin.Tabemi();
                         if (tab == null) { Say(L.T("ERR 拿不到 TabemiControl（不在店内场景？）")); break; }
                         string[] names = new string[] {
@@ -440,7 +440,7 @@ namespace BurgerShopModder
 
                         // 点击是否被"桌子"吃掉 —— HitArea_Osiri 的分支靠它决定丢弃还是计数
                         {
-                            var sb3 = new StringBuilder("点击归属: ");
+                            var sb3 = new StringBuilder(L.T("点击归属: "));
                             int found = 0;
                             foreach (UnityEngine.Object o in Resources.FindObjectsOfTypeAll(typeof(MonoBehaviour)))
                             {
@@ -453,7 +453,7 @@ namespace BurgerShopModder
                                 found++;
                                 if (found >= 3) break;
                             }
-                            if (found == 0) sb3.Append("（没找到该字段）");
+                            if (found == 0) sb3.Append(L.T("（没找到该字段）"));
                             Say(sb3.ToString());
                         }
 
@@ -469,7 +469,7 @@ namespace BurgerShopModder
                             if (acs != null && acs.Length > 0)
                             {
                                 object ac = acs[0];
-                                var sb2 = new StringBuilder("动画层: ");
+                                var sb2 = new StringBuilder(L.T("动画层: "));
                                 foreach (string n in new string[] { "KyuseiRate", "fellaKyuseiAttRate", "fellaSpeedUpRate",
                                                                    "fellaSpeed", "isSpeedUpFella", "fellaSpeedPlus" })
                                     sb2.Append(n).Append('=').Append(Plugin.GetStateFieldText(ac, n)).Append("  ");
@@ -483,7 +483,7 @@ namespace BurgerShopModder
                                     if (ot == null) continue;
                                     UnityEngine.Object[] os2 = Resources.FindObjectsOfTypeAll(ot);
                                     if (os2 == null || os2.Length == 0) continue;
-                                    var sb3 = new StringBuilder(tn.Replace("Live2D_Animation_", "动画层·") + ": ");
+                                    var sb3 = new StringBuilder(tn.Replace("Live2D_Animation_", L.T("动画层·")) + ": ");
                                     foreach (string n in new string[] { "osiriSpeed", "osiriSpeedPlus", "isSpeedUpOsiri",
                                                                         "sitSpeed", "isSpeedUpSit" })
                                         sb3.Append(n).Append('=').Append(Plugin.GetStateFieldText(os2[0], n)).Append("  ");
@@ -496,7 +496,7 @@ namespace BurgerShopModder
 
                 case "ecs":
                     {
-                        var sb = new StringBuilder("绝顶一览: ");
+                        var sb = new StringBuilder(L.T("绝顶一览: "));
                         object pc = null;
                         try
                         {
@@ -530,21 +530,21 @@ namespace BurgerShopModder
                                 if (acs != null && acs.Length > 0)
                                 {
                                     object ac = acs[0];
-                                    sb.Append("  | 吸精发生率KyuseiRate=").Append(Plugin.GetFloatPublicRaw(ac, "KyuseiRate").ToString("0"))
-                                      .Append("% 吸精攻击率=").Append(Plugin.GetFloatPublicRaw(ac, "fellaKyuseiAttRate").ToString("0"))
-                                      .Append("% 加速率=").Append(Plugin.GetFloatPublicRaw(ac, "fellaSpeedUpRate").ToString("0"))
+                                    sb.Append(L.T("  | 吸精发生率KyuseiRate=")).Append(Plugin.GetFloatPublicRaw(ac, "KyuseiRate").ToString("0"))
+                                      .Append(L.T("% 吸精攻击率=")).Append(Plugin.GetFloatPublicRaw(ac, "fellaKyuseiAttRate").ToString("0"))
+                                      .Append(L.T("% 加速率=")).Append(Plugin.GetFloatPublicRaw(ac, "fellaSpeedUpRate").ToString("0"))
                                       .Append("%");
                                 }
                             }
                         }
                         catch { }
 
-                        sb.Append("  | 上升率=").Append(Plugin.GetRateCfg("EcstasyUpRate").ToString("0"))
-                          .Append("% 下降率=").Append(Plugin.GetRateCfg("EcstasyDownRate").ToString("0"))
-                          .Append("% 抗性=").Append(Plugin.GetRateCfg("EcstasyResist").ToString("0.##"))
-                          .Append(" 上限目标=").Append(Plugin.GetRateCfg("TargetEcstasy").ToString("0"))
-                          .Append(" 锁上限=").Append(Plugin.GetRateCfg("LockMaxEcstasy").ToString("0"))
-                          .Append(" 无绝顶=").Append(Plugin.GetRateCfg("NoEcstasy").ToString("0"));
+                        sb.Append(L.T("  | 上升率=")).Append(Plugin.GetRateCfg("EcstasyUpRate").ToString("0"))
+                          .Append(L.T("% 下降率=")).Append(Plugin.GetRateCfg("EcstasyDownRate").ToString("0"))
+                          .Append(L.T("% 抗性=")).Append(Plugin.GetRateCfg("EcstasyResist").ToString("0.##"))
+                          .Append(L.T(" 上限目标=")).Append(Plugin.GetRateCfg("TargetEcstasy").ToString("0"))
+                          .Append(L.T(" 锁上限=")).Append(Plugin.GetRateCfg("LockMaxEcstasy").ToString("0"))
+                          .Append(L.T(" 无绝顶=")).Append(Plugin.GetRateCfg("NoEcstasy").ToString("0"));
                         Say(sb.ToString());
                     }
                     break;
@@ -671,7 +671,7 @@ namespace BurgerShopModder
                     if (!string.IsNullOrEmpty(t)) label += "  [" + t + "]";
                     list.Add(label);
                 }
-                if (n == 0) list.Add("（没有活动按钮）");
+                if (n == 0) list.Add(L.T("（没有活动按钮）"));
             }
             catch (Exception e) { list.Add("ERR " + e.Message); }
             return list;
@@ -732,8 +732,8 @@ namespace BurgerShopModder
                         if (lum > 200) bright++;
                     }
                 }
-                if (n == 0) return label + ": 空区域";
-                return string.Format("{0}  矩形({1},{2})-({3},{4})  均值RGB=({5},{6},{7})  暗<60={8:0.0}%  亮>200={9:0.0}%",
+                if (n == 0) return label + L.T(": 空区域");
+                return string.Format(L.T("{0}  矩形({1},{2})-({3},{4})  均值RGB=({5},{6},{7})  暗<60={8:0.0}%  亮>200={9:0.0}%"),
                     label, x0, y0, x1, y1, r / n, g / n, b / n,
                     100.0 * dark / n, 100.0 * bright / n);
             }
@@ -751,14 +751,14 @@ namespace BurgerShopModder
             {
                 Type camType = Plugin.FindType("Live2D.Cubism.Core.CubismModel");
                 Type dt = Plugin.FindType("Live2D.Cubism.Core.CubismDrawable");
-                if (camType == null || dt == null) return "ERR 找不到 Cubism 类型";
+                if (camType == null || dt == null) return L.T("ERR 找不到 Cubism 类型");
 
                 UnityEngine.Object[] models = Resources.FindObjectsOfTypeAll(camType);
-                if (models == null || models.Length == 0) return "ERR 没有 CubismModel（不在店内场景？）";
+                if (models == null || models.Length == 0) return L.T("ERR 没有 CubismModel（不在店内场景？）");
 
                 UnityEngine.Object[] draws = (UnityEngine.Object[])camType.GetProperty("Drawables", FLAGS)
                     .GetValue(models[0], null);
-                if (draws == null) return "ERR 没有 Drawables";
+                if (draws == null) return L.T("ERR 没有 Drawables");
 
                 // 丝袜 6 个 + 对照（正常可见的部件），用于判断"可见的 drawable 长什么样"
                 string[] want6 = new string[] { "ArtMesh186", "ArtMesh187", "ArtMesh188", "ArtMesh189", "ArtMesh190", "ArtMesh191",
@@ -838,9 +838,9 @@ namespace BurgerShopModder
 
                 if (minX < maxX && minY < maxY)
                 {
-                    sb.AppendLine(PixStats((int)minX, (int)minY, (int)maxX, (int)maxY, "丝袜并集区域"));
+                    sb.AppendLine(PixStats((int)minX, (int)minY, (int)maxX, (int)maxY, L.T("丝袜并集区域")));
                 }
-                else sb.AppendLine("（未能计算丝袜屏幕区域）");
+                else sb.AppendLine(L.T("（未能计算丝袜屏幕区域）"));
             }
             catch (Exception e) { sb.Append("ERR rendercheck: ").Append(e.Message); }
             return sb.ToString().Replace("\n", " | ");
@@ -920,7 +920,7 @@ namespace BurgerShopModder
                         mi.Invoke(comp, null);
                         done.Add(m);
                     }
-                    return comp.gameObject.name + "  调用: " + string.Join(", ", done.ToArray());
+                    return comp.gameObject.name + L.T("  调用: ") + string.Join(", ", done.ToArray());
                 }
             }
             catch (Exception e) { Say("ERR clickobj: " + e.Message); }
@@ -985,7 +985,7 @@ namespace BurgerShopModder
                       .Append(" tights=").Append(Plugin.GetFloatPublic(tab, "Tights"))
                       .Append(" glasses=").Append(Plugin.GetFloatPublic(tab, "Glasses"));
                 }
-                else sb.Append("  （无 TabemiControl）");
+                else sb.Append(L.T("  （无 TabemiControl）"));
 
                 Type mc = Plugin.FindType("Live2D_ModelControl");
                 UnityEngine.Object[] mcs = mc != null ? Resources.FindObjectsOfTypeAll(mc) : null;
@@ -1004,12 +1004,12 @@ namespace BurgerShopModder
                         BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).GetValue(models[0], null);
                     if (parts != null && parts.Length > 40)
                     {
-                        sb.Append("  | 部件39=").Append(PartOp(parts[39]))
-                          .Append(" 部件40=").Append(PartOp(parts[40]))
-                          .Append(" 部件19(Tights)=").Append(PartOp(parts[19]));
+                        sb.Append(L.T("  | 部件39=")).Append(PartOp(parts[39]))
+                          .Append(L.T(" 部件40=")).Append(PartOp(parts[40]))
+                          .Append(L.T(" 部件19(Tights)=")).Append(PartOp(parts[19]));
                     }
                 }
-                sb.Append("  | 强制=").Append(Plugin.ForceStateText());
+                sb.Append(L.T("  | 强制=")).Append(Plugin.ForceStateText());
             }
             catch (Exception e) { sb.Append("  ERR ").Append(e.Message); }
             return sb.ToString();
