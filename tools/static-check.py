@@ -326,7 +326,14 @@ if _en.exists():
         if _zh:
             _entries.append(_zh)
 
-    _panel = read(ROOT / 'plugin' / 'BurgerShopModder.cs') or ''
+    _panel_main = read(ROOT / 'plugin' / 'BurgerShopModder.cs') or ''
+    # 【v1.0.93】第 (13) 条原来只扫主文件。GameBuild.cs 里那 7 处 L.T 一直没有译文，
+    # 检查器完全看不见 —— 因为它只看这一个文件。同目录其它 .cs 一并并入扫描范围。
+    # 第 (14) 条仍然只看主文件：它的报错带行号，拼接后的行号会误导人。
+    _panel = _panel_main
+    for _f in ('GameBuild.cs', 'PresetStore.cs', 'ActivityLogger.cs', 'CfgGuard.cs',
+               'GameBindings.cs', 'GameCommandServer.cs', 'Localization.cs'):
+        _panel += '\n' + (read(ROOT / 'plugin' / _f) or '')
     # L.T 的 key 可以是拼接出来的（"A" + "B"），编译期会合并成一个串。
     # 所以按括号配对取出完整实参再做字面量合并 —— 直接抓第一个引号会把这种条目截断，
     # 结果表里那条完整的 key 反而被判成孤儿。
@@ -494,10 +501,10 @@ _bare = []
 # 【必须按括号配对取整段调用】原来用 `[^;]*?\)` 非贪婪匹配到第一个右括号，
 # 遇到 `GUILayout.Button(L.T("打开"), GUILayout.Width(BtnW("打开", 52f)))` 这种
 # 嵌套调用就被截断，`L.T(` 落在截断点之外，于是已翻译的按钮被误报成裸中文。
-for _m in re.finditer(r'\bGU(?:ILayout|I)\.(?:Button|Label|Toggle|Box|TextField|TextArea|Toolbar|Window)\(', _panel):
+for _m in re.finditer(r'\bGU(?:ILayout|I)\.(?:Button|Label|Toggle|Box|TextField|TextArea|Toolbar|Window)\(', _panel_main):
     _i, _d, _j, _in = _m.end() - 1, 0, _m.end() - 1, False
-    while _j < len(_panel):
-        _c = _panel[_j]
+    while _j < len(_panel_main):
+        _c = _panel_main[_j]
         if _in:
             if _c == '\\':
                 _j += 2; continue
@@ -513,14 +520,14 @@ for _m in re.finditer(r'\bGU(?:ILayout|I)\.(?:Button|Label|Toggle|Box|TextField|
                 if _d == 0:
                     break
         _j += 1
-    _call = _panel[_i:_j]
+    _call = _panel_main[_i:_j]
     if 'L.T(' in _call or 'TabNames' in _call or 'SlotLabels' in _call:
         continue
     for _s in re.findall(r'"([^"]*)"', _call):
         if _s in ('中文', 'English'):
             continue          # 语言按钮在各语言下都显示自己的名字
         if re.search(r'[一-鿿]', _s):
-            _line = _panel[: _m.start()].count(chr(10)) + 1
+            _line = _panel_main[: _m.start()].count(chr(10)) + 1
             _bare.append('%d：%s' % (_line, _s[:40]))
 
 if _bare:

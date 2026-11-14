@@ -79,7 +79,6 @@ HP 回复率	HP recovery rate
 每秒回复	Regen per second
 安全闸	Safety valve
 吸精 · 当前状态	Absorb: current state
-当前场景：	Current scene: 
 上限	Caps
 游戏机制：被榨取按 3~5% 削 maxHP、1~5% 削 maxEcstasy；	Game rule: being drained shaves 3 to 5% off maxHP and 1 to 5% off maxEcstasy;
 吃汉堡的回血按 maxHP 的百分比算 → 上限被削就越来越难回血。	Burger healing is a percentage of maxHP, so a shaved cap makes recovery progressively harder.
@@ -153,7 +152,6 @@ HP 上限目标	HP cap target
 （下面两个只在「手动进入余韵」时用，正常流程不用）	(The next two apply only to a manually started afterglow; the normal flow does not use them)
 手动余韵下限	Manual afterglow: minimum
 手动余韵上限	Manual afterglow: maximum
-当前：	Current: 
 背榨 · 骑乘	Rear mount: riding
 骑乘速度加成	Riding speed boost
 连榨上限	Chain limit
@@ -182,7 +180,6 @@ HP 上限目标	HP cap target
 点击 = 坐姿版的「打屁股」：涨榨取欲 + 给坐姿动作一个速度冲量	Clicking is the sitting-pose equivalent of spanking: it raises drain urge and gives the sitting animation a speed impulse
 判定按【人物模型包围盒】算 → 跟着人物走，换分辨率也不跑偏	The hit area is computed from the character's model bounding box, so it follows the character and does not drift when the resolution changes
 跟着总开关一起画（粉色）—— 总开关在下面「实验性高亮」那个	Drawn along with the master switch (pink). The master switch is under "Experimental highlight" below.
-当前绑定：	Currently bound: 
 点下面任一素材名即可绑定，它的大小位置就是判定区	Click any part name below to bind it; its size and position become the hit area
 （绑定到非 HitArea 的美术素材才有意义 —— 那 5 个 HitArea 本身就能点）	(Binding only makes sense for non-HitArea art parts; the five HitAreas are already clickable)
 筛选（子串）：	Filter (substring): 
@@ -628,3 +625,33 @@ HitArea_Manman_By_Plugins 已绑定到素材：	HitArea_Manman_By_Plugins bound 
 {模式} / {模式}模式中【每射精一次】累积多少次余韵。	Afterglow ticks added per ejaculation during {模式} mode.
 连榨本身也累积绝顶值（游戏原码 EcstasyChange() 的连榨路径被守卫挡住，这里补上）。	Chain drain itself also builds ecstasy (the original EcstasyChange() gates the chain-drain path; this mod restores it).
 已有预设（{0}）	Saved presets ({0})
+{0}模式中 {1} 段 / 共剩余 {2:0.#}s	{0} mode: {1} tiers, {2:0.#}s left
+不在{0}模式	Not in {0} mode
+当前场景：{0}，上限 {1}，已连 {2}	Current: {0}, cap {1}, chained {2}
+当前：{0}	Current: {0}
+当前绑定：{0}	Current binding: {0}
+（无，用手拖的矩形）	(none — using the hand-dragged rect)
+    当前{0}欲 {1:0.#}%  ·  距叠第 {2} 层还差 {3:0.#}%	    {0} urge {1:0.#}%  ·  {3:0.#}% to tier {2}
+未生效	not applied
+(未武装)	(not armed)
+·闸门关	 · gate closed
+ERR 用法: demand on|off|fire|afterglow|status	ERR usage: demand on|off|fire|afterglow|status
+游戏程序集与开发时一致	Game assembly matches the development build
+游戏程序集与开发时【不一致】—— 补丁可能挂不上，见下方详情	Game assembly does NOT match the development build — patches may fail to attach; see the details below
+查不到游戏程序集（{0}）	Game assembly not found ({0})
+未知原因	unknown reason
+没找到 Assembly-CSharp.dll	Assembly-CSharp.dll not found
+  期望大小   : {0} 字节	  Expected size : {0} bytes
+  实际大小   : {0} 字节	  Actual size   : {0} bytes
+  说明       : {0}	  Note          : {0}
+ERR 拿不到配置对象	ERR cannot reach the config object
+ERR 预设名不合法（只允许中英文、数字、空格、- 和 _）	ERR invalid preset name (letters, digits, spaces, - and _ only)
+已保存预设「{0}」（{1} 项）{2}	Saved preset [{0}] ({1} entries){2}
+，原同名预设已备份	, the previous one was backed up
+ERR 保存预设失败：{0}	ERR failed to save the preset: {0}
+ERR 没有这个预设：{0}	ERR no such preset: {0}
+已应用预设「{0}」：{1} 项{2}；应用前的状态已备份为 {3}	Applied preset [{0}]: {1} entries{2}; the previous state was backed up as {3}
+（{0} 项预设里没有，保持当前值）	 ({0} entries were not in the preset and keep their current values)
+ERR 应用预设失败：{0}	ERR failed to apply the preset: {0}
+已删除预设「{0}」（文件改名为 {1}，想找回就改回去）	Deleted preset [{0}] (the file was renamed to {1}; rename it back to recover)
+ERR 删除预设失败：{0}	ERR failed to delete the preset: {0}

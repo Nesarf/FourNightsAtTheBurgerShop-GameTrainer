@@ -15,7 +15,7 @@ namespace BurgerShopModder
     /// Four Nights at the Burger Shop — 数值修改器
     /// 用反射操作游戏托管字段，不修改原始 Assembly-CSharp.dll，卸载 BepInEx 即完全还原。
     /// </summary>
-    [BepInPlugin(Guid, "Burger Shop 数值修改器", "1.0.92")]
+    [BepInPlugin(Guid, "Burger Shop 数值修改器", "1.0.93")]
     [BepInProcess("Four Nights at the Burger Shop.exe")]
     public class Plugin : BaseUnityPlugin
     {
@@ -6343,8 +6343,9 @@ namespace BurgerShopModder
                 case "status":
                     {
                         string st = _demandMode
-                            ? string.Format(ModeWord() + "模式中 {1} 段 / 共剩余 {0:0.#}s", Mathf.Max(0f, _demandUntil - Time.unscaledTime), _demandStacks)
-                            : "不在" + ModeWord() + "模式";
+                            ? L.T("{0}模式中 {1} 段 / 共剩余 {2:0.#}s", L.T(ModeWord()), _demandStacks,
+                                  Mathf.Max(0f, _demandUntil - Time.unscaledTime))
+                            : L.T("不在{0}模式", L.T(ModeWord()));
                         float att = -1f;
                         try
                         {
@@ -6371,14 +6372,14 @@ namespace BurgerShopModder
                         return L.T("{0}  索取欲={1:0.#}%（叠下一层需 {16:0.#}%）  攻击力={2:0.##}(+{3:0}%)  "
                             + "动画倍速={7:0}%[{8}]  回口交基准={9:0.#}%  已回口交={10}次  回归累积={12:0.#}%{13}  余韵剩={4}(待发动{14}{15})  触发过{5}次",
                             st, _demandUrge, att, P3(DemandAttBonus3), _afterglowRemaining, _demandTotal, _afterglowTotal,
-                            P3(DemandAnimSpeed3), _animSpeedMemberUsed ?? "未生效",
+                            P3(DemandAnimSpeed3), _animSpeedMemberUsed ?? L.T("未生效"),
                             10f * Mathf.Pow(1f - Mathf.Clamp01(P3(DemandFellaDecay3) / 100f), _demandTotal),
                             _fellaReturns, P3(DemandAttSpeedBonus3),
-                            _osiriReturnChance, _osiriReturnArmed ? "" : "(未武装)",
-                            _afterglowPending, _demandEntered ? "" : "·闸门关",
+                            _osiriReturnChance, _osiriReturnArmed ? "" : L.T("(未武装)"),
+                            _afterglowPending, _demandEntered ? "" : L.T("·闸门关"),
                             P3(DemandThresholdBase3) + P3(DemandThresholdStep3) * Mathf.Max(0, _demandStacks));
                     }
-                default: return "ERR 用法: demand on|off|fire|afterglow|status";
+                default: return L.T("ERR 用法: demand on|off|fire|afterglow|status");
             }
         }
 
@@ -9233,7 +9234,7 @@ namespace BurgerShopModder
         private string _aboutHint = "";
 
         /// <summary>插件版本。与 [BepInPlugin] 里那个字符串保持一致。</summary>
-        internal const string PluginVersion = "1.0.92";
+        internal const string PluginVersion = "1.0.93";
 
         private const string UrlRepo = "https://github.com/Nesarf/FourNightsAtTheBurgerShop-GameTrainer";
         private const string UrlBili = "https://space.bilibili.com/11247581";
@@ -9809,8 +9810,8 @@ namespace BurgerShopModder
             // 原来这里写的是"0 = 不限；当前场景：…"，但那句"0 = 不限"指的是
             // 连榨上限滑块 —— 它们已经挪到各栏自己的专属区了。
             // 留着一句指向不存在滑块的提示会误导，所以只保留当前场景信息。
-            Hint("当前场景：" + ChainSlotName()
-                + "，上限 " + ChainLimitNow() + "，已连 " + ChainNow());
+            Hint(L.T("当前场景：{0}，上限 {1}，已连 {2}",
+                ChainSlotName(), ChainLimitNow(), ChainNow()));
             GUILayout.Label(L.T("  吸精发生率 {0}%（已修正游戏的整数除法 bug，填多少就是多少）",
                 KyuseiRateNow().ToString("0")));
 
@@ -10007,7 +10008,8 @@ namespace BurgerShopModder
                     P3(DemandThresholdBase3) + P3(DemandThresholdStep3) * 2f,
                     P3(DemandThresholdBase3) + P3(DemandThresholdStep3) * 3f,
                     P3(DemandThresholdBase3) + P3(DemandThresholdStep3) * 4f));
-                GUILayout.Label(L.T("    当前" + mw + "欲 {0:0.#}%  ·  距叠第 {1} 层还差 {2:0.#}%",
+                GUILayout.Label(L.T("    当前{0}欲 {1:0.#}%  ·  距叠第 {2} 层还差 {3:0.#}%",
+                    mw,
                     DemandUrge,
                     _demandStacks + 1,
                     Mathf.Max(0f, P3(DemandThresholdBase3) + P3(DemandThresholdStep3) * Mathf.Max(0, _demandStacks) - DemandUrge)));
@@ -10101,7 +10103,7 @@ namespace BurgerShopModder
             if (GUILayout.Button(L.T("手动进入{0}", mw))) DemandCmd("fire");
             if (GUILayout.Button(L.T("手动进入余韵"))) DemandCmd("afterglow");
             GUILayout.EndHorizontal();
-            Hint("当前：" + DemandCmd("status"));
+            Hint(L.T("当前：{0}", DemandCmd("status")));
         }
                 // 【正骑专属】从 DrawDemandSection 里抽出来的。
                 // 原来是一大块 if (sitSide) {...}，占了那个方法的三分之二，
@@ -10165,8 +10167,8 @@ namespace BurgerShopModder
                 SitPussyAreaShowRect.Value = GUILayout.Toggle(SitPussyAreaShowRect.Value, "  " + L.T("跟着总开关一起画（粉色）—— 总开关在下面「实验性高亮」那个"));
                 GUILayout.Space(4f);
                 Sub("素材绑定（比手拖更贴合，跟着网格形变走）");
-                Hint("当前绑定：" + (string.IsNullOrEmpty(ManmanBindDrawable.Value)
-                    ? "（无，用手拖的矩形）" : ManmanBindDrawable.Value));
+                Hint(L.T("当前绑定：{0}", string.IsNullOrEmpty(ManmanBindDrawable.Value)
+                    ? L.T("（无，用手拖的矩形）") : ManmanBindDrawable.Value));
                 if (GUILayout.Button(L.T("清除绑定（回到手拖矩形）")))
                     ManmanBindDrawable.Value = "";
                 Hint("点下面任一素材名即可绑定，它的大小位置就是判定区");
