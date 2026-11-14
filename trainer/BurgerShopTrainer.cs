@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using Txt = BurgerShopLocale.Txt;
 
 namespace BurgerShopTrainer
 {
@@ -26,6 +27,11 @@ namespace BurgerShopTrainer
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+
+            // 界面语言：--lang 优先，其次 cfg 里的 Language，其次系统 UI 语言。
+            // 游戏目录还没定下来时先传 null —— 首次运行本来也可能没有 cfg。
+            Txt.Init(null, Txt.LangFromArgs(Environment.GetCommandLineArgs()));
+
             Application.Run(new MainForm());
         }
 
@@ -46,7 +52,7 @@ namespace BurgerShopTrainer
             // 3) 让用户自己指
             using (FolderBrowserDialog dlg = new FolderBrowserDialog())
             {
-                dlg.Description = "请选择游戏根目录（里面有 " + GameExe + "）";
+                dlg.Description = Txt.T("请选择游戏根目录（里面有 {0}）", GameExe);
                 if (dlg.ShowDialog() == DialogResult.OK) return dlg.SelectedPath;
             }
             return null;
@@ -107,7 +113,10 @@ namespace BurgerShopTrainer
         public MainForm()
         {
             _root = Program.FindGameRoot();
-            Text = "汉堡店 数值修改器";
+            // 找到游戏目录之后再定一次语言 —— 这时候能读到 cfg 里的 Language，
+            // 与游戏内面板的开关保持一致。读不到就退回系统语言。
+            Txt.Init(_root, Txt.LangFromArgs(Environment.GetCommandLineArgs()));
+            Text = Txt.T("汉堡店 数值修改器");
 
             // 程序带 DPI 感知清单（原生清晰，不被系统位图拉伸）；
             // 但不交给 WinForms 自动缩放——它在中文系统上会按字体度量算出非 1 的比值把布局压小。
@@ -123,8 +132,8 @@ namespace BurgerShopTrainer
 
             if (_root == null)
             {
-                MessageBox.Show("没找到游戏目录。\n\n请把本编辑器放到游戏根目录（与 " + Program.GameExe + " 同级）再运行。",
-                    "找不到游戏", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(Txt.T("没找到游戏目录。\n\n请把本编辑器放到游戏根目录（与 {0} 同级）再运行。", Program.GameExe),
+                    Txt.T("找不到游戏"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Load += (s, e) => Close();
                 return;
             }
@@ -134,7 +143,7 @@ namespace BurgerShopTrainer
 
             Label title = new Label
             {
-                Text = "数值修改器 · 外部编辑器",
+                Text = Txt.T("数值修改器 · 外部编辑器"),
                 Font = new Font("Microsoft YaHei UI", 15f, FontStyle.Bold),
                 ForeColor = Ink,
                 Location = P(20, 14),
@@ -144,7 +153,7 @@ namespace BurgerShopTrainer
 
             Label sub = new Label
             {
-                Text = "改完点「保存」，再进游戏生效。热键 F9 也能在游戏里开面板。",
+                Text = Txt.T("改完点「保存」，再进游戏生效。热键 F9 也能在游戏里开面板。"),
                 ForeColor = Color.FromArgb(110, 116, 132),
                 Location = P(22, 46),
                 AutoSize = true
@@ -154,7 +163,7 @@ namespace BurgerShopTrainer
             // 作者与反馈渠道 —— 使用者遇到问题 / 想报 bug / 想要别的游戏版本时用得上
             Label contact = new Label
             {
-                Text = "反馈 / 建议 / 其他游戏版本的适配需求：nesarfpersonal@163.com",
+                Text = Txt.T("反馈 / 建议 / 其他游戏版本的适配需求：nesarfpersonal@163.com"),
                 ForeColor = Color.FromArgb(64, 110, 170),
                 Location = P(22, 68),
                 AutoSize = true,
@@ -166,11 +175,11 @@ namespace BurgerShopTrainer
                 {
                     Process.Start(new ProcessStartInfo(
                         "mailto:nesarfpersonal@163.com?subject=" +
-                        Uri.EscapeDataString("汉堡店修改器 反馈") +
+                        Uri.EscapeDataString(Txt.T("汉堡店修改器 反馈")) +
                         "&body=" + Uri.EscapeDataString(
-                            "游戏版本：" + (char)10 +
-                            "问题描述：" + (char)10 +
-                            "（可附上 BepInEx 目录下的 LogOutput.log 与本工具的 trainer_dpi.log）"))
+                            Txt.T("游戏版本：") + (char)10 +
+                            Txt.T("问题描述：") + (char)10 +
+                            Txt.T("（可附上 BepInEx 目录下的 LogOutput.log 与本工具的 trainer_dpi.log）")))
                     { UseShellExecute = true });
                 }
                 catch { }
@@ -191,7 +200,7 @@ namespace BurgerShopTrainer
             {
                 Label warn = new Label
                 {
-                    Text = "尚未找到配置文件。先启动一次游戏（让 BepInEx 生成 cfg），再回来改。",
+                    Text = Txt.T("尚未找到配置文件。先启动一次游戏（让 BepInEx 生成 cfg），再回来改。"),
                     ForeColor = Color.FromArgb(200, 80, 60),
                     Location = P(22, 70),
                     Size = S(510, 40)
@@ -252,8 +261,9 @@ namespace BurgerShopTrainer
 
             var panel = new Panel
             {
-                Location = P(16, 78),
-                Size = S(528, 470),
+                // 从状态行下方开始 —— 原来从 78 起，正好压住状态行，那行永远看不见。
+                Location = P(16, 110),
+                Size = S(528, 440),
                 AutoScroll = true,
                 BackColor = Color.FromArgb(249, 249, 252)
             };
@@ -261,6 +271,17 @@ namespace BurgerShopTrainer
 
             int y = 10;
             string lastSection = null;
+
+            // 【英文比中文宽】参数名那一列中文 122px 够用，英文放不下
+            // （"Max burgers in a row" 这类会直接被截断）。按语言挪一次列宽，
+            // 后面的坐标都从这里取，改一处就够。
+            bool en = Txt.On;
+            int lblW = en ? 150 : 122;
+            int colX = en ? 176 : 146;
+            int noteX = en ? 228 : 198;
+            int noteW = en ? 280 : 310;
+            int barW = en ? 200 : 240;
+            int valX = en ? 382 : 402;
 
             foreach (string key in Order)
             {
@@ -273,7 +294,7 @@ namespace BurgerShopTrainer
                 {
                     Label head = new Label
                     {
-                        Text = "— " + section + " —",
+                        Text = Txt.T("— {0} —", Txt.T(section)),
                         Font = new Font("Microsoft YaHei UI", 10f, FontStyle.Bold),
                         ForeColor = Accent,
                         Location = P(10, y),
@@ -286,9 +307,9 @@ namespace BurgerShopTrainer
 
                 Label lbl = new Label
                 {
-                    Text = meta[1],
+                    Text = Txt.T(meta[1]),
                     Location = P(16, y + 2),
-                    Size = S(122, 22),
+                    Size = S(lblW, 22),
                     ForeColor = Ink
                 };
                 panel.Controls.Add(lbl);
@@ -297,7 +318,7 @@ namespace BurgerShopTrainer
                 {
                     CheckBox cb = new CheckBox
                     {
-                        Location = P(146, y),
+                        Location = P(colX, y),
                         Size = S(46, 24),
                         Checked = st.Value == "true" || st.Value == "1"
                     };
@@ -306,9 +327,9 @@ namespace BurgerShopTrainer
 
                     Label note = new Label
                     {
-                        Text = meta[2],
-                        Location = P(198, y + 4),
-                        Size = S(310, 20),
+                        Text = Txt.T(meta[2]),
+                        Location = P(noteX, y + 4),
+                        AutoSize = true,
                         ForeColor = Color.FromArgb(130, 136, 150)
                     };
                     panel.Controls.Add(note);
@@ -326,8 +347,8 @@ namespace BurgerShopTrainer
                         Minimum = 0,
                         Maximum = 1000,
                         TickStyle = TickStyle.None,
-                        Location = P(146, y - 4),
-                        Size = S(240, 32),
+                        Location = P(colX, y - 4),
+                        Size = S(barW, 32),
                         Value = ToBar(cur, st.Min, st.Max),
                         SmallChange = 1,
                         LargeChange = 10
@@ -337,7 +358,7 @@ namespace BurgerShopTrainer
 
                     Label val = new Label
                     {
-                        Location = P(402, y + 4),
+                        Location = P(valX, y + 4),
                         Size = S(88, 20),
                         ForeColor = Ink,
                         TextAlign = ContentAlignment.MiddleRight,
@@ -355,9 +376,9 @@ namespace BurgerShopTrainer
 
                     Label hint = new Label
                     {
-                        Text = meta[2],
+                        Text = Txt.T(meta[2]),
                         Location = P(16, y + 24),
-                        Size = S(478, 18),
+                        AutoSize = true,
                         ForeColor = Color.FromArgb(150, 155, 170),
                         Font = new Font("Microsoft YaHei UI", 8.2f)
                     };
@@ -392,15 +413,15 @@ namespace BurgerShopTrainer
 
         private void BuildButtons()
         {
-            Button save = MakeButton("保存", 16, 560, Accent, Color.White);
+            Button save = MakeButton(Txt.T("保存"), 16, 560, Accent, Color.White);
             save.Click += (s, e) =>
             {
                 if (SaveSettings())
-                    MessageBox.Show("已保存。\n\n游戏里随时按 F9 也能打开修改面板。", "完成",
+                    MessageBox.Show(Txt.T("已保存。\n\n游戏里随时按 F9 也能打开修改面板。"), Txt.T("完成"),
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
             };
 
-            Button launch = MakeButton("保存并启动游戏", 116, 560, Color.FromArgb(70, 78, 100), Color.White);
+            Button launch = MakeButton(Txt.T("保存并启动游戏"), 116, 560, Color.FromArgb(70, 78, 100), Color.White);
             launch.Size = S(140, 34);
             launch.Click += (s, e) =>
             {
@@ -416,16 +437,16 @@ namespace BurgerShopTrainer
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("启动失败：" + ex.Message, "出错");
+                        MessageBox.Show(Txt.T("启动失败：{0}", ex.Message), Txt.T("出错"));
                     }
                 }
             };
 
-            Button open = MakeButton("打开游戏目录", 272, 560, Color.FromArgb(235, 235, 242), Ink);
+            Button open = MakeButton(Txt.T("打开游戏目录"), 272, 560, Color.FromArgb(235, 235, 242), Ink);
             open.Size = S(120, 34);
             open.Click += (s, e) => Process.Start("explorer.exe", "\"" + _root + "\"");
 
-            Button reset = MakeButton("恢复默认", 408, 560, Color.FromArgb(235, 235, 242), Ink);
+            Button reset = MakeButton(Txt.T("恢复默认"), 408, 560, Color.FromArgb(235, 235, 242), Ink);
             reset.Size = S(120, 34);
             reset.Click += (s, e) =>
             {
@@ -442,6 +463,11 @@ namespace BurgerShopTrainer
                     }
                 }
             };
+
+            // 【这一行曾经漏掉】四个按钮都创建好、绑了事件，却从没挂到窗口上 ——
+            // 于是外部编辑器打开后只有一片滑块，保存键根本点不到。
+            // 这条是 v1.0.94 排查英文界面时发现的：窗口底部一片空白，控件枚举里没有按钮。
+            Controls.AddRange(new Control[] { save, launch, open, reset });
         }
 
         private static double DefaultOf(string key)
@@ -583,7 +609,7 @@ namespace BurgerShopTrainer
                             File.Delete(LockPath);
                     }
                     catch { }
-                    if (waited >= 2000) { err = "另一个写入者正在写（游戏内的修改器？），请稍后重试。"; return null; }
+                    if (waited >= 2000) { err = Txt.T("另一个写入者正在写（游戏内的修改器？），请稍后重试。"); return null; }
                     Thread.Sleep(40); waited += 40;
                 }
                 catch (Exception ex) { err = ex.Message; return null; }
@@ -601,10 +627,10 @@ namespace BurgerShopTrainer
         {
             try
             {
-                if (!File.Exists(_cfgPath)) return "配置文件尚未生成 —— 先启动一次游戏。";
+                if (!File.Exists(_cfgPath)) return Txt.T("配置文件尚未生成 —— 先启动一次游戏。");
                 if (GameRunning())
-                    return "游戏正在运行：保存仍然有效（已做修订号合并），但建议改完重启游戏让面板同步。";
-                return "游戏未运行：可直接保存。rev " + ReadRev();
+                    return Txt.T("游戏正在运行：保存仍然有效（已做修订号合并），但建议改完重启游戏让面板同步。");
+                return Txt.T("游戏未运行：可直接保存。rev {0}", ReadRev());
             }
             catch { return ""; }
         }
@@ -623,8 +649,8 @@ namespace BurgerShopTrainer
         {
             if (!File.Exists(_cfgPath))
             {
-                MessageBox.Show("还没有配置文件。\n\n先启动一次游戏，让 BepInEx 生成它，再来保存。",
-                    "无法保存", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(Txt.T("还没有配置文件。\n\n先启动一次游戏，让 BepInEx 生成它，再来保存。"),
+                    Txt.T("无法保存"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
 
@@ -652,7 +678,7 @@ namespace BurgerShopTrainer
             FileStream lk = AcquireLock(out lockErr);
             if (lk == null)
             {
-                MessageBox.Show(lockErr, "暂时无法保存", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(lockErr, Txt.T("暂时无法保存"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
 
@@ -681,7 +707,7 @@ namespace BurgerShopTrainer
             }
             catch (Exception ex)
             {
-                MessageBox.Show("写入失败：" + ex.Message, "出错", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(Txt.T("写入失败：{0}", ex.Message), Txt.T("出错"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
             finally { ReleaseLock(lk); }

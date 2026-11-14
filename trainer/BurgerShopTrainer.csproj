@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -10,7 +10,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <UseWindowsForms>true</UseWindowsForms>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <Version>1.0.93</Version>
+    <Version>1.0.94</Version>
     <Product>Four Nights at the Burger Shop 数值修改器</Product>
     <DebugType>none</DebugType>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -18,6 +18,8 @@
 
   <ItemGroup>
     <Compile Include="BurgerShopTrainer.cs" />
+    <!-- 与安装程序共用的界面语言表 -->
+    <Compile Include="..\shared\Locale.cs" Link="Locale.cs" />
   </ItemGroup>
 
 </Project>

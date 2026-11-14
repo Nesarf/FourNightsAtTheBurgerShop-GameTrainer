@@ -1,5 +1,13 @@
 # 工程笔记 · 踩过的坑与逆向发现
 
+> **Note for English readers:** this file is the developer's working log and is kept in
+> Chinese. It is where every real problem is written down — symptom, root cause, fix and
+> lesson — one numbered entry each. The English documents are
+> [README.en.md](README.en.md), [使用说明.en.md](使用说明.en.md), [KNOWN-ISSUES.en.md](KNOWN-ISSUES.en.md)
+> and [CHANGELOG.en.md](CHANGELOG.en.md). If you are reading this to understand *why* a
+> feature behaves the way it does, the entries are short and the code samples are readable
+> even without the prose; issue numbers here match the ones cited by the English documents.
+>
 > 这份文件是**历史记录**，不是待办清单。
 > 它记录了开发过程中每一个真实问题：**症状 / 根因 / 修法 / 教训**。
 >

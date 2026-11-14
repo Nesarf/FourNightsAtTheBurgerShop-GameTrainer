@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -15,7 +15,7 @@ namespace BurgerShopModder
     /// Four Nights at the Burger Shop — 数值修改器
     /// 用反射操作游戏托管字段，不修改原始 Assembly-CSharp.dll，卸载 BepInEx 即完全还原。
     /// </summary>
-    [BepInPlugin(Guid, "Burger Shop 数值修改器", "1.0.93")]
+    [BepInPlugin(Guid, "Burger Shop Trainer / 数值修改器", "1.0.94")]
     [BepInProcess("Four Nights at the Burger Shop.exe")]
     public class Plugin : BaseUnityPlugin
     {
@@ -267,7 +267,7 @@ namespace BurgerShopModder
             }
             catch (Exception e)
             {
-                Log.LogWarning("[i18n] 载入英文对照表失败，界面按中文显示：" + e.GetType().Name);
+                Log.LogWarning(L.T("[i18n] 载入英文对照表失败，界面按中文显示：") + e.GetType().Name);
             }
 
             GodMode = Config.Bind("1-Player", "GodMode", false,
@@ -797,9 +797,9 @@ namespace BurgerShopModder
             // 【游戏绑定校验】确认每个补丁目标都真的在它该在的类上。
             // 挂错类在 Harmony 里是静默失败 —— 这里把它变成启动日志里的一条 WARN。
             try { GameBindings.VerifyAll(FindType, Log.LogWarning, Log.LogInfo); }
-            catch (Exception e) { Log.LogWarning("[绑定] 校验失败：" + e.Message); }
+            catch (Exception e) { Log.LogWarning(L.T("[绑定] 校验失败：") + e.Message); }
 
-            Log.LogInfo("数值修改器已加载 — F9 开关面板");
+            Log.LogInfo(L.T("数值修改器已加载 — F9 开关面板"));
 
             // 变化率 + 部件覆盖：都靠 Harmony 前缀/后缀补丁
             try
@@ -823,7 +823,7 @@ namespace BurgerShopModder
             }
             catch (Exception e)
             {
-                Log.LogError("Harmony 初始化失败：" + e);
+                Log.LogError(L.T("Harmony 初始化失败：") + e);
             }
         }
 
@@ -856,8 +856,8 @@ namespace BurgerShopModder
 
                 bool exists = System.IO.File.Exists(dlcFile);
                 if (Log != null)
-                    Log.LogInfo("DLC 自检（修正 Patches/ 路径 bug）：文件 " + dlcFile + " → "
-                                + (exists ? "存在" : "不存在"));
+                    Log.LogInfo(L.T("DLC 自检（修正 Patches/ 路径 bug）：文件 ") + dlcFile + " → "
+                                + (exists ? L.T("存在") : L.T("不存在")));
 
                 if (!exists)
                 {
@@ -869,7 +869,7 @@ namespace BurgerShopModder
                 {
                     PlayerPrefs.SetInt("DLC", 1);
                     PlayerPrefs.Save();
-                    if (Log != null) Log.LogInfo("  已把 PlayerPrefs 的 DLC 标记从 0 纠正为 1");
+                    if (Log != null) Log.LogInfo(L.T("  已把 PlayerPrefs 的 DLC 标记从 0 纠正为 1"));
                 }
 
                 Type gm = FindType("GameManager");
@@ -893,14 +893,14 @@ namespace BurgerShopModder
                         {
                             MethodInfo load = dm.GetMethod("LoadAssetBundle", AllFlags);
                             if (load != null) load.Invoke(dms[0], null);
-                            if (Log != null) Log.LogInfo("  已调用 DLCManager.LoadAssetBundle()");
+                            if (Log != null) Log.LogInfo(L.T("  已调用 DLCManager.LoadAssetBundle()"));
                         }
                     }
                 }
             }
             catch (Exception e)
             {
-                if (Log != null) Log.LogWarning("DLC 自检失败：" + e.Message);
+                if (Log != null) Log.LogWarning(L.T("DLC 自检失败：") + e.Message);
             }
         }
 
@@ -917,14 +917,14 @@ namespace BurgerShopModder
             try
             {
                 Type t = FindType("TitleDLCCheck");
-                if (t == null) { Log.LogWarning("找不到 TitleDLCCheck，DLC 修正未挂载（不影响其他功能）"); return; }
+                if (t == null) { Log.LogWarning(L.T("找不到 TitleDLCCheck，DLC 修正未挂载（不影响其他功能）")); return; }
 
                 MethodInfo post = typeof(Plugin).GetMethod("Postfix_TitleDLCCheck", AllFlags);
                 MethodInfo target = t.GetMethod("Start", AllFlags) ?? t.GetMethod("Awake", AllFlags);
-                if (target == null) { Log.LogWarning("TitleDLCCheck 没有 Start/Awake"); return; }
+                if (target == null) { Log.LogWarning(L.T("TitleDLCCheck 没有 Start/Awake")); return; }
 
                 _harmony.Patch(target, null, new HarmonyMethod(post), null);
-                Log.LogInfo("DLC 路径修正补丁已挂载（" + t.Name + "." + target.Name + " 后缀）");
+                Log.LogInfo(L.T("DLC 路径修正补丁已挂载（") + t.Name + "." + target.Name + L.T(" 后缀）"));
 
                 // 更可靠的一条：DLCManager.LoadAssetBundle() 是游戏**实际会执行**的加载路径
                 // （TitleDLCCheck 在标题画面，可能根本不跑）。
@@ -937,11 +937,11 @@ namespace BurgerShopModder
                     if (lb != null && post2 != null)
                     {
                         _harmony.Patch(lb, null, new HarmonyMethod(post2), null);
-                        Log.LogInfo("DLC 加载修正补丁已挂载（DLCManager.LoadAssetBundle 后缀）");
+                        Log.LogInfo(L.T("DLC 加载修正补丁已挂载（DLCManager.LoadAssetBundle 后缀）"));
                     }
                 }
             }
-            catch (Exception e) { Log.LogWarning("挂 DLC 修正补丁失败：" + e.Message); }
+            catch (Exception e) { Log.LogWarning(L.T("挂 DLC 修正补丁失败：") + e.Message); }
         }
 
         /// <summary>
@@ -958,7 +958,7 @@ namespace BurgerShopModder
                 object bundle = bf != null ? bf.GetValue(null) : null;
                 if (bundle == null)
                 {
-                    if (Log != null) Log.LogInfo("DLC 加载后检查：资产包为空（无 DLC 或加载失败），保持原判");
+                    if (Log != null) Log.LogInfo(L.T("DLC 加载后检查：资产包为空（无 DLC 或加载失败），保持原判"));
                     return;
                 }
 
@@ -967,16 +967,16 @@ namespace BurgerShopModder
                 {
                     PlayerPrefs.SetInt("DLC", 1);
                     PlayerPrefs.Save();
-                    if (Log != null) Log.LogInfo("DLC 加载后检查：包已加载，DLC 标记 " + cur + " → 1");
+                    if (Log != null) Log.LogInfo(L.T("DLC 加载后检查：包已加载，DLC 标记 ") + cur + " → 1");
                 }
                 else
                 {
-                    if (Log != null) Log.LogInfo("DLC 加载后检查：包已加载，DLC 标记已是 1");
+                    if (Log != null) Log.LogInfo(L.T("DLC 加载后检查：包已加载，DLC 标记已是 1"));
                 }
             }
             catch (Exception e)
             {
-                if (Log != null) Log.LogWarning("DLC 加载后检查失败：" + e.Message);
+                if (Log != null) Log.LogWarning(L.T("DLC 加载后检查失败：") + e.Message);
             }
         }
 
@@ -985,16 +985,16 @@ namespace BurgerShopModder
             try
             {
                 Type mc = FindType("Live2D_ModelControl");
-                if (mc == null) { Log.LogWarning("找不到 Live2D_ModelControl，部件覆盖不可用"); return; }
+                if (mc == null) { Log.LogWarning(L.T("找不到 Live2D_ModelControl，部件覆盖不可用")); return; }
                 MethodInfo target = mc.GetMethod("UpdatePartOpacity", AllFlags);
-                if (target == null) { Log.LogWarning("找不到 UpdatePartOpacity"); return; }
+                if (target == null) { Log.LogWarning(L.T("找不到 UpdatePartOpacity")); return; }
                 MethodInfo post = typeof(Plugin).GetMethod("Postfix_UpdatePartOpacity", AllFlags);
                 _harmony.Patch(target, null, new HarmonyMethod(post), null);
-                Log.LogInfo("部件覆盖补丁已挂载（UpdatePartOpacity 后缀）");
+                Log.LogInfo(L.T("部件覆盖补丁已挂载（UpdatePartOpacity 后缀）"));
             }
             catch (Exception e)
             {
-                Log.LogWarning("挂部件覆盖补丁失败：" + e.Message);
+                Log.LogWarning(L.T("挂部件覆盖补丁失败：") + e.Message);
             }
         }
 
@@ -1122,7 +1122,7 @@ namespace BurgerShopModder
                 }
 
                 if (logThis && Log != null)
-                    Log.LogInfo("部件覆盖 " + sig + "：显示 " + shown + " 个 / 还原 " + restored + " 个");
+                    Log.LogInfo(L.T("部件覆盖 ") + sig + L.T("：显示 ") + shown + L.T(" 个 / 还原 ") + restored + L.T(" 个"));
             }
             catch { }
         }
@@ -1239,7 +1239,7 @@ namespace BurgerShopModder
             if (_fieldCache.TryGetValue(key, out fi)) return fi;
             fi = t.GetField(name, AllFlags);
             _fieldCache[key] = fi;
-            if (fi == null && Log != null) Log.LogWarning("找不到字段 " + key);
+            if (fi == null && Log != null) Log.LogWarning(L.T("找不到字段 ") + key);
             return fi;
         }
 
@@ -1494,7 +1494,7 @@ namespace BurgerShopModder
                 sb.Append(hit ? "(自然) " : "× ").Append(n).Append("  ");
             }
             string s = targeted + "/" + names.Length + " 已挂：" + sb;
-            Log.LogInfo("补丁检查 → " + s);
+            Log.LogInfo(L.T("补丁检查 → ") + s);
             return s;
         }
 
@@ -1515,7 +1515,7 @@ namespace BurgerShopModder
 
                 Type camType = FindType("Live2D.Cubism.Core.CubismModel");
                 Type rendType = FindType("Live2D.Cubism.Rendering.CubismRenderer");
-                if (camType == null) { Log.LogWarning("诊断：找不到 CubismModel"); return; }
+                if (camType == null) { Log.LogWarning(L.T("诊断：找不到 CubismModel")); return; }
 
                 var sb = new System.Text.StringBuilder();
                 sb.AppendLine("kind\tname\topacity\ttexName\tatlasX0\tatlasY0\tatlasX1\tatlasY1\ttexW\ttexH");
@@ -1797,11 +1797,11 @@ namespace BurgerShopModder
                 }
                 catch { }
 
-                Log.LogInfo("诊断已导出到 " + dir + "（diagnose.tsv / uvex.tsv / drawpart.tsv / texhit.tsv / meta.txt）");
+                Log.LogInfo(L.T("诊断已导出到 ") + dir + "（diagnose.tsv / uvex.tsv / drawpart.tsv / texhit.tsv / meta.txt）");
             }
             catch (Exception e)
             {
-                Log.LogError("诊断导出失败：" + e);
+                Log.LogError(L.T("诊断导出失败：") + e);
             }
         }
 
@@ -1834,7 +1834,7 @@ namespace BurgerShopModder
 
                 Type rendType = FindType("Live2D.Cubism.Rendering.CubismRenderer");
                 Type camType = FindType("Live2D.Cubism.Core.CubismModel");
-                if (camType == null) { Log.LogWarning("导出运行时贴图：找不到 CubismModel"); return; }
+                if (camType == null) { Log.LogWarning(L.T("导出运行时贴图：找不到 CubismModel")); return; }
 
                 var seen = new HashSet<string>();
                 int ok = 0;
@@ -1868,8 +1868,8 @@ namespace BurgerShopModder
                         string file = System.IO.Path.Combine(dir, t.name + "_" + t.GetInstanceID() + ".png");
                         try
                         {
-                            Log.LogInfo("导出运行时贴图 " + t.name + " (" + t.width + "x" + t.height
-                                        + ", isReadable=" + t.isReadable + ") …（大图会卡一会儿）");
+                            Log.LogInfo(L.T("导出运行时贴图 ") + t.name + " (" + t.width + "x" + t.height
+                                        + ", isReadable=" + t.isReadable + L.T(") …（大图会卡一会儿）"));
 
                             Color32[] buf = t.isReadable ? t.GetPixels32() : GpuReadTexture(t);
                             int W = t.width, H = t.height;
@@ -1886,19 +1886,19 @@ namespace BurgerShopModder
 
                             System.IO.File.WriteAllBytes(file, png);
                             ok++;
-                            Log.LogInfo("  已写出 " + file + "（" + (png.Length / 1024) + " KB）");
+                            Log.LogInfo(L.T("  已写出 ") + file + "（" + (png.Length / 1024) + " KB）");
                         }
                         catch (Exception ex)
                         {
-                            Log.LogWarning("  导出 " + t.name + " 失败：" + ex.Message);
+                            Log.LogWarning(L.T("  导出 ") + t.name + L.T(" 失败：") + ex.Message);
                         }
                     }
                 }
-                Log.LogInfo("运行时贴图导出完成，共 " + ok + " 张 → " + dir);
+                Log.LogInfo(L.T("运行时贴图导出完成，共 ") + ok + L.T(" 张 → ") + dir);
             }
             catch (Exception e)
             {
-                Log.LogError("导出运行时贴图失败：" + e);
+                Log.LogError(L.T("导出运行时贴图失败：") + e);
             }
         }
 
@@ -2168,7 +2168,7 @@ namespace BurgerShopModder
             {
                 Type rendType = FindType("Live2D.Cubism.Rendering.CubismRenderer");
                 Type camType = FindType("Live2D.Cubism.Core.CubismModel");
-                if (camType == null || rendType == null) { Log.LogWarning("贴图探针：找不到 Cubism 类型"); return; }
+                if (camType == null || rendType == null) { Log.LogWarning(L.T("贴图探针：找不到 Cubism 类型")); return; }
 
                 var seen = new HashSet<int>();
                 foreach (UnityEngine.Object mo in Resources.FindObjectsOfTypeAll(camType))
@@ -2205,7 +2205,7 @@ namespace BurgerShopModder
                     }
                 }
             }
-            catch (Exception e) { Log.LogWarning("贴图探针异常：" + e.Message); }
+            catch (Exception e) { Log.LogWarning(L.T("贴图探针异常：") + e.Message); }
         }
 
         // -----------------------------------------------------------------
@@ -2232,7 +2232,7 @@ namespace BurgerShopModder
             _opLog.Add(string.Format("{0:000}  [{1,7:0.0}s]  {2,-22} {3}",
                 _opSeq, t, action, detail + (scene != "" ? "  @ " + scene : "")));
             if (_opLog.Count > 2000) _opLog.RemoveAt(0);
-            if (Log != null) Log.LogInfo("[操作] " + action + " | " + detail);
+            if (Log != null) Log.LogInfo(L.T("[操作] ") + action + " | " + detail);
         }
 
         /// <summary>快照当前关键游戏状态，供流水里作为"游戏给出的反馈"。</summary>
@@ -2417,9 +2417,9 @@ namespace BurgerShopModder
                 }
                 System.IO.File.WriteAllText(System.IO.Path.Combine(dir, "vmap.tsv"),
                     sb.ToString(), new System.Text.UTF8Encoding(false));
-                Log.LogInfo("顶点映射已导出：" + System.IO.Path.Combine(dir, "vmap.tsv"));
+                Log.LogInfo(L.T("顶点映射已导出：") + System.IO.Path.Combine(dir, "vmap.tsv"));
             }
-            catch (Exception e) { Log.LogWarning("导出顶点映射失败：" + e.Message); }
+            catch (Exception e) { Log.LogWarning(L.T("导出顶点映射失败：") + e.Message); }
         }
 
         /// <summary>
@@ -2517,10 +2517,10 @@ namespace BurgerShopModder
 
                 System.IO.File.WriteAllText(System.IO.Path.Combine(dir, "runtime_atlas.txt"),
                     sb.ToString(), new System.Text.UTF8Encoding(false));
-                Log.LogInfo("运行时图集盘点已写出 runtime_atlas.txt");
+                Log.LogInfo(L.T("运行时图集盘点已写出 runtime_atlas.txt"));
                 Log.LogInfo(sb.ToString());
             }
-            catch (Exception e) { Log.LogWarning("运行时图集盘点失败：" + e.Message); }
+            catch (Exception e) { Log.LogWarning(L.T("运行时图集盘点失败：") + e.Message); }
         }
 
         /// <summary>
@@ -2560,7 +2560,7 @@ namespace BurgerShopModder
                 object idsInst = idsField.GetValue(mcComp);
                 if (idsInst == null) { ProbeWhy("IDs 字段值为 null（组件未初始化？）"); return false; }
                 Type idsType = idsInst.GetType();
-                Log.LogInfo("部件索引对照：IDs 实例类型 = " + idsType.FullName);
+                Log.LogInfo(L.T("部件索引对照：IDs 实例类型 = ") + idsType.FullName);
 
                 // 取一个模型实例
                 UnityEngine.Object[] models = Resources.FindObjectsOfTypeAll(camType);
@@ -2664,11 +2664,11 @@ namespace BurgerShopModder
 
                 System.IO.File.WriteAllText(System.IO.Path.Combine(dir, "partindex.txt"),
                     sb.ToString(), new System.Text.UTF8Encoding(false));
-                Log.LogInfo("部件索引对照已导出：" + dir);
+                Log.LogInfo(L.T("部件索引对照已导出：") + dir);
                 Log.LogInfo(sb.ToString());
                 return true;
             }
-            catch (Exception e) { Log.LogWarning("导出部件索引失败：" + e.Message); return false; }
+            catch (Exception e) { Log.LogWarning(L.T("导出部件索引失败：") + e.Message); return false; }
         }
 
         /// <summary>
@@ -2778,10 +2778,10 @@ namespace BurgerShopModder
                 string dir = DiagStampDir("parttable");
                 System.IO.File.WriteAllText(System.IO.Path.Combine(dir, "parttable.txt"),
                     sb.ToString(), new System.Text.UTF8Encoding(false));
-                Log.LogInfo("部件完整清单已导出：" + dir);
+                Log.LogInfo(L.T("部件完整清单已导出：") + dir);
                 return true;
             }
-            catch (Exception e) { Log.LogWarning("导出部件清单失败：" + e.Message); return false; }
+            catch (Exception e) { Log.LogWarning(L.T("导出部件清单失败：") + e.Message); return false; }
         }
 
         /// <summary>
@@ -2812,7 +2812,7 @@ namespace BurgerShopModder
             _tightsSampleDir = DiagStampDir("tightslog");
             _tightsSampleSb = new System.Text.StringBuilder();
             _tightsSampleSb.AppendLine("时间(s)	槽位	_Op_T	_Op_W	_Op_B	部件39.透明度	部件40.透明度	强制");
-            Log.LogInfo("丝袜状态采样已开始（10 秒）→ " + _tightsSampleDir);
+            Log.LogInfo(L.T("丝袜状态采样已开始（10 秒）→ ") + _tightsSampleDir);
         }
 
         /// <summary>每帧调用；每 0.25 秒记一行，共 40 行。</summary>
@@ -2872,9 +2872,9 @@ namespace BurgerShopModder
                 {
                     System.IO.File.WriteAllText(System.IO.Path.Combine(_tightsSampleDir, "tightslog.txt"),
                         _tightsSampleSb.ToString(), new System.Text.UTF8Encoding(false));
-                    Log.LogInfo("丝袜状态时间线已导出：" + _tightsSampleDir);
+                    Log.LogInfo(L.T("丝袜状态时间线已导出：") + _tightsSampleDir);
                 }
-                catch (Exception e) { Log.LogWarning("写丝袜时间线失败：" + e.Message); }
+                catch (Exception e) { Log.LogWarning(L.T("写丝袜时间线失败：") + e.Message); }
             }
         }
 
@@ -2980,11 +2980,11 @@ namespace BurgerShopModder
 
                 string dir = DiagStampDir("masks");
                 System.IO.File.WriteAllText(System.IO.Path.Combine(dir, "masks.txt"), sb.ToString(), new System.Text.UTF8Encoding(false));
-                Log.LogInfo("遮罩诊断已导出：" + dir);
+                Log.LogInfo(L.T("遮罩诊断已导出：") + dir);
                 Log.LogInfo(sb.ToString());
                 return true;
             }
-            catch (Exception e) { Log.LogWarning("遮罩诊断失败：" + e.Message); return false; }
+            catch (Exception e) { Log.LogWarning(L.T("遮罩诊断失败：") + e.Message); return false; }
         }
 
         // =================================================================
@@ -3020,7 +3020,7 @@ namespace BurgerShopModder
             _ttDir = DiagStampDir("tightstest");
             _ttSb = new System.Text.StringBuilder();
             _ttSb.AppendLine("裤袜值\t_Op_W\t_Op_B\t部件39\t部件40\t强制状态\t截图");
-            Log.LogInfo("自动裤袜截图测试开始（已强制关闭部件覆盖）→ " + _ttDir);
+            Log.LogInfo(L.T("自动裤袜截图测试开始（已强制关闭部件覆盖）→ ") + _ttDir);
         }
 
         /// <summary>
@@ -3084,8 +3084,8 @@ namespace BurgerShopModder
                 _ttSb.Append(vv).Append('\t').Append(opW).Append('\t').Append(opB)
                      .Append('\t').Append(p39).Append('\t').Append(p40)
                      .Append('\t').Append(forceState).Append('\t').Append(shot).AppendLine();
-                Log.LogInfo("  测量 Tights=" + vv + " → _Op_W=" + opW + " _Op_B=" + opB
-                            + " 部件39=" + p39 + " 部件40=" + p40 + " 强制=" + forceState);
+                Log.LogInfo(L.T("  测量 Tights=") + vv + " → _Op_W=" + opW + " _Op_B=" + opB
+                            + L.T(" 部件39=") + p39 + L.T(" 部件40=") + p40 + L.T(" 强制=") + forceState);
 
                 _ttStep++;
                 if (_ttStep >= _ttValues.Length) { FinishTightsTest(); return; }
@@ -3105,7 +3105,7 @@ namespace BurgerShopModder
                     InvokeMethod(tab, "UpdateCostume");
                 }
             }
-            catch (Exception e) { Log.LogWarning("设 Tights 失败：" + e.Message); }
+            catch (Exception e) { Log.LogWarning(L.T("设 Tights 失败：") + e.Message); }
         }
 
         private static void FinishTightsTest()
@@ -3115,9 +3115,9 @@ namespace BurgerShopModder
             {
                 System.IO.File.WriteAllText(System.IO.Path.Combine(_ttDir, "tightstest.txt"),
                     _ttSb.ToString(), new System.Text.UTF8Encoding(false));
-                Log.LogInfo("自动裤袜截图测试完成 → " + _ttDir);
+                Log.LogInfo(L.T("自动裤袜截图测试完成 → ") + _ttDir);
             }
-            catch (Exception e) { Log.LogWarning("写测试结果失败：" + e.Message); }
+            catch (Exception e) { Log.LogWarning(L.T("写测试结果失败：") + e.Message); }
         }
 
         /// <summary>打开产物目录（方便看自检报告与快照）。</summary>
@@ -3129,7 +3129,7 @@ namespace BurgerShopModder
                 System.IO.Directory.CreateDirectory(dir);
                 System.Diagnostics.Process.Start("explorer.exe", "\"" + dir + "\"");
             }
-            catch (Exception e) { Log.LogWarning("打开目录失败：" + e.Message); }
+            catch (Exception e) { Log.LogWarning(L.T("打开目录失败：") + e.Message); }
         }
 
         // -----------------------------------------------------------------
@@ -3262,7 +3262,7 @@ namespace BurgerShopModder
                     catch { }
                 }
             }
-            if (Log != null) Log.LogInfo("已按快照还原 " + n + " 个部件的透明度");
+            if (Log != null) Log.LogInfo(L.T("已按快照还原 ") + n + L.T(" 个部件的透明度"));
         }
 
         /// <summary>贴图像素缓存（按贴图名）。GetPixels32 一次拉取，避免 8192² 上逐点 GetPixel。</summary>
@@ -3280,7 +3280,7 @@ namespace BurgerShopModder
         {
             if (_probeWhyLogged.Contains(why)) return;
             _probeWhyLogged.Add(why);
-            Log.LogInfo("部件索引对照：暂不可用 —— " + why);
+            Log.LogInfo(L.T("部件索引对照：暂不可用 —— ") + why);
         }
         private static string _probeInfo = "";
         private static string _exportBatch = "";
@@ -3490,9 +3490,9 @@ namespace BurgerShopModder
             }
 
             string s = "不可见 " + hidden.Count + " 个 / 可见 " + shown.Count + " 个";
-            Log.LogInfo("部件可见性：" + s);
-            Log.LogInfo("  不可见: " + string.Join(", ", hidden.ToArray()));
-            Log.LogInfo("  可见: " + string.Join(", ", shown.ToArray()));
+            Log.LogInfo(L.T("部件可见性：") + s);
+            Log.LogInfo(L.T("  不可见: ") + string.Join(", ", hidden.ToArray()));
+            Log.LogInfo(L.T("  可见: ") + string.Join(", ", shown.ToArray()));
             return s + "（明细见控制台/日志）";
         }
 
@@ -3500,7 +3500,7 @@ namespace BurgerShopModder
         private static void PatchRates()
         {
             Type pc = FindType("PlayerControl");
-            if (pc == null) { Log.LogWarning("找不到 PlayerControl，变化率补丁未挂载"); return; }
+            if (pc == null) { Log.LogWarning(L.T("找不到 PlayerControl，变化率补丁未挂载")); return; }
 
             int ok = 0, miss = 0;
             ok += TryPatch(pc, "HPChange", "Prefix_HPChange", ref miss);
@@ -3511,7 +3511,7 @@ namespace BurgerShopModder
             ok += TryPatch(pc, "EcstasyReset", new Type[0], "Prefix_EcstasyResetNoArg", ref miss);
             ok += TryPatch(pc, "EcstasyGaugeChangePercent", "Prefix_EcstasyGaugeChangePercent", ref miss);
 
-            Log.LogInfo("变化率补丁：" + ok + " 个方法已挂载" + (miss > 0 ? "，" + miss + " 个未找到（该功能对此版本不可用）" : ""));
+            Log.LogInfo(L.T("变化率补丁：") + ok + L.T(" 个方法已挂载") + (miss > 0 ? "，" + miss + L.T(" 个未找到（该功能对此版本不可用）") : ""));
         }
 
         private static int TryPatch(Type type, string method, string prefixName, ref int miss)
@@ -3534,7 +3534,7 @@ namespace BurgerShopModder
             }
             catch (Exception e)
             {
-                Log.LogWarning("挂补丁失败 " + type.Name + "." + method + "：" + e.Message);
+                Log.LogWarning(L.T("挂补丁失败 ") + type.Name + "." + method + "：" + e.Message);
                 miss++;
                 return 0;
             }
@@ -3684,7 +3684,7 @@ namespace BurgerShopModder
 
                 StartTremor(__instance, _preEcstasy, v1, gain);
             }
-            catch (Exception e) { Log.LogWarning("[动摇] 后缀异常: " + e.Message); }
+            catch (Exception e) { Log.LogWarning(L.T("[动摇] 后缀异常: ") + e.Message); }
         }
 
         /// <summary>
@@ -3857,8 +3857,8 @@ namespace BurgerShopModder
                         RaiseMaxHp(pl, baseMax + _hpBuffBonus);
                     }
                 }
-                Log.LogInfo("[动摇] 进入绝顶适应期 " + TremorAdaptTime.Value.ToString("0.#")
-                            + "s，累积倍率 " + TremorAdaptFactor.Value.ToString("0") + "%");
+                Log.LogInfo(L.T("[动摇] 进入绝顶适应期 ") + TremorAdaptTime.Value.ToString("0.#")
+                            + L.T("s，累积倍率 ") + TremorAdaptFactor.Value.ToString("0") + "%");
             }
         }
 
@@ -3928,7 +3928,7 @@ namespace BurgerShopModder
             {
                 _tremorCaught = true;
                 _tremorSettle = CalcSettle(player, TremorCatch.Value);
-                Log.LogInfo("[动摇] 稳住了！落点损失降至 " + TremorCatch.Value.ToString("0.#") + "%");
+                Log.LogInfo(L.T("[动摇] 稳住了！落点损失降至 ") + TremorCatch.Value.ToString("0.#") + "%");
             }
 
             // 中心线【持续下降】：从 v1 平滑滑向落点。
@@ -3970,7 +3970,7 @@ namespace BurgerShopModder
             {
                 _suppressDrive = false;
                 _suppressDamageFx = false;
-                Log.LogWarning("[动摇] 驱动失败: " + e.Message);
+                Log.LogWarning(L.T("[动摇] 驱动失败: ") + e.Message);
             }
         }
 
@@ -4109,7 +4109,7 @@ namespace BurgerShopModder
                 {
                     repeat = true;                       // 余韵：强制连榨（只在非索取模式下）
                     _afterglowRemaining--;
-                    Log.LogInfo("[" + ModeWord() + "] 余韵（骑乘位）：强制连榨，剩 " + _afterglowRemaining + " 次");
+                    Log.LogInfo("[" + ModeWord() + L.T("] 余韵（骑乘位）：强制连榨，剩 ") + _afterglowRemaining + L.T(" 次"));
                 }
                 else
                 {
@@ -4119,8 +4119,8 @@ namespace BurgerShopModder
                     if (repeat && ChainLimitNow() > 0 && ChainNow() >= ChainLimitNow())
                     {
                         repeat = false;
-                        Log.LogInfo("[吸精] 已达连榨上限 " + ChainLimitNow()
-                                    + " 次（" + ChainSlotName() + "），强制收尾");
+                        Log.LogInfo(L.T("[吸精] 已达连榨上限 ") + ChainLimitNow()
+                                    + L.T(" 次（") + ChainSlotName() + L.T("），强制收尾"));
                     }
                     if (repeat) ChainSet(ChainNow() + 1); else ChainSet(0);
                 }
@@ -4140,7 +4140,7 @@ namespace BurgerShopModder
                 {
                     // 索取模式期间"该结束了"也不脱出 —— 改为回骑乘位攻击继续
                     InvokeAt(__instance, "Play_OsiriMainMixer");
-                    Log.LogInfo("[" + ModeWord() + "] 吸精该收尾，但索取模式期间不脱出 → 回骑乘位继续");
+                    Log.LogInfo("[" + ModeWord() + L.T("] 吸精该收尾，但索取模式期间不脱出 → 回骑乘位继续"));
                 }
                 else
                 {
@@ -4151,7 +4151,7 @@ namespace BurgerShopModder
             }
             catch (Exception e)
             {
-                Log.LogWarning("[" + ModeWord() + "] 接管骑乘位吸精收尾失败: " + e.Message);
+                Log.LogWarning("[" + ModeWord() + L.T("] 接管骑乘位吸精收尾失败: ") + e.Message);
                 return true;       // 出错就交还原逻辑
             }
         }
@@ -4164,7 +4164,7 @@ namespace BurgerShopModder
         {
             if (_demandMode && P3(DemandBlockFella3))
             {
-                Log.LogInfo("[" + ModeWord() + "] 索取模式期间：拦下一次脱出到口交");
+                Log.LogInfo("[" + ModeWord() + L.T("] 索取模式期间：拦下一次脱出到口交"));
                 return false;
             }
             return true;
@@ -4204,8 +4204,8 @@ namespace BurgerShopModder
             _spankAdd = add;
             _spankCount++;
             _spankTarget += add;
-            Log.LogInfo("[屁股] 第 " + _spankCount + " 下：冲量 +" + (add * 100f).ToString("0.#")
-                        + "% → 目标 " + _spankTarget.ToString("0.###"));
+            Log.LogInfo(L.T("[屁股] 第 ") + _spankCount + L.T(" 下：冲量 +") + (add * 100f).ToString("0.#")
+                        + L.T("% → 目标 ") + _spankTarget.ToString("0.###"));
         }
 
         /// <summary>每帧推进：实际值快速逼近目标，目标缓慢衰减回 1。</summary>
@@ -4334,10 +4334,10 @@ namespace BurgerShopModder
                 if (_chainLogLeft > 0)
                 {
                     _chainLogLeft--;
-                    Log.LogInfo("[连榨] 按生命值折算：" + hpDamage.ToString("0.##") + " 伤害 / "
-                                + maxHp.ToString("0.#") + " 最大生命 = "
-                                + (hpDamage / maxHp * 100f).ToString("0.##") + "% → 绝顶值 +"
-                                + pct.ToString("0.##") + "%（比例 " + ratio.ToString("0") + "%）");
+                    Log.LogInfo(L.T("[连榨] 按生命值折算：") + hpDamage.ToString("0.##") + L.T(" 伤害 / ")
+                                + maxHp.ToString("0.#") + L.T(" 最大生命 = ")
+                                + (hpDamage / maxHp * 100f).ToString("0.##") + L.T("% → 绝顶值 +")
+                                + pct.ToString("0.##") + L.T("%（比例 ") + ratio.ToString("0") + "%）");
                 }
             }
             catch { }
@@ -4435,11 +4435,11 @@ namespace BurgerShopModder
                     _afterglowPending += back0;
                     _afterglowRemaining = 0;
                     _afterglowTotal = Mathf.Max(0, _afterglowTotal - 1);
-                    Log.LogInfo("[" + ModeWord() + "] 进入新模式，把未跑完的余韵收回待发动 " + back0
-                                + " 次 → 待发动共 " + _afterglowPending + " 次");
+                    Log.LogInfo("[" + ModeWord() + L.T("] 进入新模式，把未跑完的余韵收回待发动 ") + back0
+                                + L.T(" 次 → 待发动共 ") + _afterglowPending + L.T(" 次"));
                 }
-                Log.LogInfo("[" + ModeWord() + "] 进入" + ModeWord() + "模式（" + reason + "），本段时长 " + seg.ToString("0.#")
-                            + " 秒，共 1 段");
+                Log.LogInfo("[" + ModeWord() + L.T("] 进入") + ModeWord() + L.T("模式（") + reason + L.T("），本段时长 ") + seg.ToString("0.#")
+                            + L.T(" 秒，共 1 段"));
             }
             else if (_demandStacks < maxStacks)
             {
@@ -4460,11 +4460,11 @@ namespace BurgerShopModder
                     _afterglowPending += back;
                     _afterglowRemaining = 0;
                     _afterglowTotal = Mathf.Max(0, _afterglowTotal - 1);   // 这次不算"已触发"
-                    Log.LogInfo("[" + ModeWord() + "] 叠加期间把进行中的余韵收回待发动 " + back
-                                + " 次 → 待发动共 " + _afterglowPending + " 次");
+                    Log.LogInfo("[" + ModeWord() + L.T("] 叠加期间把进行中的余韵收回待发动 ") + back
+                                + L.T(" 次 → 待发动共 ") + _afterglowPending + L.T(" 次"));
                 }
-                Log.LogInfo("[" + ModeWord() + "] 叠加第 " + _demandStacks + " 段（" + reason + "），+"
-                            + seg.ToString("0.#") + " 秒 → 剩余 "
+                Log.LogInfo("[" + ModeWord() + L.T("] 叠加第 ") + _demandStacks + L.T(" 段（") + reason + "），+"
+                            + seg.ToString("0.#") + L.T(" 秒 → 剩余 ")
                             + Mathf.Max(0f, _demandUntil - Time.unscaledTime).ToString("0.#") + "s");
             }
             else
@@ -4478,13 +4478,13 @@ namespace BurgerShopModder
                 {
                     _demandUntil += seg * mul;
                     _demandUrge = 0f;      // 消耗掉这次积累
-                    Log.LogInfo("[" + ModeWord() + "] 已达 " + maxStacks + " 段上限 → 不加层，但刷新持续时间 +"
-                                + (seg * mul).ToString("0.#") + " 秒 → 剩余 "
-                                + Mathf.Max(0f, _demandUntil - Time.unscaledTime).ToString("0.#") + " 秒");
+                    Log.LogInfo("[" + ModeWord() + L.T("] 已达 ") + maxStacks + L.T(" 段上限 → 不加层，但刷新持续时间 +")
+                                + (seg * mul).ToString("0.#") + L.T(" 秒 → 剩余 ")
+                                + Mathf.Max(0f, _demandUntil - Time.unscaledTime).ToString("0.#") + L.T(" 秒"));
                 }
                 else
                 {
-                    Log.LogInfo("[" + ModeWord() + "] 已达 " + maxStacks + " 段上限，本次不再叠加");
+                    Log.LogInfo("[" + ModeWord() + L.T("] 已达 ") + maxStacks + L.T(" 段上限，本次不再叠加"));
                 }
             }
         }
@@ -4743,7 +4743,7 @@ namespace BurgerShopModder
 
                 _kissAutoAt = -999f;
                 InvokeNoArg(tab, "PrepareKissing");
-                Log.LogInfo("[束缚之吻] 自动进入（原版要按 X 或靠 10% 随机）");
+                Log.LogInfo(L.T("[束缚之吻] 自动进入（原版要按 X 或靠 10% 随机）"));
             }
             catch { }
         }
@@ -4904,9 +4904,9 @@ namespace BurgerShopModder
                 string mpNow = pf.GetValue(null) as string;
                 if (mpNow != ManmanAreaName) return true;
 
-                Log.LogInfo("[HitArea_Manman_By_Plugins] 命中！姿势=" + PoseIdx()
-                            + "  榨取欲=" + _demandUrge.ToString("0.#")
-                            + "  段=" + _demandStacks);
+                Log.LogInfo(L.T("[HitArea_Manman_By_Plugins] 命中！姿势=") + PoseIdx()
+                            + L.T("  榨取欲=") + _demandUrge.ToString("0.#")
+                            + L.T("  段=") + _demandStacks);
 
                 // 点击特效（粒子 + 那声"啪"）—— 复用游戏自己的实现，手感一致
                 try
@@ -5354,7 +5354,7 @@ namespace BurgerShopModder
             {
                 SetField(__instance, "sitSpeed", _preSitSpeed);
                 SetField(__instance, "isSpeedUpSit", true);
-                Log.LogInfo("[榨取] Sit 射精：不减速（sitSpeed=" + _preSitSpeed.ToString("0.###") + "）");
+                Log.LogInfo(L.T("[榨取] Sit 射精：不减速（sitSpeed=") + _preSitSpeed.ToString("0.###") + "）");
                 NoteDemandSyasei("坐姿");
             }
             catch { }
@@ -5387,7 +5387,7 @@ namespace BurgerShopModder
                 float ch = Mathf.Clamp(SitSyaseiToDrainChance.Value, 0f, 100f);
                 if (ch > 0f && UnityEngine.Random.value * 100f < ch)
                 {
-                    Log.LogInfo("[榨取] 坐姿射精收尾 → 按 " + ch.ToString("0.#") + "% 进入榨取（不经过束缚之吻）");
+                    Log.LogInfo(L.T("[榨取] 坐姿射精收尾 → 按 ") + ch.ToString("0.#") + L.T("% 进入榨取（不经过束缚之吻）"));
                     InvokeAt(ChainSitInstance(), "Play_SitKiss吸精", true);
                     return false;
                 }
@@ -5396,7 +5396,7 @@ namespace BurgerShopModder
             }
             catch (Exception e)
             {
-                Log.LogWarning("[榨取] 坐姿射精收尾接管失败: " + e.Message);
+                Log.LogWarning(L.T("[榨取] 坐姿射精收尾接管失败: ") + e.Message);
                 return true;
             }
         }
@@ -5462,7 +5462,7 @@ namespace BurgerShopModder
                     if (ChainLimitNow() > 0 && ChainNow() >= ChainLimitNow())
                     {
                         repeat = false;
-                        Log.LogInfo("[射精] 已达连榨上限 " + ChainLimitNow() + " 次（Sit·束缚之吻），强制收尾");
+                        Log.LogInfo(L.T("[射精] 已达连榨上限 ") + ChainLimitNow() + L.T(" 次（Sit·束缚之吻），强制收尾"));
                     }
                     if (repeat) ChainSet(ChainNow() + 1); else ChainSet(0);
                 }
@@ -5483,7 +5483,7 @@ namespace BurgerShopModder
             }
             catch (Exception e)
             {
-                Log.LogWarning("[射精] 束缚之吻射精收尾接管失败: " + e.Message);
+                Log.LogWarning(L.T("[射精] 束缚之吻射精收尾接管失败: ") + e.Message);
                 return true;
             }
         }
@@ -5532,8 +5532,8 @@ namespace BurgerShopModder
                     if (ChainLimitNow() > 0 && ChainNow() >= ChainLimitNow())
                     {
                         repeat = false;
-                        Log.LogInfo("[吸精] 已达连榨上限 " + ChainLimitNow() + " 次（Sit·"
-                                    + (_demandMode ? "榨取模式" : "常规") + "），强制收尾");
+                        Log.LogInfo(L.T("[吸精] 已达连榨上限 ") + ChainLimitNow() + L.T(" 次（Sit·")
+                                    + (_demandMode ? L.T("榨取模式") : L.T("常规")) + L.T("），强制收尾"));
                     }
                     if (repeat) ChainSet(ChainNow() + 1); else ChainSet(0);
                 }
@@ -5555,7 +5555,7 @@ namespace BurgerShopModder
             }
             catch (Exception e)
             {
-                Log.LogWarning("[榨取] Sit 吸精收尾接管失败: " + e.Message);
+                Log.LogWarning(L.T("[榨取] Sit 吸精收尾接管失败: ") + e.Message);
                 return true;
             }
         }
@@ -5675,9 +5675,9 @@ namespace BurgerShopModder
             if (_urgeAuditLeft <= 0) return;
             _urgeAuditLeft--;
             float d = after - before;
-            Log.LogInfo("[索取欲] " + src + " " + (d >= 0f ? "+" : "") + d.ToString("0.##")
+            Log.LogInfo(L.T("[索取欲] ") + src + " " + (d >= 0f ? "+" : "") + d.ToString("0.##")
                         + "  → " + after.ToString("0.##") + "%"
-                        + (_urgeAuditLeft == 0 ? "（审计结束）" : ""));
+                        + (_urgeAuditLeft == 0 ? L.T("（审计结束）") : ""));
         }
 
         /// 一次打屁股的完整效果。真实点击与测试命令共用这一份逻辑。
@@ -5774,12 +5774,12 @@ namespace BurgerShopModder
                         if (fi != null) fi.SetValue(tab, need * mul);
                     }
                     catch { }
-                    Log.LogInfo("[" + ModeWord() + "] 打屁股让脱出更难了：需要 " + (need * mul).ToString("0.#") + " 次");
+                    Log.LogInfo("[" + ModeWord() + L.T("] 打屁股让脱出更难了：需要 ") + (need * mul).ToString("0.#") + L.T(" 次"));
                 }
 
                 TryStackNow(source);
             }
-            catch (Exception e) { Log.LogWarning("[" + ModeWord() + "] 累积失败: " + e.Message); }
+            catch (Exception e) { Log.LogWarning("[" + ModeWord() + L.T("] 累积失败: ") + e.Message); }
         }
 
         // ---- 通用：射精开始 → 索取模式期间撤销"减速" ----
@@ -5849,12 +5849,12 @@ namespace BurgerShopModder
                 if (!_attBoostLogged)
                 {
                     _attBoostLogged = true;
-                    Log.LogInfo("[" + ModeWord() + "] 攻击力加成生效：" + before.ToString("0.##") + " → "
+                    Log.LogInfo("[" + ModeWord() + L.T("] 攻击力加成生效：") + before.ToString("0.##") + " → "
                                 + (before * mul).ToString("0.##") + "（×" + mul.ToString("0.##")
-                                + "，其中速度 ×" + _spankMul.ToString("0.###") + "）");
+                                + L.T("，其中速度 ×") + _spankMul.ToString("0.###") + "）");
                 }
             }
-            catch (Exception e) { Log.LogWarning("[" + ModeWord() + "] 攻击力加成失败: " + e.Message); }
+            catch (Exception e) { Log.LogWarning("[" + ModeWord() + L.T("] 攻击力加成失败: ") + e.Message); }
         }
 
         private static void Postfix_OsiriSyaseiStart(object __instance)
@@ -5870,7 +5870,7 @@ namespace BurgerShopModder
                 // 分阶段模式下，这里只保留"不减速"；加速累积交给对应阶段的开关去管
                 if (!P3(DemandSpeedSplit3)) SetField(__instance, "isSpeedUpOsiri", true);
                 NoteDemandSyasei("骑乘位");
-                Log.LogInfo("[" + ModeWord() + "] 骑乘位射精：不减速且加速继续（osiriSpeed="
+                Log.LogInfo("[" + ModeWord() + L.T("] 骑乘位射精：不减速且加速继续（osiriSpeed=")
                             + GetFloat(__instance, "osiriSpeed").ToString("0.###") + "）");
             }
             catch { }
@@ -5905,7 +5905,7 @@ namespace BurgerShopModder
             {
                 SetField(__instance, "fellaSpeed", _preFellaSpeed);          // 撤销减半
                 SetField(__instance, "isSpeedUpFella", _preSpeedUp);         // 恢复加速累积
-                Log.LogInfo("[" + ModeWord() + "] 索取模式：本次射精不减速（保持 fellaSpeed=" + _preFellaSpeed.ToString("0.###") + "）");
+                Log.LogInfo("[" + ModeWord() + L.T("] 索取模式：本次射精不减速（保持 fellaSpeed=") + _preFellaSpeed.ToString("0.###") + "）");
             }
             catch { }
         }
@@ -5942,8 +5942,8 @@ namespace BurgerShopModder
                     object tb3 = Tabemi();
                     if (tb3 != null && GetStringField(tb3, "centerGirlState") == "Sit")
                     {
-                        Log.LogInfo("[" + ModeWord() + "] " + ModeWord() + "模式进行中，状态却被切成坐姿 → 夺回骑乘位"
-                                    + "（多半是 Show_CenterGirlSit 的协程早已排队）");
+                        Log.LogInfo("[" + ModeWord() + "] " + ModeWord() + L.T("模式进行中，状态却被切成坐姿 → 夺回骑乘位")
+                                    + L.T("（多半是 Show_CenterGirlSit 的协程早已排队）"));
                         MethodInfo mi = tb3.GetType().GetMethod("ShowCenterGirlOsiri", AllFlags);
                         if (mi != null) mi.Invoke(tb3, null);
                     }
@@ -5989,14 +5989,14 @@ namespace BurgerShopModder
                 _lastDemandActivity = Time.unscaledTime;   // 退出也算一次活动，点火要再等
                 _chainOsiriNormal = 0; _chainSitNormal = 0;   // 常规计数重新起算
                 if (_afterglowPending > 0)
-                    Log.LogInfo("[余韵] 最后一段结束，待局面稳定后发动（已累积 " + _afterglowPending + " 次）");
+                    Log.LogInfo(L.T("[余韵] 最后一段结束，待局面稳定后发动（已累积 ") + _afterglowPending + L.T(" 次）"));
                 else
-                    Log.LogInfo("[余韵] 最后一段结束，但模式中没有射精 → 不发动余韵");
+                    Log.LogInfo(L.T("[余韵] 最后一段结束，但模式中没有射精 → 不发动余韵"));
                 int lo = Mathf.Min(DemandAfterglowMin.Value, DemandAfterglowMax.Value);
                 int hi = Mathf.Max(DemandAfterglowMin.Value, DemandAfterglowMax.Value);
                 _afterglowRemaining = UnityEngine.Random.Range(lo, hi + 1);
                 _afterglowTotal++;
-                Log.LogInfo("[" + ModeWord() + "] 角色自行退出索取模式 → 进入余韵，连续吸精 " + _afterglowRemaining + " 次");
+                Log.LogInfo("[" + ModeWord() + L.T("] 角色自行退出索取模式 → 进入余韵，连续吸精 ") + _afterglowRemaining + L.T(" 次"));
             }
 
             // 余韵：等它自然消耗完（每次吸精由 KyuseiRate 掷骰处递减）
@@ -6181,7 +6181,7 @@ namespace BurgerShopModder
                     {
                         _animSpeedLogged = true;
                         _animSpeedMemberUsed = used;
-                        Log.LogInfo("[" + ModeWord() + "] 绝顶动画倍速已生效：通过 " + used + " 设为 ×" + want.ToString("0.##"));
+                        Log.LogInfo("[" + ModeWord() + L.T("] 绝顶动画倍速已生效：通过 ") + used + L.T(" 设为 ×") + want.ToString("0.##"));
                     }
                     _animSpeedApplied = true;
                     return;
@@ -6189,7 +6189,7 @@ namespace BurgerShopModder
             }
             catch (Exception e)
             {
-                if (!_animSpeedLogged) { _animSpeedLogged = true; Log.LogWarning("[" + ModeWord() + "] 动画倍速失败: " + e.Message); }
+                if (!_animSpeedLogged) { _animSpeedLogged = true; Log.LogWarning("[" + ModeWord() + L.T("] 动画倍速失败: ") + e.Message); }
             }
         }
 
@@ -6468,7 +6468,7 @@ namespace BurgerShopModder
                 if (tab != null) InvokeNoArg(tab, "Osiri解除");
                 return false;
             }
-            catch (Exception e) { Log.LogWarning("[" + ModeWord() + "] 接管绝顶收尾失败: " + e.Message); return true; }
+            catch (Exception e) { Log.LogWarning("[" + ModeWord() + L.T("] 接管绝顶收尾失败: ") + e.Message); return true; }
         }
 
         /// <summary>无参反射调用（带日志）。</summary>
@@ -6479,7 +6479,7 @@ namespace BurgerShopModder
                 MethodInfo mi = obj.GetType().GetMethod(method, AllFlags);
                 if (mi != null) mi.Invoke(obj, null);
             }
-            catch (Exception e) { Log.LogWarning("[" + ModeWord() + "] 调用 " + method + " 失败: " + e.Message); }
+            catch (Exception e) { Log.LogWarning("[" + ModeWord() + L.T("] 调用 ") + method + L.T(" 失败: ") + e.Message); }
         }
 
         private static void InvokeAt(object obj, string method, bool arg)
@@ -6489,7 +6489,7 @@ namespace BurgerShopModder
                 MethodInfo mi = obj.GetType().GetMethod(method, AllFlags);
                 if (mi != null) mi.Invoke(obj, new object[] { arg });
             }
-            catch (Exception e) { Log.LogWarning("[" + ModeWord() + "] 调用 " + method + " 失败: " + e.Message); }
+            catch (Exception e) { Log.LogWarning("[" + ModeWord() + L.T("] 调用 ") + method + L.T(" 失败: ") + e.Message); }
         }
 
         private static void InvokeNoArg(object obj, string method)
@@ -6499,7 +6499,7 @@ namespace BurgerShopModder
                 MethodInfo mi = obj.GetType().GetMethod(method, AllFlags);
                 if (mi != null) mi.Invoke(obj, null);
             }
-            catch (Exception e) { Log.LogWarning("[" + ModeWord() + "] 调用 " + method + " 失败: " + e.Message); }
+            catch (Exception e) { Log.LogWarning("[" + ModeWord() + L.T("] 调用 ") + method + L.T(" 失败: ") + e.Message); }
         }
 
         // =================================================================
@@ -6530,7 +6530,7 @@ namespace BurgerShopModder
 
                 if (_osiriReturnChance >= 100f)
                 {
-                    Log.LogInfo("[回归] 再次进入骑乘位的概率已达 100% → 立刻进入");
+                    Log.LogInfo(L.T("[回归] 再次进入骑乘位的概率已达 100% → 立刻进入"));
                     TryEnterOsiriNow();
                 }
             }
@@ -6567,8 +6567,8 @@ namespace BurgerShopModder
                 _demandSyaseiCount++;
                 int add = Mathf.Max(0, P3(AfterglowPerSyasei3));
                 _afterglowPending += add;
-                Log.LogInfo("[余韵] " + pose + " 模式中第 " + _demandSyaseiCount + " 次射精 → 累积余韵 +"
-                            + add + "（累计 " + _afterglowPending + "）");
+                Log.LogInfo(L.T("[余韵] ") + pose + L.T(" 模式中第 ") + _demandSyaseiCount + L.T(" 次射精 → 累积余韵 +")
+                            + add + L.T("（累计 ") + _afterglowPending + "）");
             }
             catch { }
         }
@@ -6592,7 +6592,7 @@ namespace BurgerShopModder
                     _demandUrge = 0f;
                     _demandStacks = 0;
                     _demandEntered = false;      // 连同闸门一起落，杜绝"紧接着又触发"
-                    Log.LogInfo("[余韵] 已清空：索取欲归零、闸门落下 → 之后有一段干净的空档");
+                    Log.LogInfo(L.T("[余韵] 已清空：索取欲归零、闸门落下 → 之后有一段干净的空档"));
                 }
             }
             if (_afterglowRemaining > 0) _afterglowWasRunning = true;
@@ -6635,7 +6635,7 @@ namespace BurgerShopModder
             _demandEntered = false;     // 本周期结束，重新等待下一次"进过模式"
             _afterglowTotal++;
             _afterglowSettleAt = -999f;
-            Log.LogInfo("[余韵] 最后一段已结束且局面稳定 → 发动余韵 " + _afterglowRemaining + " 次");
+            Log.LogInfo(L.T("[余韵] 最后一段已结束且局面稳定 → 发动余韵 ") + _afterglowRemaining + L.T(" 次"));
             ShowChainBanner(L.T("余韵 · 剩余 {0} 次", _afterglowRemaining), 4f);
 
             // 立刻开一次榨取，把余韵的连榨链启动起来（否则没有"收尾事件"去消费它）
@@ -6657,7 +6657,7 @@ namespace BurgerShopModder
                     }
                 }
             }
-            catch (Exception e) { Log.LogWarning("[余韵] 启动余韵连榨失败: " + e.Message); }
+            catch (Exception e) { Log.LogWarning(L.T("[余韵] 启动余韵连榨失败: ") + e.Message); }
         }
 
         /// <summary>回到口交时武装累积。</summary>
@@ -6690,9 +6690,9 @@ namespace BurgerShopModder
 
                 MethodInfo mi = tab.GetType().GetMethod("ShowCenterGirlOsiri", AllFlags);
                 if (mi != null) mi.Invoke(tab, null);
-                Log.LogInfo("[回归] 已进入骑乘位");
+                Log.LogInfo(L.T("[回归] 已进入骑乘位"));
             }
-            catch (Exception e) { Log.LogWarning("[回归] 进入骑乘位失败: " + e.Message); }
+            catch (Exception e) { Log.LogWarning(L.T("[回归] 进入骑乘位失败: ") + e.Message); }
         }
 
         /// <summary>
@@ -6771,7 +6771,7 @@ namespace BurgerShopModder
         {
             if (SitLockActive())
             {
-                Log.LogInfo("[坐姿锁定] 人在坐姿 → 拦下一次切到骑乘位");
+                Log.LogInfo(L.T("[坐姿锁定] 人在坐姿 → 拦下一次切到骑乘位"));
                 return false;
             }
             return true;
@@ -6847,7 +6847,7 @@ namespace BurgerShopModder
 
                 if (bases.Count > 0)
                 {
-                    Log.LogInfo("[配置] 发现 " + bases.Count + " 个候选（旧键 + 三份副本都在），开始尝试迁移");
+                    Log.LogInfo(L.T("[配置] 发现 ") + bases.Count + L.T(" 个候选（旧键 + 三份副本都在），开始尝试迁移"));
                     // (1) 备份
                     string bak = path + ".bak-before-v1";
                     if (!System.IO.File.Exists(bak)) System.IO.File.Copy(path, bak, true);
@@ -6862,7 +6862,7 @@ namespace BurgerShopModder
                         string vS = vals.ContainsKey(b + "_Sit") ? vals[b + "_Sit"] : newVal;
                         if (vO != newVal || vS != newVal)
                         {
-                            Log.LogInfo("[配置] 跳过 " + b + "：三份副本不一致（用户已在新体系里调过）");
+                            Log.LogInfo(L.T("[配置] 跳过 ") + b + L.T("：三份副本不一致（用户已在新体系里调过）"));
                             continue;
                         }
 
@@ -6872,7 +6872,7 @@ namespace BurgerShopModder
                             if (fArr == null)
                             {
                                 // 诊断：找到了旧键却找不到对应的三份组 —— 说明注册有问题
-                                Log.LogWarning("[配置] 迁移：找不到三份组 " + b + "（已注册 float 组 "
+                                Log.LogWarning(L.T("[配置] 迁移：找不到三份组 ") + b + L.T("（已注册 float 组 ")
                                                + _p3Groups.Count + " / int " + _p3IntGroups.Count
                                                + " / bool " + _p3BoolGroups.Count + "）");
                             }
@@ -6916,22 +6916,22 @@ namespace BurgerShopModder
 
                 if (moved.Count > 0)
                 {
-                    Log.LogInfo("======== 配置自动迁移 ========");
-                    Log.LogInfo("检测到旧版配置（单份键），已把值复制到「按姿势三份」键。");
-                    Log.LogInfo("原文件已备份为：" + System.IO.Path.GetFileName(path) + ".bak-before-v1");
-                    Log.LogInfo("共迁移 " + moved.Count + " 个键：");
+                    Log.LogInfo(L.T("======== 配置自动迁移 ========"));
+                    Log.LogInfo(L.T("检测到旧版配置（单份键），已把值复制到「按姿势三份」键。"));
+                    Log.LogInfo(L.T("原文件已备份为：") + System.IO.Path.GetFileName(path) + ".bak-before-v1");
+                    Log.LogInfo(L.T("共迁移 ") + moved.Count + L.T(" 个键："));
                     for (int i = 0; i < moved.Count && i < 40; i++) Log.LogInfo("  " + moved[i]);
-                    if (moved.Count > 40) Log.LogInfo("  …（其余 " + (moved.Count - 40) + " 个见配置文件）");
+                    if (moved.Count > 40) Log.LogInfo(L.T("  …（其余 ") + (moved.Count - 40) + L.T(" 个见配置文件）"));
                     Log.LogInfo("============================");
                 }
                 else
                 {
-                    Log.LogInfo("[配置] 无需迁移（没有发现旧版单份键）");
+                    Log.LogInfo(L.T("[配置] 无需迁移（没有发现旧版单份键）"));
                 }
             }
             catch (Exception e)
             {
-                Log.LogWarning("[配置] 自动迁移失败（不影响使用）：" + e.Message);
+                Log.LogWarning(L.T("[配置] 自动迁移失败（不影响使用）：") + e.Message);
             }
         }
 
@@ -6961,13 +6961,13 @@ namespace BurgerShopModder
         {
             if (_afterglowRemaining > 0)
             {
-                Log.LogInfo("[余韵] 余韵未清空（剩 " + _afterglowRemaining + " 次）→ 不进口交");
+                Log.LogInfo(L.T("[余韵] 余韵未清空（剩 ") + _afterglowRemaining + L.T(" 次）→ 不进口交"));
                 return false;
             }
             // 【坐姿锁定】人在坐姿就不许被切到口交（Osiri解除() 也是调这个方法）
             if (SitLockActive())
             {
-                Log.LogInfo("[坐姿锁定] 人在坐姿 → 拦下一次切到口交");
+                Log.LogInfo(L.T("[坐姿锁定] 人在坐姿 → 拦下一次切到口交"));
                 return false;
             }
             return true;
@@ -6978,7 +6978,7 @@ namespace BurgerShopModder
         {
             if (_afterglowRemaining > 0)
             {
-                Log.LogInfo("[余韵] 余韵未清空（剩 " + _afterglowRemaining + " 次）→ 不进坐姿");
+                Log.LogInfo(L.T("[余韵] 余韵未清空（剩 ") + _afterglowRemaining + L.T(" 次）→ 不进坐姿"));
                 return false;
             }
             // 【索取/榨取模式进行中 → 坐姿不许顶进来】
@@ -6994,9 +6994,9 @@ namespace BurgerShopModder
             // 它会破坏"模式期间不被打断"这条设计。
             if (_demandMode)
             {
-                Log.LogInfo("[" + ModeWord() + "] " + ModeWord() + "模式进行中（" + _demandStacks + " 段 / 剩余 "
+                Log.LogInfo("[" + ModeWord() + "] " + ModeWord() + L.T("模式进行中（") + _demandStacks + L.T(" 段 / 剩余 ")
                             + Mathf.Max(0f, _demandUntil - Time.unscaledTime).ToString("0.#")
-                            + "s）→ 不许坐姿顶进来。要退出请用「手动进入余韵」");
+                            + L.T("s）→ 不许坐姿顶进来。要退出请用「手动进入余韵」"));
                 return false;
             }
 
@@ -7007,7 +7007,7 @@ namespace BurgerShopModder
                 string cg = tab != null ? GetStringField(tab, "centerGirlState") : "";
                 if (cg == "Osiri") return false;      // 骑乘位还在进行 → 继续挂起
                 _sitDeferred = false;                 // 骑乘位结束 → 放行
-                Log.LogInfo("[回归] 骑乘位结束 → 放行被挂起的坐姿");
+                Log.LogInfo(L.T("[回归] 骑乘位结束 → 放行被挂起的坐姿"));
             }
             catch { }
             return true;
@@ -7047,7 +7047,7 @@ namespace BurgerShopModder
                 if (cg != "Osiri")
                 {
                     _sitDeferred = false;
-                    Log.LogInfo("[回归] 骑乘位结束 → 放行被挂起的坐姿");
+                    Log.LogInfo(L.T("[回归] 骑乘位结束 → 放行被挂起的坐姿"));
                 }
             }
             catch { }
@@ -7070,7 +7070,7 @@ namespace BurgerShopModder
                 if (cur < 0) return;                       // -1 = 本作无 DLC，不干预
                 int next = Mathf.Max(1, cur - P3(DemandOsiriBoost3));
                 SetField(tab, "OsiriPenaltyToAppear", next);
-                Log.LogInfo("[" + ModeWord() + "] 回到口交 → 骑乘位门槛 " + cur + " → " + next + "（下次更快来）");
+                Log.LogInfo("[" + ModeWord() + L.T("] 回到口交 → 骑乘位门槛 ") + cur + " → " + next + L.T("（下次更快来）"));
             }
             catch { }
         }
@@ -7087,7 +7087,7 @@ namespace BurgerShopModder
             Type at = FindType("Live2D_AnimationControl");
             Type tc2 = FindType("TabemiControl");
             Type hc = FindType("Live2D_HitAreaCheck");
-            if (at == null) { Log.LogWarning("找不到 Live2D_AnimationControl，索取模式补丁未挂载"); return; }
+            if (at == null) { Log.LogWarning(L.T("找不到 Live2D_AnimationControl，索取模式补丁未挂载")); return; }
             int ok = 0;
 
             // 打屁股：Osiri叩かれる 前后对比计数。
@@ -7098,14 +7098,14 @@ namespace BurgerShopModder
             MethodInfo hitPre = typeof(Plugin).GetMethod("Prefix_OsiriHits", AllFlags);
             MethodInfo hitPost = typeof(Plugin).GetMethod("Postfix_OsiriHits", AllFlags);
             if (hit == null)
-                Log.LogWarning("索取模式：找不到 TabemiControl.Osiri叩かれる（打屁股无法识别）");
+                Log.LogWarning(L.T("索取模式：找不到 TabemiControl.Osiri叩かれる（打屁股无法识别）"));
             else if (hitPre == null || hitPost == null)
-                Log.LogWarning("索取模式：回调方法未找到");
+                Log.LogWarning(L.T("索取模式：回调方法未找到"));
             else
             {
                 _harmony.Patch(hit, new HarmonyMethod(hitPre), new HarmonyMethod(hitPost), null);
                 ok++;
-                Log.LogInfo("索取模式补丁已挂载（TabemiControl.Osiri叩かれる 前缀+后缀）");
+                Log.LogInfo(L.T("索取模式补丁已挂载（TabemiControl.Osiri叩かれる 前缀+后缀）"));
             }
 
             // 骑乘位射精（索取模式真正要覆盖的那一支）
@@ -7115,19 +7115,19 @@ namespace BurgerShopModder
             //   Event_OsiriSyaseiStart  → Live2D_Animation_SitOsiri
             //   Osiri叩かれる / UpdateAtt → TabemiControl
             Type so = FindType("Live2D_Animation_SitOsiri");
-            if (so == null) Log.LogWarning("索取模式：找不到 Live2D_Animation_SitOsiri");
+            if (so == null) Log.LogWarning(L.T("索取模式：找不到 Live2D_Animation_SitOsiri"));
             MethodInfo os = so != null ? so.GetMethod("Event_OsiriSyaseiStart", AllFlags) : null;
             MethodInfo osPre = typeof(Plugin).GetMethod("Prefix_OsiriSyaseiStart", AllFlags);
             MethodInfo osPost = typeof(Plugin).GetMethod("Postfix_OsiriSyaseiStart", AllFlags);
             if (os == null)
-                Log.LogWarning("索取模式：找不到 Event_OsiriSyaseiStart（骑乘位射精不减速会失效）");
+                Log.LogWarning(L.T("索取模式：找不到 Event_OsiriSyaseiStart（骑乘位射精不减速会失效）"));
             else if (osPre == null || osPost == null)
-                Log.LogWarning("索取模式：Osiri 回调未找到");
+                Log.LogWarning(L.T("索取模式：Osiri 回调未找到"));
             else
             {
                 _harmony.Patch(os, new HarmonyMethod(osPre), new HarmonyMethod(osPost), null);
                 ok++;
-                Log.LogInfo("索取模式补丁已挂载（Event_OsiriSyaseiStart 前缀+后缀：骑乘位射精不减速）");
+                Log.LogInfo(L.T("索取模式补丁已挂载（Event_OsiriSyaseiStart 前缀+后缀：骑乘位射精不减速）"));
             }
 
             // ---------- Sit（榨取模式）----------
@@ -7140,9 +7140,9 @@ namespace BurgerShopModder
                 {
                     _harmony.Patch(sh, new HarmonyMethod(shPre), new HarmonyMethod(shPost), null);
                     ok++;
-                    Log.LogInfo("榨取模式补丁已挂载（TabemiControl.頭叩かれるSit 前缀+后缀）");
+                    Log.LogInfo(L.T("榨取模式补丁已挂载（TabemiControl.頭叩かれるSit 前缀+后缀）"));
                 }
-                else Log.LogWarning("榨取模式：找不到 頭叩かれるSit");
+                else Log.LogWarning(L.T("榨取模式：找不到 頭叩かれるSit"));
             }
 
             if (so != null)
@@ -7157,7 +7157,7 @@ namespace BurgerShopModder
                     MethodInfo mm = so.GetMethod(mn, AllFlags);
                     if (mm != null && smPost != null) { _harmony.Patch(mm, null, new HarmonyMethod(smPost), null); ok++; }
                 }
-                Log.LogInfo("榨取模式补丁已挂载（Sit 攻击事件后缀：涨索取欲）");
+                Log.LogInfo(L.T("榨取模式补丁已挂载（Sit 攻击事件后缀：涨索取欲）"));
 
                 // Sit 射精不减速（两个 Start 事件都会 SetSpeed_Sit(sitSpeed/2f)）
                 MethodInfo ssPre = typeof(Plugin).GetMethod("Prefix_SitSyaseiStart", AllFlags);
@@ -7171,7 +7171,7 @@ namespace BurgerShopModder
                         ok++;
                     }
                 }
-                Log.LogInfo("榨取模式补丁已挂载（Sit 射精不减速）");
+                Log.LogInfo(L.T("榨取模式补丁已挂载（Sit 射精不减速）"));
 
                 // Sit 吸精收尾接管（原版永远重播）
                 MethodInfo se = so.GetMethod("Even_SitKiss吸精OnEnd", AllFlags);
@@ -7180,9 +7180,9 @@ namespace BurgerShopModder
                 {
                     _harmony.Patch(se, new HarmonyMethod(sePre), null, null);
                     ok++;
-                    Log.LogInfo("榨取模式补丁已挂载（Even_SitKiss吸精OnEnd 前缀：接管 Sit 连榨上限）");
+                    Log.LogInfo(L.T("榨取模式补丁已挂载（Even_SitKiss吸精OnEnd 前缀：接管 Sit 连榨上限）"));
                 }
-                else Log.LogWarning("榨取模式：找不到 Even_SitKiss吸精OnEnd");
+                else Log.LogWarning(L.T("榨取模式：找不到 Even_SitKiss吸精OnEnd"));
             }
 
             // 榨取伤害事件 → 按对生命值的影响折算绝顶值
@@ -7191,27 +7191,27 @@ namespace BurgerShopModder
             if (od != null && odPost != null)
             {
                 _harmony.Patch(od, null, new HarmonyMethod(odPost), null); ok++;
-                Log.LogInfo("连榨绝顶值补丁已挂载（Event_Osiri吸精Damage 后缀：按伤害折算）");
+                Log.LogInfo(L.T("连榨绝顶值补丁已挂载（Event_Osiri吸精Damage 后缀：按伤害折算）"));
             }
-            else Log.LogWarning("连榨绝顶值：找不到 Event_Osiri吸精Damage");
+            else Log.LogWarning(L.T("连榨绝顶值：找不到 Event_Osiri吸精Damage"));
 
             MethodInfo sd = so != null ? so.GetMethod("Event_SitKiss吸精1", AllFlags) : null;
             MethodInfo sdPost = typeof(Plugin).GetMethod("Postfix_SitKiss吸精1", AllFlags);
             if (sd != null && sdPost != null)
             {
                 _harmony.Patch(sd, null, new HarmonyMethod(sdPost), null); ok++;
-                Log.LogInfo("连榨绝顶值补丁已挂载（Event_SitKiss吸精1 后缀：按伤害折算）");
+                Log.LogInfo(L.T("连榨绝顶值补丁已挂载（Event_SitKiss吸精1 后缀：按伤害折算）"));
             }
-            else Log.LogWarning("连榨绝顶值：找不到 Event_SitKiss吸精1");
+            else Log.LogWarning(L.T("连榨绝顶值：找不到 Event_SitKiss吸精1"));
 
             MethodInfo fd = at != null ? at.GetMethod("Event_Fella吸精", AllFlags) : null;
             MethodInfo fdPost = typeof(Plugin).GetMethod("Postfix_Fella吸精", AllFlags);
             if (fd != null && fdPost != null)
             {
                 _harmony.Patch(fd, null, new HarmonyMethod(fdPost), null); ok++;
-                Log.LogInfo("连榨绝顶值补丁已挂载（Event_Fella吸精 后缀：按伤害×吸精攻击率折算）");
+                Log.LogInfo(L.T("连榨绝顶值补丁已挂载（Event_Fella吸精 后缀：按伤害×吸精攻击率折算）"));
             }
-            else Log.LogWarning("连榨绝顶值：找不到 Event_Fella吸精");
+            else Log.LogWarning(L.T("连榨绝顶值：找不到 Event_Fella吸精"));
 
             // 【修 #8】坐姿射精收尾 → 可进榨取（原版永远回坐姿攻击）
             MethodInfo sse = so != null ? so.GetMethod("Event_SitSyasei_OnEnd", AllFlags) : null;
@@ -7219,9 +7219,9 @@ namespace BurgerShopModder
             if (sse != null && ssePre != null)
             {
                 _harmony.Patch(sse, new HarmonyMethod(ssePre), null, null); ok++;
-                Log.LogInfo("榨取模式补丁已挂载（Event_SitSyasei_OnEnd 前缀：坐姿射精可进榨取）");
+                Log.LogInfo(L.T("榨取模式补丁已挂载（Event_SitSyasei_OnEnd 前缀：坐姿射精可进榨取）"));
             }
-            else Log.LogWarning("榨取模式：找不到 Event_SitSyasei_OnEnd");
+            else Log.LogWarning(L.T("榨取模式：找不到 Event_SitSyasei_OnEnd"));
 
             // 坐姿挂起拦截 + 口交伤害计数
             if (tc2 != null)
@@ -7231,7 +7231,7 @@ namespace BurgerShopModder
                 if (sf != null && sfPre != null)
                 {
                     _harmony.Patch(sf, new HarmonyMethod(sfPre), null, null); ok++;
-                    Log.LogInfo("余韵补丁已挂载（ShowCenterGirlFella 前缀：余韵清空前不进口交）");
+                    Log.LogInfo(L.T("余韵补丁已挂载（ShowCenterGirlFella 前缀：余韵清空前不进口交）"));
                 }
 
                 MethodInfo sc = tc2.GetMethod("Show_CenterGirlSit", AllFlags);
@@ -7239,7 +7239,7 @@ namespace BurgerShopModder
                 if (sc != null && scPre != null)
                 {
                     _harmony.Patch(sc, new HarmonyMethod(scPre), null, null); ok++;
-                    Log.LogInfo("回归补丁已挂载（Show_CenterGirlSit 前缀：坐姿挂起）");
+                    Log.LogInfo(L.T("回归补丁已挂载（Show_CenterGirlSit 前缀：坐姿挂起）"));
                 }
             }
             MethodInfo df = tc2 != null ? tc2.GetMethod("DealDamage_Fella", AllFlags) : null;
@@ -7247,9 +7247,9 @@ namespace BurgerShopModder
             if (df != null && dfPost != null)
             {
                 _harmony.Patch(df, null, new HarmonyMethod(dfPost), null); ok++;
-                Log.LogInfo("回归补丁已挂载（DealDamage_Fella 后缀：口交造成伤害也计数）");
+                Log.LogInfo(L.T("回归补丁已挂载（DealDamage_Fella 后缀：口交造成伤害也计数）"));
             }
-            else Log.LogWarning("回归：找不到 DealDamage_Fella");
+            else Log.LogWarning(L.T("回归：找不到 DealDamage_Fella"));
 
             // 连榨强制第 4 档撞击声
             if (so != null)
@@ -7259,9 +7259,9 @@ namespace BurgerShopModder
                 if (ose != null && osePre != null)
                 {
                     _harmony.Patch(ose, new HarmonyMethod(osePre), null, null); ok++;
-                    Log.LogInfo("撞击声补丁已挂载（OsiriSE 前缀：连榨用 3/4 档，其余默认）");
+                    Log.LogInfo(L.T("撞击声补丁已挂载（OsiriSE 前缀：连榨用 3/4 档，其余默认）"));
                 }
-                else Log.LogWarning("撞击声：找不到 OsiriSE");
+                else Log.LogWarning(L.T("撞击声：找不到 OsiriSE"));
             }
 
             // 束缚之吻：拉长窗口 + 阻止衰减
@@ -7276,18 +7276,18 @@ namespace BurgerShopModder
                 if (ke != null && kePre != null)
                 {
                     _harmony.Patch(ke, new HarmonyMethod(kePre), null, null); ok++;
-                    Log.LogInfo("束缚之吻补丁已挂载（Event_SitKissSyaseiOnEnd 前缀：射精也受连榨上限管制）");
+                    Log.LogInfo(L.T("束缚之吻补丁已挂载（Event_SitKissSyaseiOnEnd 前缀：射精也受连榨上限管制）"));
                 }
-                else Log.LogWarning("束缚之吻：找不到 Event_SitKissSyaseiOnEnd");
+                else Log.LogWarning(L.T("束缚之吻：找不到 Event_SitKissSyaseiOnEnd"));
 
                 MethodInfo ps = so.GetMethod("Play_SitKissSyasei", AllFlags);
                 MethodInfo psPost = typeof(Plugin).GetMethod("Postfix_PlaySitKissSyasei", AllFlags);
                 if (ps != null && psPost != null)
                 {
                     _harmony.Patch(ps, null, new HarmonyMethod(psPost), null); ok++;
-                    Log.LogInfo("束缚之吻补丁已挂载（Play_SitKissSyasei 后缀：绝顶动画可调速）");
+                    Log.LogInfo(L.T("束缚之吻补丁已挂载（Play_SitKissSyasei 后缀：绝顶动画可调速）"));
                 }
-                else Log.LogWarning("束缚之吻：找不到 Play_SitKissSyasei");
+                else Log.LogWarning(L.T("束缚之吻：找不到 Play_SitKissSyasei"));
             }
             if (tc2 != null)
             {
@@ -7296,7 +7296,7 @@ namespace BurgerShopModder
                 if (dd != null && ddPost != null)
                 {
                     _harmony.Patch(dd, null, new HarmonyMethod(ddPost), null); ok++;
-                    Log.LogInfo("束缚之吻补丁已挂载（DealDamage_SitKiss 后缀：伤害计入回归累积）");
+                    Log.LogInfo(L.T("束缚之吻补丁已挂载（DealDamage_SitKiss 后缀：伤害计入回归累积）"));
                 }
             }
 
@@ -7308,9 +7308,9 @@ namespace BurgerShopModder
                 if (tm != null && tmPre != null)
                 {
                     _harmony.Patch(tm, new HarmonyMethod(tmPre), null, null); ok++;
-                    Log.LogInfo("倒计时补丁已挂载（MenuControl.Timing 前缀：每单时长 / 速度）");
+                    Log.LogInfo(L.T("倒计时补丁已挂载（MenuControl.Timing 前缀：每单时长 / 速度）"));
                 }
-                else Log.LogWarning("倒计时：找不到 MenuControl.Timing");
+                else Log.LogWarning(L.T("倒计时：找不到 MenuControl.Timing"));
             }
 
             // 坐姿锁定：两个出口
@@ -7321,14 +7321,14 @@ namespace BurgerShopModder
                 if (gf != null && gfPre != null)
                 {
                     _harmony.Patch(gf, new HarmonyMethod(gfPre), null, null); ok++;
-                    Log.LogInfo("坐姿锁定补丁已挂载（ShowCenterGirlFella 前缀）");
+                    Log.LogInfo(L.T("坐姿锁定补丁已挂载（ShowCenterGirlFella 前缀）"));
                 }
                 MethodInfo go = tc2.GetMethod("ShowCenterGirlOsiri", AllFlags);
                 MethodInfo goPre = typeof(Plugin).GetMethod("Prefix_ShowCenterGirlOsiri", AllFlags);
                 if (go != null && goPre != null)
                 {
                     _harmony.Patch(go, new HarmonyMethod(goPre), null, null); ok++;
-                    Log.LogInfo("坐姿锁定补丁已挂载（ShowCenterGirlOsiri 前缀）");
+                    Log.LogInfo(L.T("坐姿锁定补丁已挂载（ShowCenterGirlOsiri 前缀）"));
                 }
             }
 
@@ -7339,7 +7339,7 @@ namespace BurgerShopModder
                 if (pk != null && pkPost != null)
                 {
                     _harmony.Patch(pk, null, new HarmonyMethod(pkPost), null); ok++;
-                    Log.LogInfo("束缚之吻补丁已挂载（PrepareKissing 后缀：拉长窗口）");
+                    Log.LogInfo(L.T("束缚之吻补丁已挂载（PrepareKissing 后缀：拉长窗口）"));
                 }
                 MethodInfo kk = tc2.GetMethod("KissPrepare解除", AllFlags);
                 MethodInfo kkPre = typeof(Plugin).GetMethod("Prefix_KissPrepareKaijo", AllFlags);
@@ -7347,9 +7347,9 @@ namespace BurgerShopModder
                 if (kk != null && kkPre != null && kkPost != null)
                 {
                     _harmony.Patch(kk, new HarmonyMethod(kkPre), new HarmonyMethod(kkPost), null); ok++;
-                    Log.LogInfo("束缚之吻补丁已挂载（KissPrepare解除 前缀+后缀：阻止窗口衰减）");
+                    Log.LogInfo(L.T("束缚之吻补丁已挂载（KissPrepare解除 前缀+后缀：阻止窗口衰减）"));
                 }
-                else Log.LogWarning("束缚之吻：找不到 KissPrepare解除");
+                else Log.LogWarning(L.T("束缚之吻：找不到 KissPrepare解除"));
             }
 
             // 坐姿小穴点按区（拦截 Live2D 命中结果）
@@ -7361,9 +7361,9 @@ namespace BurgerShopModder
                 if (hcw != null && hcwPost != null)
                 {
                     _harmony.Patch(hcw, null, new HarmonyMethod(hcwPost), null); ok++;
-                    Log.LogInfo("点按区补丁已挂载（HitAreaCheckWindows 后缀：HitArea_Manman 鼠标路径）");
+                    Log.LogInfo(L.T("点按区补丁已挂载（HitAreaCheckWindows 后缀：HitArea_Manman 鼠标路径）"));
                 }
-                else Log.LogWarning("点按区：找不到 HitAreaCheckWindows（鼠标路径接不上）");
+                else Log.LogWarning(L.T("点按区：找不到 HitAreaCheckWindows（鼠标路径接不上）"));
 
                 // 【HitArea_Manman 自己的点击处理】
                 Type mk = FindType("MenuController") ?? FindType("ClickControl");
@@ -7383,20 +7383,20 @@ namespace BurgerShopModder
                     if (md != null && mdPre != null)
                     {
                         _harmony.Patch(md, new HarmonyMethod(mdPre), null, null); ok++;
-                        Log.LogInfo("点按区补丁已挂载（Mouse_Down_0 前缀：HitArea_Manman 独立处理）");
+                        Log.LogInfo(L.T("点按区补丁已挂载（Mouse_Down_0 前缀：HitArea_Manman 独立处理）"));
                     }
-                    else Log.LogWarning("点按区：找不到 Mouse_Down_0 —— HitArea_Manman 不会响应");
+                    else Log.LogWarning(L.T("点按区：找不到 Mouse_Down_0 —— HitArea_Manman 不会响应"));
                 }
-                else Log.LogWarning("点按区：找不到 Mouse_Down_0 的宿主类 —— HitArea_Manman 不会响应");
+                else Log.LogWarning(L.T("点按区：找不到 Mouse_Down_0 的宿主类 —— HitArea_Manman 不会响应"));
 
                 MethodInfo gt = hc.GetMethod("GetTouchTargetName", AllFlags);
                 MethodInfo gtPost = typeof(Plugin).GetMethod("Postfix_GetTouchTargetName", AllFlags);
                 if (gt != null && gtPost != null)
                 {
                     _harmony.Patch(gt, null, new HarmonyMethod(gtPost), null); ok++;
-                    Log.LogInfo("点按区补丁已挂载（GetTouchTargetName 后缀：坐姿小穴区）");
+                    Log.LogInfo(L.T("点按区补丁已挂载（GetTouchTargetName 后缀：坐姿小穴区）"));
                 }
-                else Log.LogWarning("点按区：找不到 GetTouchTargetName");
+                else Log.LogWarning(L.T("点按区：找不到 GetTouchTargetName"));
             }
 
             // 常态攻击事件：低概率涨索取欲
@@ -7406,9 +7406,9 @@ namespace BurgerShopModder
             {
                 _harmony.Patch(gm2, null, new HarmonyMethod(gm2Post), null);
                 ok++;
-                Log.LogInfo("索取模式补丁已挂载（Event_OsiriGirlMainMixer 后缀：每次攻击低概率涨索取欲）");
+                Log.LogInfo(L.T("索取模式补丁已挂载（Event_OsiriGirlMainMixer 后缀：每次攻击低概率涨索取欲）"));
             }
-            else Log.LogWarning("索取模式：找不到 Event_OsiriGirlMainMixer");
+            else Log.LogWarning(L.T("索取模式：找不到 Event_OsiriGirlMainMixer"));
 
             // 绝顶收尾的三岔路口（管"回口交"的概率）
             MethodInfo oe = so != null ? so.GetMethod("Event_OsiriSyaseiOnEnd", AllFlags) : null;
@@ -7417,9 +7417,9 @@ namespace BurgerShopModder
             {
                 _harmony.Patch(oe, new HarmonyMethod(oePre), null, null);
                 ok++;
-                Log.LogInfo("索取模式补丁已挂载（Event_OsiriSyaseiOnEnd 前缀：接管回口交概率）");
+                Log.LogInfo(L.T("索取模式补丁已挂载（Event_OsiriSyaseiOnEnd 前缀：接管回口交概率）"));
             }
-            else Log.LogWarning("索取模式：找不到 Event_OsiriSyaseiOnEnd");
+            else Log.LogWarning(L.T("索取模式：找不到 Event_OsiriSyaseiOnEnd"));
 
             // 骑乘位吸精收尾（连榨上限真正该管的地方）
             MethodInfo oke = so != null ? so.GetMethod("Event_Osiri吸精End", AllFlags) : null;
@@ -7428,9 +7428,9 @@ namespace BurgerShopModder
             {
                 _harmony.Patch(oke, new HarmonyMethod(okePre), null, null);
                 ok++;
-                Log.LogInfo("索取模式补丁已挂载（Event_Osiri吸精End 前缀：接管连榨上限）");
+                Log.LogInfo(L.T("索取模式补丁已挂载（Event_Osiri吸精End 前缀：接管连榨上限）"));
             }
-            else Log.LogWarning("索取模式：找不到 Event_Osiri吸精End（骑乘位的连榨上限会失效）");
+            else Log.LogWarning(L.T("索取模式：找不到 Event_Osiri吸精End（骑乘位的连榨上限会失效）"));
 
             // Osiri解除：索取模式期间拦住（并记录真正的回口交）
             MethodInfo kaijo = tc2 != null ? tc2.GetMethod("Osiri解除", AllFlags) : null;
@@ -7440,9 +7440,9 @@ namespace BurgerShopModder
             {
                 _harmony.Patch(kaijo, new HarmonyMethod(kaijoPre), new HarmonyMethod(kaijoPost), null);
                 ok++;
-                Log.LogInfo("索取模式补丁已挂载（TabemiControl.Osiri解除 前缀+后缀：索取期间不脱出）");
+                Log.LogInfo(L.T("索取模式补丁已挂载（TabemiControl.Osiri解除 前缀+后缀：索取期间不脱出）"));
             }
-            else Log.LogWarning("索取模式：找不到 TabemiControl.Osiri解除");
+            else Log.LogWarning(L.T("索取模式：找不到 TabemiControl.Osiri解除"));
 
             // 绝顶动画播放时立即套倍速
             MethodInfo ps2 = so != null ? so.GetMethod("Play_OsiriSyasei", AllFlags) : null;
@@ -7451,21 +7451,21 @@ namespace BurgerShopModder
             {
                 _harmony.Patch(ps2, null, new HarmonyMethod(ps2Post), null);
                 ok++;
-                Log.LogInfo("索取模式补丁已挂载（Play_OsiriSyasei 后缀：绝顶动画倍速）");
+                Log.LogInfo(L.T("索取模式补丁已挂载（Play_OsiriSyasei 后缀：绝顶动画倍速）"));
             }
-            else Log.LogWarning("索取模式：找不到 Live2D_Animation_SitOsiri.Play_OsiriSyasei");
+            else Log.LogWarning(L.T("索取模式：找不到 Live2D_Animation_SitOsiri.Play_OsiriSyasei"));
 
             // 攻击力加成：TabemiControl.UpdateAtt 的后缀
             tc2 = FindType("TabemiControl");
             MethodInfo ua = tc2 != null ? tc2.GetMethod("UpdateAtt", AllFlags) : null;
             MethodInfo uaPost = typeof(Plugin).GetMethod("Postfix_UpdateAtt", AllFlags);
             if (ua == null || uaPost == null)
-                Log.LogWarning("索取模式：找不到 TabemiControl.UpdateAtt（攻击力加成会失效）");
+                Log.LogWarning(L.T("索取模式：找不到 TabemiControl.UpdateAtt（攻击力加成会失效）"));
             else
             {
                 _harmony.Patch(ua, null, new HarmonyMethod(uaPost), null);
                 ok++;
-                Log.LogInfo("索取模式补丁已挂载（TabemiControl.UpdateAtt 后缀：索取模式期间攻击力提升）");
+                Log.LogInfo(L.T("索取模式补丁已挂载（TabemiControl.UpdateAtt 后缀：索取模式期间攻击力提升）"));
             }
 
             // 口交分支（脱出骑乘位之后会走到这里）
@@ -7476,10 +7476,10 @@ namespace BurgerShopModder
             {
                 _harmony.Patch(sy, new HarmonyMethod(syPre), new HarmonyMethod(syPost), null);
                 ok++;
-                Log.LogInfo("索取模式补丁已挂载（Event_FellaSyaseiStart 前缀+后缀：索取模式期间不减速）");
+                Log.LogInfo(L.T("索取模式补丁已挂载（Event_FellaSyaseiStart 前缀+后缀：索取模式期间不减速）"));
             }
 
-            if (ok == 0) Log.LogWarning("索取模式：一个挂点都没挂上");
+            if (ok == 0) Log.LogWarning(L.T("索取模式：一个挂点都没挂上"));
         }
 
         // =================================================================
@@ -7524,13 +7524,13 @@ namespace BurgerShopModder
                     _afterglowRemaining--;
                     AddChainGain(Player());
                     ShowChainBanner(L.T("余韵 · 剩余 {0} 次", _afterglowRemaining));
-                    Log.LogInfo("[" + ModeWord() + "] 余韵中，本次强制连榨（剩 " + _afterglowRemaining + " 次）");
+                    Log.LogInfo("[" + ModeWord() + L.T("] 余韵中，本次强制连榨（剩 ") + _afterglowRemaining + L.T(" 次）"));
                 }
                 else if (repeat && ChainLimitNow() > 0 && ChainNow() >= ChainLimitNow())
                 {
                     // 连榨上限：兜住"发生率 100% = 无限连榨"这种会把游戏卡死的极端情况
                     repeat = false;
-                    Log.LogInfo("[吸精] 已达连榨上限 " + ChainLimitNow() + " 次（" + ChainSlotName() + "），强制收尾");
+                    Log.LogInfo(L.T("[吸精] 已达连榨上限 ") + ChainLimitNow() + L.T(" 次（") + ChainSlotName() + L.T("），强制收尾"));
                 }
 
                 if (_afterglowRemaining > 0 && !_demandMode) { /* 余韵不参与链计数 */ }
@@ -7568,10 +7568,10 @@ namespace BurgerShopModder
         private static void PatchKyuseiRate()
         {
             Type at = FindType("Live2D_AnimationControl");
-            if (at == null) { Log.LogWarning("找不到 Live2D_AnimationControl，吸精发生率修正未挂载"); return; }
+            if (at == null) { Log.LogWarning(L.T("找不到 Live2D_AnimationControl，吸精发生率修正未挂载")); return; }
             MethodInfo pre = typeof(Plugin).GetMethod("Prefix_KyuseiRateRoll", AllFlags);
             MethodInfo post = typeof(Plugin).GetMethod("Postfix_KyuseiRateRestore", AllFlags);
-            if (pre == null || post == null) { Log.LogWarning("吸精发生率修正：回调未找到"); return; }
+            if (pre == null || post == null) { Log.LogWarning(L.T("吸精发生率修正：回调未找到")); return; }
 
             int ok = 0;
             // 两个判定点：Fella 的吸精收尾、以及另一处同样的判定
@@ -7586,21 +7586,21 @@ namespace BurgerShopModder
                 if (m == null) continue;
                 _harmony.Patch(m, new HarmonyMethod(pre), new HarmonyMethod(post), null);
                 ok++;
-                Log.LogInfo("吸精发生率修正已挂载（" + mn + "）");
+                Log.LogInfo(L.T("吸精发生率修正已挂载（") + mn + "）");
             }
-            if (ok == 0) Log.LogWarning("吸精发生率修正：一个判定点都没挂上");
+            if (ok == 0) Log.LogWarning(L.T("吸精发生率修正：一个判定点都没挂上"));
         }
 
         private static void PatchTremor()
         {
             Type pc = FindType("PlayerControl");
-            if (pc == null) { Log.LogWarning("找不到 PlayerControl，动摇补丁未挂载"); return; }
+            if (pc == null) { Log.LogWarning(L.T("找不到 PlayerControl，动摇补丁未挂载")); return; }
             try
             {
                 MethodInfo target = pc.GetMethod("EcstasyChange", AllFlags);
                 MethodInfo pre = typeof(Plugin).GetMethod("Prefix_EcstasyRecord", AllFlags);
                 MethodInfo post = typeof(Plugin).GetMethod("Postfix_EcstasyChange", AllFlags);
-                if (target == null || pre == null || post == null) { Log.LogWarning("动摇补丁：方法未找到"); return; }
+                if (target == null || pre == null || post == null) { Log.LogWarning(L.T("动摇补丁：方法未找到")); return; }
                 _harmony.Patch(target, new HarmonyMethod(pre), new HarmonyMethod(post), null);
 
                 MethodInfo fx = pc.GetMethod("PlayEsctasyDamageEffect", AllFlags);
@@ -7617,7 +7617,7 @@ namespace BurgerShopModder
                     if (ps != null && psPre != null)
                     {
                         _harmony.Patch(ps, new HarmonyMethod(psPre), null, null);
-                        Log.LogInfo("红光特效计数已挂载（EffectsControl.PlaySyaseiEffect）");
+                        Log.LogInfo(L.T("红光特效计数已挂载（EffectsControl.PlaySyaseiEffect）"));
                     }
 
                     // 真正的吸精红光
@@ -7626,13 +7626,13 @@ namespace BurgerShopModder
                     if (ky != null && kyPre != null)
                     {
                         _harmony.Patch(ky, new HarmonyMethod(kyPre), null, null);
-                        Log.LogInfo("吸精红光计数已挂载（EffectsControl.Play吸精Effect）");
+                        Log.LogInfo(L.T("吸精红光计数已挂载（EffectsControl.Play吸精Effect）"));
                     }
                 }
 
-                Log.LogInfo("绝顶动摇补丁已挂载（EcstasyChange 前缀+后缀，PlayEsctasyDamageEffect 前缀）");
+                Log.LogInfo(L.T("绝顶动摇补丁已挂载（EcstasyChange 前缀+后缀，PlayEsctasyDamageEffect 前缀）"));
             }
-            catch (Exception e) { Log.LogWarning("挂动摇补丁失败：" + e.Message); }
+            catch (Exception e) { Log.LogWarning(L.T("挂动摇补丁失败：") + e.Message); }
         }
 
         internal static object PlayerRef() { return Player(); }
@@ -7963,7 +7963,7 @@ namespace BurgerShopModder
             foreach (var g in _p3Groups) g[t].Value = g[f].Value;
             foreach (var g in _p3IntGroups) g[t].Value = g[f].Value;
             foreach (var g in _p3BoolGroups) g[t].Value = g[f].Value;
-            Log.LogInfo("[面板] 已把「" + PoseLabel[f] + "」的全部设置拷到「" + PoseLabel[t] + "」");
+            Log.LogInfo(L.T("[面板] 已把「") + PoseLabel[f] + L.T("」的全部设置拷到「") + PoseLabel[t] + "」");
         }
 
 
@@ -8523,7 +8523,7 @@ namespace BurgerShopModder
             if (player == null) { _hpBuffBonus = 0f; return; }
             float back = Mathf.Max(1f, GetFloat(player, "maxHP") - _hpBuffBonus);
             SetMaxExact(player, "maxHP", "currentHP", back);
-            Log.LogInfo("[动摇] 生命上限已还原 -" + _hpBuffBonus.ToString("0.##")
+            Log.LogInfo(L.T("[动摇] 生命上限已还原 -") + _hpBuffBonus.ToString("0.##")
                         + " → " + back.ToString("0.##") + "（" + why + "）");
             _hpBuffBonus = 0f;
         }
@@ -8930,7 +8930,7 @@ namespace BurgerShopModder
             catch (Exception e)
             {
                 _suppressRateScale = false;
-                Log.LogWarning("SetMaxExact 失败: " + e.Message);
+                Log.LogWarning(L.T("SetMaxExact 失败: ") + e.Message);
             }
         }
 
@@ -8958,7 +8958,7 @@ namespace BurgerShopModder
             }
             catch (Exception e)
             {
-                if (Log != null) Log.LogWarning("改 HP 上限失败：" + e.Message);
+                if (Log != null) Log.LogWarning(L.T("改 HP 上限失败：") + e.Message);
             }
         }
 
@@ -9009,11 +9009,11 @@ namespace BurgerShopModder
                 {
                     _invokeWarned.Add(name);
                     Exception inner = tie.InnerException;
-                    Log.LogWarning("调用 " + name + " 失败，内层异常："
+                    Log.LogWarning(L.T("调用 ") + name + L.T(" 失败，内层异常：")
                         + inner.GetType().Name + ": " + inner.Message
-                        + "\n  调用对象类型: " + obj.GetType().Name
-                        + "\n  参数: " + value.ToString("0.###") + (twoArgs ? " (双参)" : "")
-                        + "\n  " + (inner.StackTrace ?? "(无栈)"));
+                        + "\n" + L.T("  调用对象类型: ") + obj.GetType().Name
+                        + "\n" + L.T("  参数: ") + value.ToString("0.###") + (twoArgs ? L.T(" (双参)") : "")
+                        + "\n  " + (inner.StackTrace ?? L.T("(无栈)")));
                 }
             }
             catch (Exception e)
@@ -9021,7 +9021,7 @@ namespace BurgerShopModder
                 if (!_invokeWarned.Contains(name))
                 {
                     _invokeWarned.Add(name);
-                    Log.LogWarning("调用 " + name + " 失败：" + e.GetType().Name + ": " + e.Message);
+                    Log.LogWarning(L.T("调用 ") + name + L.T(" 失败：") + e.GetType().Name + ": " + e.Message);
                 }
             }
         }
@@ -9114,7 +9114,7 @@ namespace BurgerShopModder
             if (PlayerPrefs.GetInt("ClearedDay", 0) < MaxDay) PlayerPrefs.SetInt("ClearedDay", MaxDay);
             PlayerPrefs.Save();
             Field(FindType("GameManager"), "clearedDay")?.SetValue(null, MaxDay);
-            Log.LogInfo("已写入通关进度（普通 / DLC 各 " + MaxDay + " 天）");
+            Log.LogInfo(L.T("已写入通关进度（普通 / DLC 各 ") + MaxDay + L.T(" 天）"));
         }
 
         // ---------------------------------------------------------------
@@ -9194,7 +9194,7 @@ namespace BurgerShopModder
                     tabNo, L.T(TabNames[tabNo]), name, ix, iy, iw, ih);
                 Log.LogInfo("[tabshot] " + _snapHint);
             }
-            catch (Exception e) { Log.LogWarning("[tabshot] 失败: " + e.Message); }
+            catch (Exception e) { Log.LogWarning(L.T("[tabshot] 失败: ") + e.Message); }
         }
 
         internal void RequestTabShot(int tab, string name)
@@ -9234,7 +9234,7 @@ namespace BurgerShopModder
         private string _aboutHint = "";
 
         /// <summary>插件版本。与 [BepInPlugin] 里那个字符串保持一致。</summary>
-        internal const string PluginVersion = "1.0.93";
+        internal const string PluginVersion = "1.0.94";
 
         private const string UrlRepo = "https://github.com/Nesarf/FourNightsAtTheBurgerShop-GameTrainer";
         private const string UrlBili = "https://space.bilibili.com/11247581";
@@ -9835,7 +9835,7 @@ namespace BurgerShopModder
 
         private static void LogTremorStatus()
         {
-            Log.LogInfo("[动摇] " + TremorCmd("status"));
+            Log.LogInfo(L.T("[动摇] ") + TremorCmd("status"));
         }
 
         private void DrawTabCaps(object player)
@@ -10143,7 +10143,7 @@ namespace BurgerShopModder
                     {
                         SitLockEnabled.Value = false;
                         _snapHint = L.T("已解锁 —— 游戏下次尝试切换就会成功；要再锁上请重新勾选");
-                        Log.LogInfo("[坐姿锁定] 手动解锁（逃生口）");
+                        Log.LogInfo(L.T("[坐姿锁定] 手动解锁（逃生口）"));
                     }
                 }
                 if (SitKissAutoPrepare.Value)
@@ -10200,7 +10200,7 @@ namespace BurgerShopModder
                             ManmanBindDrawable.Value = cur ? "" : nm;
                             _snapHint = cur ? L.T("已取消素材绑定")
                                 : (L.T("HitArea_Manman_By_Plugins 已绑定到素材：") + nm);
-                            Log.LogInfo("[HitArea_Manman_By_Plugins] 绑定切换 → " + (cur ? "(清除)" : nm));
+                            Log.LogInfo(L.T("[HitArea_Manman_By_Plugins] 绑定切换 → ") + (cur ? L.T("(清除)") : nm));
                         }
                     }
                 }
@@ -10298,10 +10298,10 @@ namespace BurgerShopModder
                 // 其余全部按姿势三份的参数，整体搬过去
                 CopyPoseSettings2(PoseIdxOf(from), PoseIdxOf(to));
 
-                Log.LogInfo("[面板] 拷贝设置：" + from + " → " + to
-                            + "（含连榨上限与 " + _p3Groups.Count + " 组按姿势参数）");
+                Log.LogInfo(L.T("[面板] 拷贝设置：") + from + " → " + to
+                            + L.T("（含连榨上限与 ") + _p3Groups.Count + L.T(" 组按姿势参数）"));
             }
-            catch (Exception e) { Log.LogWarning("[面板] 拷贝失败: " + e.Message); }
+            catch (Exception e) { Log.LogWarning(L.T("[面板] 拷贝失败: ") + e.Message); }
         }
 
         private static int PoseIdxOf(string pose)
@@ -10515,7 +10515,7 @@ namespace BurgerShopModder
                 var onList = new List<string>();
                 for (int i = 0; i < _partNames.Count && i < _partNatural.Count; i++)
                     if (_partNatural[i] >= 0.5f) onList.Add(_partNames[i]);
-                Log.LogInfo("游戏侧为『显示』的部件（" + onList.Count + "/" + _partNames.Count + "）："
+                Log.LogInfo(L.T("游戏侧为『显示』的部件（") + onList.Count + "/" + _partNames.Count + "）："
                             + string.Join(", ", onList.ToArray()));
             }
 
@@ -10567,7 +10567,7 @@ namespace BurgerShopModder
                             {
                                 if (other == n) continue;
                                 if (_partForceOn.Remove(other))
-                                    Log.LogInfo("互斥：因开启 " + n + "，已取消强制 " + other);
+                                    Log.LogInfo(L.T("互斥：因开启 ") + n + L.T("，已取消强制 ") + other);
                             }
                         }
                         LogOpWithState("部件·强制显示", n + "（列表 " + _partForceOn.Count + " 项）");
@@ -10902,10 +10902,10 @@ namespace BurgerShopModder
                         else if (_mergeDebugLeft > 0)
                         {
                             _mergeDebugLeft--;
-                            Log.LogWarning("[合并] 一项都没并进去。抽查：条目数=" + CountCfgEntries()
-                                + "  DemandAttBonus 在文件里读到="
+                            Log.LogWarning(L.T("[合并] 一项都没并进去。抽查：条目数=") + CountCfgEntries()
+                                + L.T("  DemandAttBonus 在文件里读到=")
                                 + (ReadValueFromFile(cfg, "1-Player", "DemandAttBonus") ?? "(null)")
-                                + "  文件存在=" + System.IO.File.Exists(cfg));
+                                + L.T("  文件存在=") + System.IO.File.Exists(cfg));
                         }
                         if (reapplyKey != null) ReapplyOne(reapplyKey, reapplyVal);
                     }
@@ -11056,7 +11056,7 @@ namespace BurgerShopModder
             // （实测会把 Parts[19] Tights 置 1，并让 40/39 归零）。
             // 恢复的正确做法是"停止覆盖"，让游戏下一帧自己按 _Op_ 字段重算。
             if (!on) { _partForceOn.Clear(); _partNaturalSnapshot.Clear(); }
-            Log.LogInfo("[命令] 强制显示全部 = " + on);
+            Log.LogInfo(L.T("[命令] 强制显示全部 = ") + on);
         }
 
         internal static void SetPartForce(string partName, bool on)
@@ -11072,7 +11072,7 @@ namespace BurgerShopModder
                 if (_partForceOn.Count == 0 && !_forceAllParts) _partOverrideEnabled = false;
             }
             _lastForceSig = "";
-            Log.LogInfo("[命令] 部件 " + partName + " 强制 = " + on);
+            Log.LogInfo(L.T("[命令] 部件 ") + partName + L.T(" 强制 = ") + on);
         }
 
         // ---------------- 剧情快进（供命令接口使用） ----------------
@@ -11082,7 +11082,7 @@ namespace BurgerShopModder
         internal static void SetSkipDialog(bool on)
         {
             _forceSkipDialog = on;
-            Log.LogInfo("[命令] 快进剧情 = " + on);
+            Log.LogInfo(L.T("[命令] 快进剧情 = ") + on);
         }
 
         /// <summary>
@@ -11150,7 +11150,7 @@ namespace BurgerShopModder
                                 if (ie != null) startCor.Invoke(__instance, new object[] { ie });
                             }
                         }
-                        catch (Exception e) { Log.LogWarning("[快进] 推进失败: " + e.Message); }
+                        catch (Exception e) { Log.LogWarning(L.T("[快进] 推进失败: ") + e.Message); }
                     }
                 }
 
@@ -11167,7 +11167,7 @@ namespace BurgerShopModder
             }
             catch (Exception e)
             {
-                Log.LogWarning("[快进] 异常: " + e.Message);
+                Log.LogWarning(L.T("[快进] 异常: ") + e.Message);
                 return true;
             }
         }
@@ -11198,21 +11198,21 @@ namespace BurgerShopModder
             try
             {
                 MethodInfo post = typeof(Plugin).GetMethod("Postfix_DialogUpdate", AllFlags);
-                if (post == null) { Log.LogWarning("剧情快进挂载失败：找不到回调方法"); return; }
+                if (post == null) { Log.LogWarning(L.T("剧情快进挂载失败：找不到回调方法")); return; }
                 int ok = 0;
                 foreach (string tn in new string[] { "FullScreenDialogueSystem", "WindowedDialogueSystem" })
                 {
                     Type t = FindType(tn);
-                    if (t == null) { Log.LogWarning("找不到 " + tn); continue; }
+                    if (t == null) { Log.LogWarning(L.T("找不到 ") + tn); continue; }
                     MethodInfo m = t.GetMethod("Update", AllFlags);
-                    if (m == null) { Log.LogWarning(tn + " 没有 Update"); continue; }
+                    if (m == null) { Log.LogWarning(tn + L.T(" 没有 Update")); continue; }
                     _harmony.Patch(m, new HarmonyMethod(post), null, null);
                     ok++;
-                    Log.LogInfo("剧情快进补丁已挂载（" + tn + ".Update 前缀，返回 false 接管）");
+                    Log.LogInfo(L.T("剧情快进补丁已挂载（") + tn + L.T(".Update 前缀，返回 false 接管）"));
                 }
-                if (ok == 0) Log.LogWarning("剧情快进：一个都没挂上");
+                if (ok == 0) Log.LogWarning(L.T("剧情快进：一个都没挂上"));
             }
-            catch (Exception e) { Log.LogWarning("挂剧情快进补丁失败：" + e.Message); }
+            catch (Exception e) { Log.LogWarning(L.T("挂剧情快进补丁失败：") + e.Message); }
         }
 
         internal static string ForceStateText()
@@ -11226,7 +11226,7 @@ namespace BurgerShopModder
         internal static void RunProbe(string which)
         {
             Plugin inst = _pluginInstance;
-            if (inst == null) { Log.LogWarning("[命令] 插件实例不可用"); return; }
+            if (inst == null) { Log.LogWarning(L.T("[命令] 插件实例不可用")); return; }
             switch (which.ToLowerInvariant())
             {
                 case "masks": inst.DumpMasks(); break;
@@ -11237,7 +11237,7 @@ namespace BurgerShopModder
                 case "diag": inst.DumpDiagnostics(); break;
                 case "tightslog": StartTightsSampling(); break;
                 case "tightstest": StartTightsTest(); break;
-                default: Log.LogWarning("[命令] 未知 probe: " + which); break;
+                default: Log.LogWarning(L.T("[命令] 未知 probe: ") + which); break;
             }
         }
 
@@ -11335,7 +11335,7 @@ namespace BurgerShopModder
             }
             catch (Exception e)
             {
-                Log.LogWarning("挂事件补丁失败 " + typeName + "." + methodName + "：" + e.Message);
+                Log.LogWarning(L.T("挂事件补丁失败 ") + typeName + "." + methodName + "：" + e.Message);
                 return false;
             }
         }
@@ -11369,8 +11369,8 @@ namespace BurgerShopModder
                 else missed.Add(t[0] + "." + t[1]);
             }
 
-            Log.LogInfo("活动记录：已挂 " + ok + "/" + targets.Length + " 个游戏事件记录点"
-                        + (missed.Count > 0 ? "；未找到：" + string.Join(", ", missed.ToArray()) : ""));
+            Log.LogInfo(L.T("活动记录：已挂 ") + ok + "/" + targets.Length + L.T(" 个游戏事件记录点")
+                        + (missed.Count > 0 ? L.T("；未找到：") + string.Join(", ", missed.ToArray()) : ""));
         }
 
         /// <summary>
@@ -11416,7 +11416,7 @@ namespace BurgerShopModder
             }
             catch (Exception e)
             {
-                Log.LogWarning("[i18n] 切换语言失败：" + e.GetType().Name);
+                Log.LogWarning(L.T("[i18n] 切换语言失败：") + e.GetType().Name);
             }
         }
 
@@ -11956,7 +11956,7 @@ namespace BurgerShopModder
             catch (Exception e)
             {
                 sb.AppendLine("  × 还原异常：" + e.Message);
-                Log.LogError("自检还原失败：" + e);
+                Log.LogError(L.T("自检还原失败：") + e);
             }
             _selfTestKeepHp = float.NaN;
             _selfTestKeepEc = float.NaN;
@@ -11971,8 +11971,8 @@ namespace BurgerShopModder
                 System.IO.File.WriteAllText(outFile, sb.ToString(), new System.Text.UTF8Encoding(false));
             }
             catch { }
-            Log.LogInfo("全量自检：" + pass + " 通过 / " + fail + " 失败 / " + skip + " 跳过 → " + outFile);
-            if (fail > 0) Log.LogWarning("自检有失败项，详见 " + outFile);
+            Log.LogInfo(L.T("全量自检：") + pass + L.T(" 通过 / ") + fail + L.T(" 失败 / ") + skip + L.T(" 跳过 → ") + outFile);
+            if (fail > 0) Log.LogWarning(L.T("自检有失败项，详见 ") + outFile);
         }
 
         /// <summary>
@@ -12001,7 +12001,7 @@ namespace BurgerShopModder
                     System.IO.File.WriteAllBytes(shot, png);
                     shotOk = true;
                 }
-                catch (Exception e) { Log.LogWarning("截图失败：" + e.Message); }
+                catch (Exception e) { Log.LogWarning(L.T("截图失败：") + e.Message); }
 
                 // 2) 部件级数据
                 Type camType = FindType("Live2D.Cubism.Core.CubismModel");
@@ -12134,12 +12134,12 @@ namespace BurgerShopModder
                 System.IO.File.WriteAllText(System.IO.Path.Combine(dir, "meta.txt"),
                     meta.ToString(), new System.Text.UTF8Encoding(false));
 
-                Log.LogInfo("快照已保存：" + dir + "（部件 " + total + "，可见 " + visibleCount +
-                            (shotOk ? "，含截图" : "，截图失败") + "）");
+                Log.LogInfo(L.T("快照已保存：") + dir + L.T("（部件 ") + total + L.T("，可见 ") + visibleCount +
+                            (shotOk ? L.T("，含截图") : L.T("，截图失败")) + "）");
             }
             catch (Exception e)
             {
-                Log.LogError("快照失败：" + e);
+                Log.LogError(L.T("快照失败：") + e);
             }
         }
 
@@ -12194,10 +12194,10 @@ namespace BurgerShopModder
         private void SelfTestCostume()
         {
             object tabemi = Tabemi();
-            if (tabemi == null) { Log.LogWarning("换衣自检：不在店内场景"); return; }
+            if (tabemi == null) { Log.LogWarning(L.T("换衣自检：不在店内场景")); return; }
 
             object model = Field(tabemi.GetType(), "model")?.GetValue(tabemi);
-            if (model == null) { Log.LogWarning("换衣自检：拿不到 model"); return; }
+            if (model == null) { Log.LogWarning(L.T("换衣自检：拿不到 model")); return; }
 
             // 每组：槽位名 → 模型参数名（按 UpdateCostume 的实现）
             var pairs = new[]
@@ -12263,7 +12263,7 @@ namespace BurgerShopModder
                 System.IO.File.WriteAllText(outFile, sb.ToString(), new System.Text.UTF8Encoding(false));
             }
             catch { }
-            Log.LogInfo("换衣自检：" + pass + " 通过 / " + fail + " 失败 → " + outFile);
+            Log.LogInfo(L.T("换衣自检：") + pass + L.T(" 通过 / ") + fail + L.T(" 失败 → ") + outFile);
         }
 
         // 步进器：滑块 + 「−」「+」精确加减。滑块拖不准时用按钮，步长可指定或按量程自动取。
@@ -12370,7 +12370,7 @@ namespace BurgerShopModder
             }
             catch (Exception e)
             {
-                if (Log != null) Log.LogWarning("写字段 " + field + " 失败: " + e.Message);
+                if (Log != null) Log.LogWarning(L.T("写字段 ") + field + L.T(" 失败: ") + e.Message);
             }
         }
 

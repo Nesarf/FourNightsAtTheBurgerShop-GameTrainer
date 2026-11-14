@@ -59,7 +59,7 @@ namespace BurgerShopModder
             _outPath = Path.Combine(_dir, "out.txt");
             if (!File.Exists(_outPath))
                 File.WriteAllText(_outPath, "", new UTF8Encoding(false));
-            Say("命令服务已启动。写入 " + _inPath + " 即可驱动游戏。");
+            Say(L.T("命令服务已启动。写入 ") + _inPath + L.T(" 即可驱动游戏。"));
         }
 
         private static void Say(string s)
@@ -114,7 +114,7 @@ namespace BurgerShopModder
                     try
                     {
                         SceneManager.LoadScene(a[1]);
-                        Say("scene → " + a[1] + "（已请求加载）");
+                        Say("scene → " + a[1] + L.T("（已请求加载）"));
                     }
                     catch (Exception e) { Say("ERR scene: " + e.Message); }
                     break;
@@ -124,24 +124,24 @@ namespace BurgerShopModder
                     break;
 
                 case "tights":
-                    if (a.Length < 2) { Say("ERR tights 需要参数 0/1/2"); break; }
+                    if (a.Length < 2) { Say(L.T("ERR tights 需要参数 0/1/2")); break; }
                     int tv = int.Parse(a[1], CultureInfo.InvariantCulture);
                     {
                         object tab = Plugin.Tabemi();
-                        if (tab == null) { Say("ERR 拿不到 TabemiControl（不在店内场景？）"); break; }
+                        if (tab == null) { Say(L.T("ERR 拿不到 TabemiControl（不在店内场景？）")); break; }
                         Plugin.SetFieldPublic(tab, "Tights", tv);
                         Plugin.InvokeMethodPublic(tab, "UpdateCostume");
-                        Say("tights = " + tv + "（已应用）");
+                        Say("tights = " + tv + L.T("（已应用）"));
                     }
                     break;
 
                 case "costume":
-                    if (a.Length < 3) { Say("ERR costume 需要 <slot> <value>"); break; }
+                    if (a.Length < 3) { Say(L.T("ERR costume 需要 <slot> <value>")); break; }
                     {
                         string slot = SlotField(a[1]);
-                        if (slot == null) { Say("ERR 未知槽位 " + a[1]); break; }
+                        if (slot == null) { Say(L.T("ERR 未知槽位 ") + a[1]); break; }
                         object tab = Plugin.Tabemi();
-                        if (tab == null) { Say("ERR 拿不到 TabemiControl"); break; }
+                        if (tab == null) { Say(L.T("ERR 拿不到 TabemiControl")); break; }
                         Plugin.SetFieldPublic(tab, slot, int.Parse(a[2], CultureInfo.InvariantCulture));
                         Plugin.InvokeMethodPublic(tab, "UpdateCostume");
                         Say("costume " + slot + " = " + a[2]);
@@ -157,7 +157,7 @@ namespace BurgerShopModder
                         Plugin.SetPartForce(a[2], on);
                         Say("force part " + a[2] + " " + a[3]);
                     }
-                    else Say("ERR 用法: force off | force all | force part <名字> on|off");
+                    else Say(L.T("ERR 用法: force off | force all | force part <名字> on|off"));
                     break;
 
                 case "shot":
@@ -181,14 +181,14 @@ namespace BurgerShopModder
                 case "probe":
                     if (a.Length < 2) { Say("ERR probe <masks|partindex|parttable|atlas|vmap|diag>"); break; }
                     Plugin.RunProbe(a[1]);
-                    Say("probe " + a[1] + " 已触发");
+                    Say("probe " + a[1] + L.T(" 已触发"));
                     break;
 
                 case "ecsgain":
                     {
                         // 注入一笔正向量，走的正是游戏自己的 EcstasyChange ——
                         // 因此会经过上升率与「绝顶适应」倍率，可用来直接验证削减效果。
-                        if (a.Length < 2) { Say("ecsgain <量>"); break; }
+                        if (a.Length < 2) { Say(L.T("ecsgain <量>")); break; }
                         float amt = float.Parse(a[1], CultureInfo.InvariantCulture);
                         Say(Plugin.InjectEcstasyGain(amt));
                     }
@@ -200,7 +200,7 @@ namespace BurgerShopModder
                         if (a.Length >= 2) float.TryParse(a[1], System.Globalization.NumberStyles.Float,
                             System.Globalization.CultureInfo.InvariantCulture, out sec);
                         AnimRecorder.Start(sec);
-                        Say("开始逐帧记录动画速率 " + sec + " 秒 → cmd\anim.csv");
+                        Say(L.T("开始逐帧记录动画速率 ") + sec + L.T(" 秒 → cmd\\anim.csv"));
                     }
                     break;
 
@@ -210,7 +210,7 @@ namespace BurgerShopModder
                         if (a.Length >= 2) float.TryParse(a[1], System.Globalization.NumberStyles.Float,
                             System.Globalization.CultureInfo.InvariantCulture, out sec);
                         RedRecorder.Start(sec);
-                        Say("开始逐帧红光采样 " + sec + " 秒 → cmd\\red.csv（每帧一行）");
+                        Say(L.T("开始逐帧红光采样 ") + sec + L.T(" 秒 → cmd\\red.csv（每帧一行）"));
                     }
                     break;
 
@@ -220,18 +220,18 @@ namespace BurgerShopModder
                         if (a.Length >= 2) float.TryParse(a[1], System.Globalization.NumberStyles.Float,
                             System.Globalization.CultureInfo.InvariantCulture, out sec);
                         TremorRecorder.Start(sec);
-                        Say("开始逐帧记录绝顶值 " + sec + " 秒 → cmd\tremor.csv");
+                        Say(L.T("开始逐帧记录绝顶值 ") + sec + L.T(" 秒 → cmd\\tremor.csv"));
                     }
                     break;
 
                 case "xwatch":
                     {
-                        if (a.Length >= 2 && a[1] == "off") { Plugin.XWatchStop(); Say("持续监视已停止"); break; }
+                        if (a.Length >= 2 && a[1] == "off") { Plugin.XWatchStop(); Say(L.T("持续监视已停止")); break; }
                         float sec = 60f;
                         if (a.Length >= 2) float.TryParse(a[1], System.Globalization.NumberStyles.Float,
                             System.Globalization.CultureInfo.InvariantCulture, out sec);
                         Plugin.XWatchStart(sec);
-                        Say("持续监视 " + sec + " 秒 → cmd\\xwatch.txt（每秒一次，只记异常）");
+                        Say(L.T("持续监视 ") + sec + L.T(" 秒 → cmd\\xwatch.txt（每秒一次，只记异常）"));
                     }
                     break;
 
@@ -255,8 +255,8 @@ namespace BurgerShopModder
                     if (a.Length >= 2 && a[1].ToLowerInvariant() == "yes")
                         Say(Plugin.RestoreDefaults());
                     else
-                        Say("defaults 会覆盖你的全部调参，已要求确认。真的要用请写：defaults yes"
-                            + (char)10 + "  更推荐：bash tools/cfgsnap.sh save / restore");
+                        Say(L.T("defaults 会覆盖你的全部调参，已要求确认。真的要用请写：defaults yes")
+                            + (char)10 + L.T("  更推荐：bash tools/cfgsnap.sh save / restore"));
                     break;
 
                 case "urgeaudit":
@@ -264,7 +264,7 @@ namespace BurgerShopModder
                         int n = 60;
                         if (a.Length >= 2) int.TryParse(a[1], out n);
                         Plugin.EnableUrgeAudit(n);
-                        Say("索取欲审计已开启，记录接下来 " + n + " 次变动 → BepInEx/LogOutput.log");
+                        Say(L.T("索取欲审计已开启，记录接下来 ") + n + L.T(" 次变动 → BepInEx/LogOutput.log"));
                     }
                     break;
 
@@ -273,18 +273,18 @@ namespace BurgerShopModder
                         int n = 1;
                         if (a.Length >= 2) int.TryParse(a[1], out n);
                         for (int i = 0; i < Mathf.Clamp(n, 1, 20); i++) Plugin.SimulateSpank();
-                        Say("已模拟 " + n + " 次打屁股 → 乘数 ×" + Plugin.SpankSpeedMul().ToString("0.###")
-                            + "  目标 ×" + Plugin.SpankSpeedTarget().ToString("0.###"));
+                        Say(L.T("已模拟 ") + n + L.T(" 次打屁股 → 乘数 ×") + Plugin.SpankSpeedMul().ToString("0.###")
+                            + L.T("  目标 ×") + Plugin.SpankSpeedTarget().ToString("0.###"));
                     }
                     break;
 
                 case "situnlock":
                     Plugin.SetSitLockPublic(false);
-                    Say("[坐姿锁定] 已解锁 —— 游戏下次尝试切换就会成功（要再锁上：sitlock）");
+                    Say(L.T("[坐姿锁定] 已解锁 —— 游戏下次尝试切换就会成功（要再锁上：sitlock）"));
                     break;
                 case "sitlock":
                     Plugin.SetSitLockPublic(true);
-                    Say("[坐姿锁定] 已锁上 —— 进入坐姿后不会再被切走");
+                    Say(L.T("[坐姿锁定] 已锁上 —— 进入坐姿后不会再被切走"));
                     break;
                 case "preset":
                     {
@@ -299,17 +299,17 @@ namespace BurgerShopModder
                             case "list":
                                 {
                                     var ns = BurgerShopModder.PresetStore.List();
-                                    Say("预设 " + ns.Count + " 个：" + (ns.Count == 0 ? "（无）" : string.Join(" / ", ns.ToArray())));
+                                    Say(L.T("预设 ") + ns.Count + L.T(" 个：") + (ns.Count == 0 ? L.T("（无）") : string.Join(" / ", ns.ToArray())));
                                 }
                                 break;
                             case "dir":
-                                Say("预设目录：" + (BurgerShopModder.PresetStore.DirPath() ?? "(拿不到)"));
+                                Say(L.T("预设目录：") + (BurgerShopModder.PresetStore.DirPath() ?? L.T("(拿不到)")));
                                 break;
                             case "save":
                             case "apply":
                             case "del":
                                 {
-                                    if (a.Length < 3) { Say("ERR preset " + sub + " <名字>"); break; }
+                                    if (a.Length < 3) { Say("ERR preset " + sub + L.T(" <名字>")); break; }
                                     string nm = string.Join(" ", a, 2, a.Length - 2);
                                     if (sub == "save") Say(BurgerShopModder.PresetStore.Save(nm));
                                     else if (sub == "apply") Say(BurgerShopModder.PresetStore.Apply(nm));
@@ -317,7 +317,7 @@ namespace BurgerShopModder
                                 }
                                 break;
                             default:
-                                Say("ERR preset <list|save|apply|del|dir> [名字]");
+                                Say(L.T("ERR preset <list|save|apply|del|dir> [名字]"));
                                 break;
                         }
                         break;
@@ -345,7 +345,7 @@ namespace BurgerShopModder
                     {
                         // tabshot <页签> <名字>
                         // 切栏与截图在同一帧完成，并写出面板矩形供精确裁切。
-                        if (a.Length < 3) { Say("ERR tabshot <页签> <名字>"); break; }
+                        if (a.Length < 3) { Say(L.T("ERR tabshot <页签> <名字>")); break; }
                         int ti = -1;
                         if (!int.TryParse(a[1], out ti))
                         {
@@ -374,9 +374,9 @@ namespace BurgerShopModder
                             for (int i = 0; i < names.Length; i++)
                                 if (names[i] == a2 || names[i].Contains(a2)) { idx = i; break; }
                         }
-                        if (idx < 0 || idx >= names.Length) { Say("ERR 没有这个页签：" + a2); break; }
+                        if (idx < 0 || idx >= names.Length) { Say(L.T("ERR 没有这个页签：") + a2); break; }
                         Plugin.SetTabPublic(idx);
-                        Say("已切到 [" + idx + "] " + names[idx]);
+                        Say(L.T("已切到 [") + idx + "] " + names[idx]);
                         break;
                     }
                 case "bindings":
@@ -413,7 +413,7 @@ namespace BurgerShopModder
                     break;
 
                 case "set":
-                    if (a.Length < 3) { Say("ERR set <项> <值>  如 set NoEcstasy 0"); break; }
+                    if (a.Length < 3) { Say(L.T("ERR set <项> <值>  如 set NoEcstasy 0")); break; }
                     Say(Plugin.SetCfg(a[1], a[2]));
                     break;
 
@@ -426,7 +426,7 @@ namespace BurgerShopModder
                         // 直接读状态机字段 —— "状态被锁死"这类问题看字段最准，不用看图。
                         var sb = new StringBuilder("状态机: ");
                         object tab = Plugin.Tabemi();
-                        if (tab == null) { Say("ERR 拿不到 TabemiControl（不在店内场景？）"); break; }
+                        if (tab == null) { Say(L.T("ERR 拿不到 TabemiControl（不在店内场景？）")); break; }
                         string[] names = new string[] {
                             "centerGirlState", "osiriState", "sitState", "specialAttState", "tabemiAttState",
                             "LeftGirlState", "RightGirlState", "kissing",
@@ -457,9 +457,9 @@ namespace BurgerShopModder
                             Say(sb3.ToString());
                         }
 
-                        Say("索取模式: " + Plugin.DemandCmd("status"));
+                        Say(L.T("索取模式: ") + Plugin.DemandCmd("status"));
                         // 直接读"当前正在播的动画状态的实际速率"——这是判断绝顶有没有加速的唯一硬证据
-                        Say("动画速率: " + Plugin.ReadAnimSpeed());
+                        Say(L.T("动画速率: ") + Plugin.ReadAnimSpeed());
 
                         // 动画层状态（Animancer）——是否还停在吸精/绝顶那一层
                         Type at = Plugin.FindType("Live2D_AnimationControl");
@@ -508,7 +508,7 @@ namespace BurgerShopModder
                             }
                         }
                         catch { }
-                        if (pc == null) { Say("ERR 找不到 PlayerControl"); break; }
+                        if (pc == null) { Say(L.T("ERR 找不到 PlayerControl")); break; }
 
                         sb.Append("CurrentEcstasy=").Append(Plugin.GetFloatPublic(pc, "CurrentEcstasy").ToString("0.###"));
                         sb.Append(" maxEcstasy=").Append(Plugin.GetFloatPublicRaw(pc, "maxEcstasy").ToString("0.###"));
@@ -552,9 +552,9 @@ namespace BurgerShopModder
                 case "parts":
                     {
                         Type camType = Plugin.FindType("Live2D.Cubism.Core.CubismModel");
-                        if (camType == null) { Say("ERR 找不到 CubismModel"); break; }
+                        if (camType == null) { Say(L.T("ERR 找不到 CubismModel")); break; }
                         UnityEngine.Object[] models = Resources.FindObjectsOfTypeAll(camType);
-                        if (models == null || models.Length == 0) { Say("ERR 没有模型实例"); break; }
+                        if (models == null || models.Length == 0) { Say(L.T("ERR 没有模型实例")); break; }
                         UnityEngine.Object[] parts = (UnityEngine.Object[])camType.GetProperty("Parts", FLAGS)
                             .GetValue(models[0], null);
                         var on = new List<string>();
@@ -569,8 +569,8 @@ namespace BurgerShopModder
                             float op = ov is float f ? f : -1f;
                             (op >= 0.5f ? on : off).Add(i + ":" + pid);
                         }
-                        Say("部件透明度 → 开(" + on.Count + "): " + string.Join(" ", on.ToArray()));
-                        Say("                关(" + off.Count + "): " + string.Join(" ", off.ToArray()));
+                        Say(L.T("部件透明度 → 开(") + on.Count + "): " + string.Join(" ", on.ToArray()));
+                        Say(L.T("                关(") + off.Count + "): " + string.Join(" ", off.ToArray()));
                     }
                     break;
 
@@ -584,7 +584,7 @@ namespace BurgerShopModder
                         if (tv2 < 0.05f)
                         {
                             tv2 = 0.05f;
-                            Say("已把时间刻度钳到 0.05（0 会让动画停住、状态机卡死）");
+                            Say(L.T("已把时间刻度钳到 0.05（0 会让动画停住、状态机卡死）"));
                         }
                         Time.timeScale = tv2;
                         Say("Time.timeScale = " + Time.timeScale);
@@ -597,38 +597,38 @@ namespace BurgerShopModder
 
                 case "pix":
                     if (a.Length < 5) { Say("ERR pix <x0> <y0> <x1> <y1>"); break; }
-                    Say(PixStats(int.Parse(a[1]), int.Parse(a[2]), int.Parse(a[3]), int.Parse(a[4]), "手动区域"));
+                    Say(PixStats(int.Parse(a[1]), int.Parse(a[2]), int.Parse(a[3]), int.Parse(a[4]), L.T("手动区域")));
                     break;
 
                 case "colliders":
                     {
                         var lines = ListColliders();
-                        Say("可点击对象（有碰撞体且激活）共 " + lines.Count + " 个:");
+                        Say(L.T("可点击对象（有碰撞体且激活）共 ") + lines.Count + L.T(" 个:"));
                         foreach (string one in lines) Say("   " + one);
                     }
                     break;
 
                 case "clickobj":
-                    if (a.Length < 2) { Say("ERR clickobj <GameObject 名字>"); break; }
+                    if (a.Length < 2) { Say(L.T("ERR clickobj <GameObject 名字>")); break; }
                     {
                         string hit = ClickObject(a[1]);
-                        Say(hit != null ? ("clickobj → " + hit) : ("ERR 没找到可点击对象: " + a[1]));
+                        Say(hit != null ? ("clickobj → " + hit) : (L.T("ERR 没找到可点击对象: ") + a[1]));
                     }
                     break;
 
                 case "buttons":
                     {
                         var found = ListButtons();
-                        Say("场景内按钮 " + found.Count + " 个:");
+                        Say(L.T("场景内按钮 ") + found.Count + L.T(" 个:"));
                         foreach (string one in found) Say("   " + one);
                     }
                     break;
 
                 case "click":
-                    if (a.Length < 2) { Say("ERR click <名字或按钮文字>"); break; }
+                    if (a.Length < 2) { Say(L.T("ERR click <名字或按钮文字>")); break; }
                     {
                         string hit = ClickButton(a[1]);
-                        Say(hit != null ? ("click → " + hit) : ("ERR 没找到匹配按钮: " + a[1]));
+                        Say(hit != null ? ("click → " + hit) : (L.T("ERR 没找到匹配按钮: ") + a[1]));
                     }
                     break;
 
@@ -638,12 +638,12 @@ namespace BurgerShopModder
                     break;
 
                 case "quit":
-                    Say("quit 收到，退出游戏");
+                    Say(L.T("quit 收到，退出游戏"));
                     Application.Quit();
                     break;
 
                 default:
-                    Say("ERR 未知命令: " + verb);
+                    Say(L.T("ERR 未知命令: ") + verb);
                     break;
             }
         }

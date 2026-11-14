@@ -362,10 +362,13 @@ bash tools/gcmd.sh demand status   # 索取/榨取模式状态
 
 | 想找什么 | 去哪 |
 | --- | --- |
-| 怎么用、每个参数是什么 | [`使用说明.md`](使用说明.md) |
-| **现在还有什么没修** | [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md) |
+| 怎么用、每个参数是什么 | [`使用说明.md`](使用说明.md) · [`使用说明.en.md`](使用说明.en.md) |
+| **现在还有什么没修** | [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md) · [`KNOWN-ISSUES.en.md`](KNOWN-ISSUES.en.md) |
 | **某个功能为什么长这样**（逆向发现、踩过的坑） | [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) |
-| 每个版本改了什么 | [`CHANGELOG.md`](CHANGELOG.md) |
+| 每个版本改了什么 | [`CHANGELOG.md`](CHANGELOG.md) · [`CHANGELOG.en.md`](CHANGELOG.en.md) |
+
+**英文读者**：上面带 `.en.md` 的那几份是完整英文版（说明书与中文版同结构）；
+`ENGINEERING-NOTES.md` 是中文工作日志，英文版没有对应文件，开头写了一段英文导读。
 
 `ENGINEERING-NOTES.md` 有 **41 条**历史记录 + **5 篇**附录 + **5 条** S 系列，
 每条都写了**症状 / 根因 / 修法 / 教训**。开头有一张**目录**，可以直接跳到某一条。
@@ -448,12 +451,12 @@ Get-FileHash "18-9L-6_ED-7-45-45_C-LS-Installer.exe" -Algorithm SHA256
 # 3. 和 SHA256SUMS.txt 里的那行比，一样就没被动过
 ```
 
-v1.0.91 的值是：
+v1.0.94 的值是：
 
 ```
-80d4c15efdd593884e9ea3f8e2e3e656f9eb354738d962c48b3114e2b9ff1d75  18-9L-6_ED-7-45-45_C-LS-Installer.exe
-5e7cdbda8cb591eed0191aa21e2e63be21fc92f8df229ea0b5b098522851f996  18-9L-6_ED-7-45-45_C-LS-Trainer.exe
-451c3067d2f31668c15d4320092ff4fa901fe5c417de7ac415250b9f422b3de7  18-9L-6_ED-7-45-45_C-LS.dll
+0b4523ec27d6da32bcee36633462183ed5afd4323d3bc0d6e7c90a50f49aa542  18-9L-6_ED-7-45-45_C-LS-Installer.exe
+1b860ccca4dc193b527616f5b3a4cd469d0bf213ffb050a0e5dbb031408fc0d9  18-9L-6_ED-7-45-45_C-LS-Trainer.exe
+080614bf2ab409e7e658f06e4c203ed197ed71ce950ae5086ae7f09a085d2a49  18-9L-6_ED-7-45-45_C-LS.dll
 ```
 
 **校验和对不上就别运行**，那说明文件在中途被改过。

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -10,7 +10,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <UseWindowsForms>true</UseWindowsForms>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <Version>1.0.93</Version>
+    <Version>1.0.94</Version>
     <Product>Four Nights at the Burger Shop 数值修改器 安装程序</Product>
     <DebugType>none</DebugType>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -29,6 +29,11 @@
     <EmbeddedResource Include="art.ico">
       <LogicalName>art.ico</LogicalName>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 与外部修改器共用的界面语言表（一份字典，两个 exe 都编进去） -->
+    <Compile Include="..\shared\Locale.cs" Link="Locale.cs" />
   </ItemGroup>
 
   <ItemGroup>

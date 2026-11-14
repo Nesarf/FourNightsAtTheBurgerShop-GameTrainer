@@ -114,8 +114,8 @@ namespace BurgerShopModder
             if (types.Count < AllTypes.Length)
             {
                 var miss = AllTypes.Where(t => !types.ContainsKey(t)).ToArray();
-                warn("[绑定] 找不到这些游戏类：" + string.Join("、", miss)
-                     + "（游戏版本可能不符，相关功能不会生效）");
+                warn(L.T("[绑定] 找不到这些游戏类：") + string.Join("、", miss)
+                     + L.T("（游戏版本可能不符，相关功能不会生效）"));
             }
 
             foreach (Bind b in Patches)
@@ -137,25 +137,25 @@ namespace BurgerShopModder
                 if (elsewhere.Count > 0)
                 {
                     _misplaced++;
-                    warn(string.Format("[绑定] 挂错类：{0} 不在 {1}，而是在 {2}{3}",
+                    warn(string.Format(L.T("[绑定] 挂错类：{0} 不在 {1}，而是在 {2}{3}"),
                         b.Method, b.Owner, string.Join(" / ", elsewhere),
                         string.IsNullOrEmpty(b.Note) ? "" : "（" + b.Note + "）"));
                 }
                 else
                 {
                     _missing++;
-                    warn(string.Format("[绑定] 找不到方法 {0}.{1}{2}",
+                    warn(string.Format(L.T("[绑定] 找不到方法 {0}.{1}{2}"),
                         b.Owner, b.Method,
                         string.IsNullOrEmpty(b.Note) ? "" : "（" + b.Note + "）"));
                 }
             }
 
             if (_misplaced > 0)
-                warn("[绑定] 有 " + _misplaced + " 个方法挂错了类 —— 这些补丁不会生效，功能静默失效");
+                warn(L.T("[绑定] 有 ") + _misplaced + L.T(" 个方法挂错了类 —— 这些补丁不会生效，功能静默失效"));
             else if (_missing > 0)
-                warn("[绑定] 有 " + _missing + " 个方法找不到 —— 相关功能不会生效");
+                warn(L.T("[绑定] 有 ") + _missing + L.T(" 个方法找不到 —— 相关功能不会生效"));
             else
-                info("[绑定] " + _ok + " 个补丁目标全部校验通过");
+                info(L.T("[绑定] ") + _ok + L.T(" 个补丁目标全部校验通过"));
         }
 
         internal static int OkCount { get { return _ok; } }

@@ -655,3 +655,403 @@ ERR 没有这个预设：{0}	ERR no such preset: {0}
 ERR 应用预设失败：{0}	ERR failed to apply the preset: {0}
 已删除预设「{0}」（文件改名为 {1}，想找回就改回去）	Deleted preset [{0}] (the file was renamed to {1}; rename it back to recover)
 ERR 删除预设失败：{0}	ERR failed to delete the preset: {0}
+
+活动记录已开始 → 	Activity recording started → 
+活动记录已结束（	Activity recording ended (
+ 条，丢 	 events, dropped 
+活动记录落盘失败：	Failed to write the activity recording: 
+写汇总失败：	Failed to write the summary: 
+[i18n] 载入英文对照表失败，界面按中文显示：	[i18n] failed to load the English table, the UI stays in Chinese: 
+[绑定] 校验失败：	[bindings] verification failed: 
+数值修改器已加载 — F9 开关面板	Trainer loaded - press F9 to toggle the panel
+Harmony 初始化失败：	Harmony initialisation failed: 
+DLC 自检（修正 Patches/ 路径 bug）：文件 	DLC self-check (fixes a Patches/ path bug): file 
+存在	present
+不存在	absent
+  已把 PlayerPrefs 的 DLC 标记从 0 纠正为 1	  corrected the PlayerPrefs DLC flag from 0 to 1
+  已调用 DLCManager.LoadAssetBundle()	  called DLCManager.LoadAssetBundle()
+DLC 自检失败：	DLC self-check failed: 
+找不到 TitleDLCCheck，DLC 修正未挂载（不影响其他功能）	TitleDLCCheck not found; the DLC fix is not hooked (nothing else is affected)
+TitleDLCCheck 没有 Start/Awake	TitleDLCCheck has no Start/Awake
+DLC 路径修正补丁已挂载（	DLC path fix hooked (
+ 后缀）	 suffix)
+DLC 加载修正补丁已挂载（DLCManager.LoadAssetBundle 后缀）	DLC load fix hooked (a postfix on DLCManager.LoadAssetBundle)
+挂 DLC 修正补丁失败：	Failed to hook the DLC fix: 
+DLC 加载后检查：资产包为空（无 DLC 或加载失败），保持原判	Post-load check: the asset bundle is empty (no DLC, or it failed to load); keeping the original verdict
+DLC 加载后检查：包已加载，DLC 标记 	Post-load check: the bundle loaded, the DLC flag is 
+DLC 加载后检查：包已加载，DLC 标记已是 1	Post-load check: the bundle loaded and the DLC flag is already 1
+DLC 加载后检查失败：	Post-load check failed: 
+找不到 Live2D_ModelControl，部件覆盖不可用	Live2D_ModelControl not found; part override is unavailable
+找不到 UpdatePartOpacity	UpdatePartOpacity not found
+部件覆盖补丁已挂载（UpdatePartOpacity 后缀）	Part override hooked (a postfix on UpdatePartOpacity)
+挂部件覆盖补丁失败：	Failed to hook the part override: 
+部件覆盖 	Part override 
+：显示 	: shown 
+ 个 / 还原 	 parts / restored 
+ 个	 parts
+找不到字段 	Field not found: 
+补丁检查 → 	Patch check → 
+诊断：找不到 CubismModel	Diagnostics: CubismModel not found
+诊断已导出到 	Diagnostics exported to 
+诊断导出失败：	Diagnostics export failed: 
+导出运行时贴图：找不到 CubismModel	Runtime texture export: CubismModel not found
+导出运行时贴图 	Exporting runtime texture 
+) …（大图会卡一会儿）	) ... (a large texture may freeze for a moment)
+  已写出 	  wrote 
+  导出 	  export 
+ 失败：	 failed: 
+运行时贴图导出完成，共 	Runtime texture export done, 
+ 张 → 	 images → 
+导出运行时贴图失败：	Runtime texture export failed: 
+贴图探针：找不到 Cubism 类型	Texture probe: Cubism type not found
+贴图探针异常：	Texture probe error: 
+[操作] 	[action] 
+顶点映射已导出：	Vertex map exported: 
+导出顶点映射失败：	Vertex map export failed: 
+运行时图集盘点已写出 runtime_atlas.txt	Runtime atlas census written to runtime_atlas.txt
+运行时图集盘点失败：	Runtime atlas census failed: 
+部件索引对照：IDs 实例类型 = 	Part index map: IDs instance type = 
+部件索引对照已导出：	Part index map exported: 
+导出部件索引失败：	Part index export failed: 
+部件完整清单已导出：	Full part list exported: 
+导出部件清单失败：	Part list export failed: 
+丝袜状态采样已开始（10 秒）→ 	Tights state sampling started (10 seconds) → 
+丝袜状态时间线已导出：	Tights state timeline exported: 
+写丝袜时间线失败：	Failed to write the tights timeline: 
+遮罩诊断已导出：	Mask diagnostics exported: 
+遮罩诊断失败：	Mask diagnostics failed: 
+自动裤袜截图测试开始（已强制关闭部件覆盖）→ 	Automatic tights screenshot test started (part override forced off) → 
+  测量 Tights=	  measured Tights=
+ 部件39=	 part39=
+ 部件40=	 part40=
+ 强制=	 forced=
+设 Tights 失败：	Failed to set Tights: 
+自动裤袜截图测试完成 → 	Automatic tights screenshot test done → 
+写测试结果失败：	Failed to write the test result: 
+打开目录失败：	Failed to open the folder: 
+已按快照还原 	Restored 
+ 个部件的透明度	 part opacities from the snapshot
+部件索引对照：暂不可用 —— 	Part index map: not available yet - 
+部件可见性：	Part visibility: 
+  不可见: 	  hidden: 
+  可见: 	  visible: 
+找不到 PlayerControl，变化率补丁未挂载	PlayerControl not found; the rate scaling patch is not hooked
+变化率补丁：	Rate scaling patch: 
+ 个方法已挂载	 methods hooked
+ 个未找到（该功能对此版本不可用）	 not found (this feature is unavailable for this game version)
+挂补丁失败 	Failed to hook patch 
+[动摇] 后缀异常: 	[tremor] postfix error: 
+[动摇] 进入绝顶适应期 	[tremor] entering ecstasy adaptation for 
+s，累积倍率 	s, accumulation multiplier 
+[动摇] 稳住了！落点损失降至 	[tremor] stabilised! The landing loss dropped to 
+[动摇] 驱动失败: 	[tremor] drive failed: 
+] 余韵（骑乘位）：强制连榨，剩 	] afterglow (riding): forcing chain drains, 
+ 次	 rounds
+[吸精] 已达连榨上限 	[absorb] chain limit reached: 
+ 次（	 rounds (
+），强制收尾	), wrapping up forcibly
+] 吸精该收尾，但索取模式期间不脱出 → 回骑乘位继续	] absorb should wrap up, but demand mode does not leave, so it returns to riding to continue
+] 接管骑乘位吸精收尾失败: 	] failed to take over the riding absorb wrap-up: 
+] 索取模式期间：拦下一次脱出到口交	] during demand mode: blocked one escape to fellatio
+[屁股] 第 	[spank] #
+ 下：冲量 +	 hit: impulse +
+% → 目标 	% → target 
+[连榨] 按生命值折算：	[chain drain] scaled by HP: 
+ 伤害 / 	 damage / 
+ 最大生命 = 	 max HP = 
+% → 绝顶值 +	% → ecstasy +
+
+%（比例 	% (scaled 
+] 进入新模式，把未跑完的余韵收回待发动 	] entered a new mode; the unfinished afterglow is taken back as pending: 
+ 次 → 待发动共 	 rounds → pending total 
+] 进入	] entered 
+模式（	 mode (
+），本段时长 	), this segment lasts 
+ 秒，共 1 段	 s, 1 segment
+] 叠加期间把进行中的余韵收回待发动 	] while stacking, the afterglow in progress is taken back as pending: 
+] 叠加第 	] stacking segment 
+ 段（	 (
+ 秒 → 剩余 	 s → 
+] 已达 	] reached 
+ 段上限 → 不加层，但刷新持续时间 +	 segment limit → no new layer, but the duration is refreshed by +
+ 秒	 s
+ 段上限，本次不再叠加	 segment limit; no new layer this time
+[束缚之吻] 自动进入（原版要按 X 或靠 10% 随机）	[binding kiss] entered automatically (vanilla needs X or a 10% roll)
+[HitArea_Manman_By_Plugins] 命中！姿势=	[HitArea_Manman_By_Plugins] hit! pose=
+  榨取欲=	  drain urge=
+  段=	  segment=
+[榨取] Sit 射精：不减速（sitSpeed=	[drain] seated ejaculation: no slow-down (sitSpeed=
+[榨取] 坐姿射精收尾 → 按 	[drain] seated ejaculation wrap-up → 
+% 进入榨取（不经过束缚之吻）	% chance to enter drain (without the binding kiss)
+[榨取] 坐姿射精收尾接管失败: 	[drain] failed to take over the seated ejaculation wrap-up: 
+[射精] 已达连榨上限 	[ejaculation] chain limit reached: 
+ 次（Sit·束缚之吻），强制收尾	 rounds (seated, binding kiss), wrapping up forcibly
+[射精] 束缚之吻射精收尾接管失败: 	[ejaculation] failed to take over the binding-kiss ejaculation wrap-up: 
+ 次（Sit·	 rounds (seated, 
+榨取模式	drain mode
+[榨取] Sit 吸精收尾接管失败: 	[drain] failed to take over the seated absorb wrap-up: 
+[索取欲] 	[demand urge] 
+（审计结束）	 (audit finished)
+] 打屁股让脱出更难了：需要 	] spanking made escaping harder: it now needs 
+] 累积失败: 	] accumulation failed: 
+] 攻击力加成生效：	] attack boost active: 
+，其中速度 ×	, including speed x
+] 攻击力加成失败: 	] attack boost failed: 
+] 骑乘位射精：不减速且加速继续（osiriSpeed=	] riding ejaculation: no slow-down and the speed-up continues (osiriSpeed=
+] 索取模式：本次射精不减速（保持 fellaSpeed=	] demand mode: this ejaculation does not slow down (keeping fellaSpeed=
+模式进行中，状态却被切成坐姿 → 夺回骑乘位	 mode is active but the state was switched to seated → retaking riding
+（多半是 Show_CenterGirlSit 的协程早已排队）	 (most likely Show_CenterGirlSit's coroutine had already queued)
+[余韵] 最后一段结束，待局面稳定后发动（已累积 	[afterglow] the last segment ended; it fires once things settle (accumulated 
+ 次）	 rounds left)
+[余韵] 最后一段结束，但模式中没有射精 → 不发动余韵	[afterglow] the last segment ended, but there was no ejaculation in the mode → no afterglow
+] 角色自行退出索取模式 → 进入余韵，连续吸精 	] the character left demand mode on its own → afterglow, chain absorb 
+] 绝顶动画倍速已生效：通过 	] climax animation speed applied via 
+ 设为 ×	 set to x
+] 动画倍速失败: 	] animation speed-up failed: 
+] 接管绝顶收尾失败: 	] failed to take over the climax wrap-up: 
+] 调用 	] calling 
+ 失败: 	 failed: 
+[回归] 再次进入骑乘位的概率已达 100% → 立刻进入	[return] the chance of returning to riding reached 100% → entering now
+[余韵] 	[afterglow] 
+ 模式中第 	 mode: ejaculation #
+ 次射精 → 累积余韵 +	 → afterglow +
+（累计 	 (total 
+[余韵] 已清空：索取欲归零、闸门落下 → 之后有一段干净的空档	[afterglow] cleared: demand urge zeroed and the gate dropped → a clean stretch follows
+[余韵] 最后一段已结束且局面稳定 → 发动余韵 	[afterglow] the last segment ended and things settled → firing afterglow 
+[余韵] 启动余韵连榨失败: 	[afterglow] failed to start the afterglow chain drain: 
+[回归] 已进入骑乘位	[return] entered riding
+[回归] 进入骑乘位失败: 	[return] failed to enter riding: 
+[坐姿锁定] 人在坐姿 → 拦下一次切到骑乘位	[sitlock] seated → blocked one switch to riding
+[配置] 发现 	[config] found 
+ 个候选（旧键 + 三份副本都在），开始尝试迁移	 candidates (the old key and all three copies exist); attempting a migration
+[配置] 跳过 	[config] skipped 
+：三份副本不一致（用户已在新体系里调过）	: the three copies disagree (already tuned under the new scheme)
+[配置] 迁移：找不到三份组 	[config] migration: no such triple group 
+（已注册 float 组 	 (float groups registered: 
+======== 配置自动迁移 ========	======== automatic config migration ========
+检测到旧版配置（单份键），已把值复制到「按姿势三份」键。	An older config (single keys) was found; the values were copied into the per-pose keys.
+原文件已备份为：	The original file was backed up as: 
+共迁移 	Migrated 
+ 个键：	 keys:
+  …（其余 	  ... (the remaining 
+ 个见配置文件）	 are in the config file)
+[配置] 无需迁移（没有发现旧版单份键）	[config] nothing to migrate (no old single keys found)
+[配置] 自动迁移失败（不影响使用）：	[config] automatic migration failed (nothing is broken): 
+[余韵] 余韵未清空（剩 	[afterglow] the afterglow is not cleared (
+ 次）→ 不进口交	 rounds left) → staying out of fellatio
+[坐姿锁定] 人在坐姿 → 拦下一次切到口交	[sitlock] seated → blocked one switch to fellatio
+ 次）→ 不进坐姿	 rounds left) → staying out of seated
+模式进行中（	 mode is active (
+ 段 / 剩余 	 segments / 
+s）→ 不许坐姿顶进来。要退出请用「手动进入余韵」	s left) → seated may not cut in. To leave, use "start afterglow manually"
+[回归] 骑乘位结束 → 放行被挂起的坐姿	[return] riding ended → releasing the held seated request
+] 回到口交 → 骑乘位门槛 	] back to fellatio → riding threshold 
+（下次更快来）	 (it comes sooner next time)
+找不到 Live2D_AnimationControl，索取模式补丁未挂载	Live2D_AnimationControl not found; the demand mode patch is not hooked
+索取模式：找不到 TabemiControl.Osiri叩かれる（打屁股无法识别）	Demand mode: TabemiControl.Osiri叩かれる not found (spanks cannot be detected)
+索取模式：回调方法未找到	Demand mode: callback method not found
+索取模式补丁已挂载（TabemiControl.Osiri叩かれる 前缀+后缀）	Demand mode hooked (prefix and postfix on TabemiControl.Osiri叩かれる)
+索取模式：找不到 Live2D_Animation_SitOsiri	Demand mode: Live2D_Animation_SitOsiri not found
+索取模式：找不到 Event_OsiriSyaseiStart（骑乘位射精不减速会失效）	Demand mode: Event_OsiriSyaseiStart not found (the riding no-slow-down will not work)
+索取模式：Osiri 回调未找到	Demand mode: Osiri callback not found
+索取模式补丁已挂载（Event_OsiriSyaseiStart 前缀+后缀：骑乘位射精不减速）	Demand mode hooked (prefix and postfix on Event_OsiriSyaseiStart: riding ejaculation does not slow down)
+榨取模式补丁已挂载（TabemiControl.頭叩かれるSit 前缀+后缀）	Drain mode hooked (prefix and postfix on TabemiControl.頭叩かれるSit)
+榨取模式：找不到 頭叩かれるSit	Drain mode: 頭叩かれるSit not found
+榨取模式补丁已挂载（Sit 攻击事件后缀：涨索取欲）	Drain mode hooked (postfix on the seated attack event: raises demand urge)
+榨取模式补丁已挂载（Sit 射精不减速）	Drain mode hooked (seated ejaculation does not slow down)
+榨取模式补丁已挂载（Even_SitKiss吸精OnEnd 前缀：接管 Sit 连榨上限）	Drain mode hooked (prefix on Even_SitKiss吸精OnEnd: takes over the seated chain limit)
+榨取模式：找不到 Even_SitKiss吸精OnEnd	Drain mode: Even_SitKiss吸精OnEnd not found
+连榨绝顶值补丁已挂载（Event_Osiri吸精Damage 后缀：按伤害折算）	Chain-drain ecstasy hooked (postfix on Event_Osiri吸精Damage: scaled by damage)
+
+连榨绝顶值：找不到 Event_Osiri吸精Damage	Chain-drain ecstasy: Event_Osiri吸精Damage not found
+连榨绝顶值补丁已挂载（Event_SitKiss吸精1 后缀：按伤害折算）	Chain-drain ecstasy hooked (postfix on Event_SitKiss吸精1: scaled by damage)
+连榨绝顶值：找不到 Event_SitKiss吸精1	Chain-drain ecstasy: Event_SitKiss吸精1 not found
+连榨绝顶值补丁已挂载（Event_Fella吸精 后缀：按伤害×吸精攻击率折算）	Chain-drain ecstasy hooked (postfix on Event_Fella吸精: scaled by damage times the absorb attack rate)
+连榨绝顶值：找不到 Event_Fella吸精	Chain-drain ecstasy: Event_Fella吸精 not found
+榨取模式补丁已挂载（Event_SitSyasei_OnEnd 前缀：坐姿射精可进榨取）	Drain mode hooked (prefix on Event_SitSyasei_OnEnd: a seated ejaculation can enter drain)
+榨取模式：找不到 Event_SitSyasei_OnEnd	Drain mode: Event_SitSyasei_OnEnd not found
+余韵补丁已挂载（ShowCenterGirlFella 前缀：余韵清空前不进口交）	Afterglow hooked (prefix on ShowCenterGirlFella: no fellatio until the afterglow is cleared)
+回归补丁已挂载（Show_CenterGirlSit 前缀：坐姿挂起）	Return hooked (prefix on Show_CenterGirlSit: the seated request is held)
+回归补丁已挂载（DealDamage_Fella 后缀：口交造成伤害也计数）	Return hooked (postfix on DealDamage_Fella: fellatio damage also counts)
+回归：找不到 DealDamage_Fella	Return: DealDamage_Fella not found
+撞击声补丁已挂载（OsiriSE 前缀：连榨用 3/4 档，其余默认）	Impact sound hooked (prefix on OsiriSE: chain drains use slots 3 and 4, the rest default)
+撞击声：找不到 OsiriSE	Impact sound: OsiriSE not found
+束缚之吻补丁已挂载（Event_SitKissSyaseiOnEnd 前缀：射精也受连榨上限管制）	Binding kiss hooked (prefix on Event_SitKissSyaseiOnEnd: ejaculation is also capped by the chain limit)
+束缚之吻：找不到 Event_SitKissSyaseiOnEnd	Binding kiss: Event_SitKissSyaseiOnEnd not found
+束缚之吻补丁已挂载（Play_SitKissSyasei 后缀：绝顶动画可调速）	Binding kiss hooked (postfix on Play_SitKissSyasei: the climax animation speed can be scaled)
+束缚之吻：找不到 Play_SitKissSyasei	Binding kiss: Play_SitKissSyasei not found
+束缚之吻补丁已挂载（DealDamage_SitKiss 后缀：伤害计入回归累积）	Binding kiss hooked (postfix on DealDamage_SitKiss: damage counts toward return accumulation)
+倒计时补丁已挂载（MenuControl.Timing 前缀：每单时长 / 速度）	Countdown hooked (prefix on MenuControl.Timing: per-order duration and speed)
+倒计时：找不到 MenuControl.Timing	Countdown: MenuControl.Timing not found
+坐姿锁定补丁已挂载（ShowCenterGirlFella 前缀）	Sitlock hooked (prefix on ShowCenterGirlFella)
+坐姿锁定补丁已挂载（ShowCenterGirlOsiri 前缀）	Sitlock hooked (prefix on ShowCenterGirlOsiri)
+束缚之吻补丁已挂载（PrepareKissing 后缀：拉长窗口）	Binding kiss hooked (postfix on PrepareKissing: lengthens the window)
+束缚之吻补丁已挂载（KissPrepare解除 前缀+后缀：阻止窗口衰减）	Binding kiss hooked (prefix and postfix on KissPrepare解除: stops the window decaying)
+束缚之吻：找不到 KissPrepare解除	Binding kiss: KissPrepare解除 not found
+点按区补丁已挂载（HitAreaCheckWindows 后缀：HitArea_Manman 鼠标路径）	Hit area hooked (postfix on HitAreaCheckWindows: the HitArea_Manman mouse path)
+点按区：找不到 HitAreaCheckWindows（鼠标路径接不上）	Hit area: HitAreaCheckWindows not found (the mouse path cannot connect)
+点按区补丁已挂载（Mouse_Down_0 前缀：HitArea_Manman 独立处理）	Hit area hooked (prefix on Mouse_Down_0: HitArea_Manman is handled separately)
+点按区：找不到 Mouse_Down_0 —— HitArea_Manman 不会响应	Hit area: Mouse_Down_0 not found - HitArea_Manman will not respond
+点按区：找不到 Mouse_Down_0 的宿主类 —— HitArea_Manman 不会响应	Hit area: the class hosting Mouse_Down_0 was not found - HitArea_Manman will not respond
+点按区补丁已挂载（GetTouchTargetName 后缀：坐姿小穴区）	Hit area hooked (postfix on GetTouchTargetName: the seated pussy area)
+点按区：找不到 GetTouchTargetName	Hit area: GetTouchTargetName not found
+索取模式补丁已挂载（Event_OsiriGirlMainMixer 后缀：每次攻击低概率涨索取欲）	Demand mode hooked (postfix on Event_OsiriGirlMainMixer: each attack has a small chance to raise demand urge)
+索取模式：找不到 Event_OsiriGirlMainMixer	Demand mode: Event_OsiriGirlMainMixer not found
+索取模式补丁已挂载（Event_OsiriSyaseiOnEnd 前缀：接管回口交概率）	Demand mode hooked (prefix on Event_OsiriSyaseiOnEnd: takes over the fellatio-return chance)
+索取模式：找不到 Event_OsiriSyaseiOnEnd	Demand mode: Event_OsiriSyaseiOnEnd not found
+索取模式补丁已挂载（Event_Osiri吸精End 前缀：接管连榨上限）	Demand mode hooked (prefix on Event_Osiri吸精End: takes over the chain limit)
+索取模式：找不到 Event_Osiri吸精End（骑乘位的连榨上限会失效）	Demand mode: Event_Osiri吸精End not found (the riding chain limit will not work)
+索取模式补丁已挂载（TabemiControl.Osiri解除 前缀+后缀：索取期间不脱出）	Demand mode hooked (prefix and postfix on TabemiControl.Osiri解除: no escape during demand)
+索取模式：找不到 TabemiControl.Osiri解除	Demand mode: TabemiControl.Osiri解除 not found
+索取模式补丁已挂载（Play_OsiriSyasei 后缀：绝顶动画倍速）	Demand mode hooked (postfix on Play_OsiriSyasei: climax animation speed)
+索取模式：找不到 Live2D_Animation_SitOsiri.Play_OsiriSyasei	Demand mode: Live2D_Animation_SitOsiri.Play_OsiriSyasei not found
+索取模式：找不到 TabemiControl.UpdateAtt（攻击力加成会失效）	Demand mode: TabemiControl.UpdateAtt not found (the attack boost will not work)
+索取模式补丁已挂载（TabemiControl.UpdateAtt 后缀：索取模式期间攻击力提升）	Demand mode hooked (postfix on TabemiControl.UpdateAtt: attack rises during demand mode)
+索取模式补丁已挂载（Event_FellaSyaseiStart 前缀+后缀：索取模式期间不减速）	Demand mode hooked (prefix and postfix on Event_FellaSyaseiStart: no slow-down during demand mode)
+索取模式：一个挂点都没挂上	Demand mode: not a single hook landed
+] 余韵中，本次强制连榨（剩 	] in the afterglow, forcing a chain drain (
+找不到 Live2D_AnimationControl，吸精发生率修正未挂载	Live2D_AnimationControl not found; the absorb-rate fix is not hooked
+吸精发生率修正：回调未找到	Absorb-rate fix: callback not found
+吸精发生率修正已挂载（	Absorb-rate fix hooked (
+吸精发生率修正：一个判定点都没挂上	Absorb-rate fix: not a single check point hooked
+找不到 PlayerControl，动摇补丁未挂载	PlayerControl not found; the tremor patch is not hooked
+动摇补丁：方法未找到	Tremor patch: method not found
+红光特效计数已挂载（EffectsControl.PlaySyaseiEffect）	Red-light effect counter hooked (EffectsControl.PlaySyaseiEffect)
+吸精红光计数已挂载（EffectsControl.Play吸精Effect）	Absorb red-light counter hooked (EffectsControl.Play吸精Effect)
+绝顶动摇补丁已挂载（EcstasyChange 前缀+后缀，PlayEsctasyDamageEffect 前缀）	Ecstasy tremor hooked (prefix and postfix on EcstasyChange, prefix on PlayEsctasyDamageEffect)
+挂动摇补丁失败：	Failed to hook the tremor patch: 
+[面板] 已把「	[panel] copied every setting from "
+」的全部设置拷到「	" into "
+[动摇] 生命上限已还原 -	[tremor] max HP restored -
+SetMaxExact 失败: 	SetMaxExact failed: 
+改 HP 上限失败：	Failed to change the HP cap: 
+调用 	calling 
+ 失败，内层异常：	 failed, inner exception: 
+ (双参)	 (two-arg)
+(无栈)	(no stack)
+已写入通关进度（普通 / DLC 各 	Cleared-progress written (normal / DLC, 
+ 天）	 days each)
+[tabshot] 失败: 	[tabshot] failed: 
+[动摇] 	[tremor] 
+[坐姿锁定] 手动解锁（逃生口）	[sitlock] manual unlock (escape hatch)
+[HitArea_Manman_By_Plugins] 绑定切换 → 	[HitArea_Manman_By_Plugins] binding switched → 
+(清除)	(cleared)
+[面板] 拷贝设置：	[panel] copy settings: 
+（含连榨上限与 	 (including the chain limit and 
+ 组按姿势参数）	 per-pose groups)
+[面板] 拷贝失败: 	[panel] copy failed: 
+游戏侧为『显示』的部件（	Parts the game reports as shown (
+互斥：因开启 	Exclusive: because 
+，已取消强制 	 was enabled, the forced 
+[合并] 一项都没并进去。抽查：条目数=	[merge] nothing was merged in. Spot check: entry count=
+  DemandAttBonus 在文件里读到=	  DemandAttBonus read from the file=
+  文件存在=	  file exists=
+[命令] 强制显示全部 = 	[command] force-show all = 
+[命令] 部件 	[command] part 
+ 强制 = 	 forced = 
+[命令] 快进剧情 = 	[command] skip story = 
+[快进] 推进失败: 	[skip] advance failed: 
+[快进] 异常: 	[skip] error: 
+剧情快进挂载失败：找不到回调方法	Failed to hook story skipping: callback method not found
+
+找不到 	Not found: 
+ 没有 Update	 has no Update
+剧情快进补丁已挂载（	Story skip hooked (
+.Update 前缀，返回 false 接管）	.Update prefix that returns false to take over)
+剧情快进：一个都没挂上	Story skip: not a single hook landed
+挂剧情快进补丁失败：	Failed to hook story skipping: 
+[命令] 插件实例不可用	[command] the plugin instance is unavailable
+[命令] 未知 probe: 	[command] unknown probe: 
+挂事件补丁失败 	Failed to hook event patch 
+活动记录：已挂 	Activity recorder: hooked 
+ 个游戏事件记录点	 game event record points
+；未找到：	; not found: 
+[i18n] 切换语言失败：	[i18n] failed to switch the language: 
+自检还原失败：	Failed to restore after the self-test: 
+全量自检：	Full self-test: 
+ 通过 / 	 passed / 
+ 失败 / 	 failed / 
+ 跳过 → 	 skipped → 
+自检有失败项，详见 	The self-test reported failures; see 
+截图失败：	Screenshot failed: 
+快照已保存：	Snapshot saved: 
+（部件 	 (parts 
+，可见 	, visible 
+，含截图	, with a screenshot
+，截图失败	, screenshot failed
+快照失败：	Snapshot failed: 
+换衣自检：不在店内场景	Costume self-test: not in the shop scene
+换衣自检：拿不到 model	Costume self-test: cannot reach the model
+换衣自检：	Costume self-test: 
+ 失败 → 	 failed → 
+写字段 	Writing field 
+[绑定] 找不到这些游戏类：	[bindings] these game classes were not found: 
+（游戏版本可能不符，相关功能不会生效）	 (the game version may not match, so the related features will not work)
+[绑定] 挂错类：{0} 不在 {1}，而是在 {2}{3}	[bindings] wrong class: {0} is not in {1} but in {2}{3}
+[绑定] 找不到方法 {0}.{1}{2}	[bindings] method not found: {0}.{1}{2}
+[绑定] 有 	[bindings] 
+ 个方法挂错了类 —— 这些补丁不会生效，功能静默失效	 methods are hooked to the wrong class - those patches never apply and the features fail silently
+ 个方法找不到 —— 相关功能不会生效	 methods were not found - the related features will not work
+[绑定] 	[bindings] 
+ 个补丁目标全部校验通过	 patch targets all verified
+命令服务已启动。写入 	Command service started. Write to 
+ 即可驱动游戏。	 to drive the game.
+（已请求加载）	 (load requested)
+ERR tights 需要参数 0/1/2	ERR tights needs an argument 0/1/2
+ERR 拿不到 TabemiControl（不在店内场景？）	ERR cannot reach TabemiControl (not in the shop scene?)
+（已应用）	 (applied)
+ERR costume 需要 <slot> <value>	ERR costume needs <slot> <value>
+ERR 未知槽位 	ERR unknown slot 
+ERR 拿不到 TabemiControl	ERR cannot reach TabemiControl
+ERR 用法: force off | force all | force part <名字> on|off	ERR usage: force off | force all | force part <name> on|off
+ 已触发	 triggered
+ecsgain <量>	ecsgain <amount>
+开始逐帧记录动画速率 	Started per-frame animation-rate logging 
+开始逐帧红光采样 	Started per-frame red-light sampling 
+开始逐帧记录绝顶值 	Started per-frame ecstasy logging 
+持续监视已停止	Watch stopped
+持续监视 	Watching 
+defaults 会覆盖你的全部调参，已要求确认。真的要用请写：defaults yes	defaults overwrites every tuned value, so it asks first. To really do it write: defaults yes
+  更推荐：bash tools/cfgsnap.sh save / restore	  prefer: bash tools/cfgsnap.sh save / restore
+索取欲审计已开启，记录接下来 	Demand-urge audit started, recording the next 
+ 次变动 → BepInEx/LogOutput.log	 changes → BepInEx/LogOutput.log
+已模拟 	Simulated 
+ 次打屁股 → 乘数 ×	 spanks → multiplier x
+  目标 ×	  target x
+[坐姿锁定] 已解锁 —— 游戏下次尝试切换就会成功（要再锁上：sitlock）	[sitlock] unlocked - the game's next switch attempt will succeed (lock again with: sitlock)
+[坐姿锁定] 已锁上 —— 进入坐姿后不会再被切走	[sitlock] locked - once seated, the game will not switch away
+预设 	Preset 
+ 个：	 items: 
+（无）	(none)
+(拿不到)	(unavailable)
+ <名字>	 <name>
+ERR preset <list|save|apply|del|dir> [名字]	ERR preset <list|save|apply|del|dir> [name]
+ERR tabshot <页签> <名字>	ERR tabshot <tab> <name>
+ERR 没有这个页签：	ERR no such tab: 
+已切到 [	Switched to [
+ERR set <项> <值>  如 set NoEcstasy 0	ERR set <item> <value>  e.g. set NoEcstasy 0
+索取模式: 	Demand mode: 
+动画速率: 	Anim rate: 
+ERR 找不到 PlayerControl	ERR PlayerControl not found
+ERR 找不到 CubismModel	ERR CubismModel not found
+ERR 没有模型实例	ERR no model instance
+部件透明度 → 开(	Part opacity → on (
+                关(	                off (
+已把时间刻度钳到 0.05（0 会让动画停住、状态机卡死）	Clamped timeScale to 0.05 (0 freezes animations and wedges the state machine)
+手动区域	manual area
+可点击对象（有碰撞体且激活）共 	Clickable objects (with a collider, active): 
+ 个:	 items:
+ERR clickobj <GameObject 名字>	ERR clickobj <GameObject name>
+ERR 没找到可点击对象: 	ERR no clickable object: 
+场景内按钮 	Buttons in the scene: 
+ERR click <名字或按钮文字>	ERR click <name or button text>
+ERR 没找到匹配按钮: 	ERR no matching button: 
+quit 收到，退出游戏	quit received, leaving the game
+ERR 未知命令: 	ERR unknown command: 
+
+ 秒 → cmd\anim.csv	 s → cmd\anim.csv
+ 秒 → cmd\tremor.csv	 s → cmd\tremor.csv
+ 秒 → cmd\red.csv（每帧一行）	 s → cmd\red.csv (one row per frame)
+ 秒 → cmd\xwatch.txt（每秒一次，只记异常）	 s → cmd\xwatch.txt (once per second, anomalies only)
+  调用对象类型: 	  call target type: 
+  参数: 	  argument: 

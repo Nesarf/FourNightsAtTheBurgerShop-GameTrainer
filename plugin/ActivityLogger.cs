@@ -94,7 +94,7 @@ namespace BurgerShopModder
             EmitUser("record_start", "开始记录活动");
             Snapshot("initial");
             Flush(true);
-            Plugin.Log.LogInfo("活动记录已开始 → " + _dir);
+            Plugin.Log.LogInfo(L.T("活动记录已开始 → ") + _dir);
         }
 
         private void Finish()
@@ -105,7 +105,7 @@ namespace BurgerShopModder
             WriteSummary();
             Flush(true);
             _active = false;
-            Plugin.Log.LogInfo("活动记录已结束（" + _events.Count + " 条，丢 " + _dropped + "）→ " + _dir);
+            Plugin.Log.LogInfo(L.T("活动记录已结束（") + _events.Count + L.T(" 条，丢 ") + _dropped + "）→ " + _dir);
         }
 
         private void Update()
@@ -351,7 +351,7 @@ namespace BurgerShopModder
             }
             catch (Exception e)
             {
-                if (Plugin.Log != null) Plugin.Log.LogWarning("活动记录落盘失败：" + e.Message);
+                if (Plugin.Log != null) Plugin.Log.LogWarning(L.T("活动记录落盘失败：") + e.Message);
             }
         }
 
@@ -391,7 +391,7 @@ namespace BurgerShopModder
             }
             catch (Exception e)
             {
-                if (Plugin.Log != null) Plugin.Log.LogWarning("写汇总失败：" + e.Message);
+                if (Plugin.Log != null) Plugin.Log.LogWarning(L.T("写汇总失败：") + e.Message);
             }
         }
 

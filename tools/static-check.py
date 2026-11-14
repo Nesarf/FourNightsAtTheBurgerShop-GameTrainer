@@ -68,17 +68,17 @@ def read(p):
 
 src = read(PLUGIN)
 if src is None:
-    print(f'找不到 {PLUGIN}')
+    print(f'cannot find {PLUGIN}')
     sys.exit(2)
 cmd = read(CMD) or ''
 doc = read(DOC) or read(HINT_DOC) or ''
 
-print('== 静态一致性检查 ==\n')
+print('== static consistency check ==\n')
 
 # ── 收集 BindP3 参数 ──────────────────────────────────────────
 # BindP3("Name", ...) / BindP3Int / BindP3Bool
 p3 = set(re.findall(r'BindP3(?:Int|Bool)?\(\s*"([A-Za-z_][A-Za-z0-9_]*)"', src))
-print(f'(1) BindP3 参数：{len(p3)} 个')
+print(f'(1) BindP3 params: {len(p3)}')
 
 # 面板控件：SetP3(Name3, ...)
 panel = set(re.findall(r'SetP3\(\s*([A-Za-z_][A-Za-z0-9_]*?)(?:3)\s*,', src))
@@ -92,26 +92,23 @@ miss_panel = sorted(p for p in p3 if p not in have_panel)
 miss_set = sorted(p for p in p3 if p not in setc)
 
 if miss_panel:
-    fail(f'(2) 这些参数【没有面板控件】：{", ".join(miss_panel[:12])}'
-         + (f' …共 {len(miss_panel)} 个' if len(miss_panel) > 12 else ''))
+    fail("(2) params with no panel control: " + ", ".join(miss_panel[:12]) + (" ... %d in total" % len(miss_panel) if len(miss_panel) > 12 else ""))
 else:
-    ok(f'(2) 全部 {len(p3)} 个参数都有面板控件')
+    ok(f"(2) all {len(p3)} params have a panel control")
 
 if miss_set:
     # set 分支可能在 GameCommandServer 之外，宽松处理
-    warn(f'(3) 这些参数【没有 set 命令分支】：{", ".join(miss_set[:12])}'
-         + (f' …共 {len(miss_set)} 个' if len(miss_set) > 12 else ''))
+    warn("(3) params with no set branch: " + ", ".join(miss_set[:12]) + (" ... %d in total" % len(miss_set) if len(miss_set) > 12 else ""))
 else:
-    ok(f'(3) 全部 {len(p3)} 个参数都有 set 命令分支')
+    ok(f"(3) all {len(p3)} params have a set branch")
 
 # ── 说明书覆盖 ────────────────────────────────────────────────
 base = set(re.sub(r'_(Fella|Osiri|Sit)$', '', p) for p in p3)
 miss_doc = sorted(b for b in base if b not in doc)
 if miss_doc:
-    warn(f'(4) 说明书中未提及：{", ".join(miss_doc[:12])}'
-         + (f' …共 {len(miss_doc)} 个' if len(miss_doc) > 12 else ''))
+    warn("(4) not mentioned in the manual: " + ", ".join(miss_doc[:12]) + (" ... %d in total" % len(miss_doc) if len(miss_doc) > 12 else ""))
 else:
-    ok(f'(4) 全部 {len(base)} 个逻辑参数都在说明书里')
+    ok(f"(4) all {len(base)} logical params appear in the manual")
 
 # ── Harmony 重复 patch ────────────────────────────────────────
 # TryPatch(pc, "Method", ...) / GetMethod("Method", ...) 后 _harmony.Patch
@@ -126,9 +123,9 @@ for kind, who in prefixes:
     names[f'{kind}_{who}'] += 1
 dups = sorted(k for k, v in names.items() if v > 1)
 if dups:
-    fail(f'(5) 重复定义的补丁方法：{", ".join(dups)}')
+    fail("(5) duplicated patch methods: " + ", ".join(dups))
 else:
-    ok(f'(5) 补丁方法无重复定义（共 {len(names)} 个）')
+    ok(f"(5) no duplicated patch methods ({len(names)} total)")
 
 # ── 本机绝对路径 ──────────────────────────────────────────────
 # 【本文件自己不能含这些字面量】tools/sync.sh 有一道闸门：要同步到发布副本的
@@ -158,9 +155,9 @@ for p in list(ROOT.rglob('*.cs')) + list(ROOT.rglob('*.ps1')) + list(ROOT.rglob(
         if re.search(pat, t):
             leak_hits.append(f'{p.relative_to(ROOT)}: {pat}')
 if leak_hits:
-    fail(f'(6) 源码里有本机绝对路径（{len(leak_hits)} 处）：{leak_hits[0]} …')
+    fail(f"(6) absolute local paths in the source ({len(leak_hits)}): {leak_hits[0]} ...")
 else:
-    ok('(6) 无本机绝对路径')
+    ok("(6) no absolute local paths")
 
 # ── 三栏用词（规则已于 v1.0.0 之后作废）────────────────────────
 # 【为什么删掉这条规则】
@@ -174,7 +171,7 @@ else:
 #
 # 【保留注释的理由】下一代人看到"这里本来有条检查"时，
 # 能直接知道它为什么被删 —— 而不是怀疑是被误删的。
-ok('(7) 三栏用词由 PoseDesc 统一归一（规则已作废，见源码注释）')
+ok("(7) pose wording is normalised by PoseDesc (rule retired, see the source comment)")
 
 # ── 装饰符与判定符 ───────────────────────────────────────────
 # 【准则来源】mega-index-map 的三条不变量之一：输出与词汇保持 ASCII。
@@ -212,18 +209,17 @@ for _p in ROOT.rglob('*'):
         if _c in _t:
             hits.append((str(_p.relative_to(ROOT)), _c, _t.count(_c)))
 if hits:
-    fail('(9) 出现装饰符/判定符：' + '，'.join(f'{f} {c!r} x{n}' for f, c, n in hits[:5])
-         + (f' 共 {len(hits)} 处' if len(hits) > 5 else ''))
+    fail("(9) decoration or judgement glyphs: " + ", ".join("%s %r x%d" % (f, c, n) for f, c, n in hits[:5]))
 else:
-    ok('(9) 无装饰符与判定符（允许中文排版与数学符号）')
+    ok("(9) no decoration or judgement glyphs (Chinese punctuation and math symbols are allowed)")
 
 
 # ── 挂载数 ────────────────────────────────────────────────────
 mounts = len(re.findall(r'ok\+\+', src))
 if mounts < 35:
-    warn(f'(8) 挂载点数偏少（{mounts}）—— 预期 ≥ 35，确认没有补丁被删掉')
+    warn(f"(8) few mount points ({mounts}) - expected at least 35, check that no patch was dropped")
 else:
-    ok(f'(8) 挂载点 {mounts} 个')
+    ok(f"(8) {mounts} mount points")
 
 
 # ── README 里的 SHA256 是否还准 ─────────────────────────────
@@ -232,7 +228,7 @@ else:
 # "文档里的数字"最容易过期，这类东西必须有检查盯着。
 _sha_lines = re.findall(r'^([0-9a-f]{64})  (\S+)$', read(ROOT / 'README.md') or '', re.M)
 if not _sha_lines:
-    warn('(10) README 里没找到 SHA256 校验和（如果是有意去掉的，忽略本条）')
+    warn("(10) no SHA256 checksums found in README (ignore if that is intentional)")
 else:
     _bad = []
     for _h, _name in _sha_lines:
@@ -247,20 +243,20 @@ else:
         }.get(_name, _name)
         _p = ROOT / 'dist' / _cand
         if not _p.exists():
-            _bad.append('%s（dist 里没有 %s）' % (_name, _cand))
+            _bad.append('%s (missing from dist: %s)' % (_name, _cand))
             continue
         _real = hashlib.sha256(_p.read_bytes()).hexdigest()
         if _real != _h:
-            _bad.append('%s（README %s… 实际 %s…）' % (_name, _h[:12], _real[:12]))
+            _bad.append('%s (README %s..., actual %s...)' % (_name, _h[:12], _real[:12]))
     if _bad:
         # 【这里是提醒，不是失败】
         # README 里的哈希描述的是【已发布的那个版本】，而 dist/ 是当前工作产物。
         # 改了代码重建之后两者必然不同 —— 那是正常的。
         # 但发版前它们必须一致，否则用户按 README 核对会以为文件被篡改。
-        warn('(10) README 的校验和与当前 dist 不一致（本地改动还没发版时属正常，发版前须更新）：'
-             + '，'.join(_bad))
+        warn("(10) README checksums do not match dist (normal before a release, but update them before tagging): "
+             + ", ".join(_bad))
     else:
-        ok('(10) README 里的 %d 个 SHA256 与 dist 一致' % len(_sha_lines))
+        ok("(10) %d SHA256 values in README match dist" % len(_sha_lines))
 
 # === 版本号一致性 ===
 # 【为什么需要】v1.0.9 发版时，工作副本升到了 1.0.9，发布副本却整棵停在 1.0.8：
@@ -285,12 +281,12 @@ for _p in ('plugin/BurgerShopModder.csproj', 'trainer/BurgerShopTrainer.csproj',
 
 _seen = {v for v in _named.values() if v}
 if None in _named.values():
-    fail('(11) 有地方读不到版本号：' + '，'.join(f'{k}={v}' for k, v in _named.items()))
+    fail("(11) cannot read a version from: " + ", ".join("%s=%s" % (k, v) for k, v in _named.items()))
 elif len(_seen) != 1:
-    fail('(11) 版本号不一致：' + '，'.join(f'{k}={v}' for k, v in _named.items()))
+    fail("(11) version numbers disagree: " + ", ".join("%s=%s" % (k, v) for k, v in _named.items()))
 else:
     _now = _seen.pop()
-    ok(f'(11) 源码版本号统一为 {_now}（{len(_named)} 处）')
+    ok(f"(11) version is {_now} everywhere ({len(_named)} places)")
 
     # dist 里的二进制是不是同一版编译的：版本资源一定以 UTF-16 存在 PE 里，
     # 找不到就说明那份产物是别的版本编出来的。粗检，所以只报提醒。
@@ -303,9 +299,9 @@ else:
         elif _want not in _f.read_bytes():
             _miss.append(f'{_n}（找不到 {_now}）')
     if _miss:
-        warn('(12) dist 里的产物不是这一版编出来的（发版前须重建）：' + '，'.join(_miss))
+        warn("(12) dist artifacts are not from this version (rebuild before releasing): " + ", ".join(_miss))
     else:
-        ok(f'(12) dist 里 3 个产物都带版本 {_now}')
+        ok(f"(12) all 3 artifacts in dist carry version {_now}")
 
 # === 英文对照表与源码是否还对得上 ===
 # 【为什么需要】对照表拿「中文原文」当 key。源码里把那句中文改了字（哪怕只多一个
@@ -456,18 +452,18 @@ if _en.exists():
     # 覆盖面比这里大。第 (15) 条只补「归一后的模板也是 key」这一件事。
     _p3miss = sorted(t for t in _p3tpl if t not in set(_entries))
     if _p3miss:
-        fail('(15) 有 %d 条 BindP3 描述模板没有译文：%s'
-             % (len(_p3miss), '，'.join(t[:30] for t in _p3miss[:4])))
+        fail("(15) %d BindP3 description templates have no translation: %s"
+             % (len(_p3miss), ", ".join(t[:30] for t in _p3miss[:4])))
     else:
-        ok('(15) %d 条 BindP3 描述模板都有译文' % len(_p3tpl))
+        ok("(15) all %d BindP3 description templates are translated" % len(_p3tpl))
 
     # 归一后的模板也算「有调用点」—— 它们是 PoseDesc 运行时才拼出来的 key
     _calls |= _p3tpl
 
     _done = set(_entries) & _calls
     _todo = sorted(_calls - _done)
-    print('  [INFO] 面板文案翻译进度 %d/%d' % (len(_done), len(_calls))
-          + ('，还没翻：' + '，'.join(_todo[:6]) if _todo else ''))
+    print('  [INFO] panel strings translated %d/%d' % (len(_done), len(_calls))
+          + (', not yet: ' + ', '.join(_todo[:6]) if _todo else ''))
     _orphan = [z for z in _entries if z not in _calls]
     try:
         # 控制台会按本地码页把中文打成乱码，完整清单顺手落一份 UTF-8 文件
@@ -476,13 +472,13 @@ if _en.exists():
     except Exception:
         pass
     if _orphan:
-        fail('(13) 对照表里有 %d 条对不上源码里的 L.T 调用（中文字改了？）：%s'
-             % (len(_orphan), '，'.join(repr(z) for z in _orphan[:6])))
+        fail("(13) %d table entries match no L.T call in the source (wording changed?): %s"
+             % (len(_orphan), ", ".join(repr(z) for z in _orphan[:6])))
     else:
-        ok('(13) 对照表 %d 条都能对上源码' % len(_entries))
+        ok("(13) all %d table entries match the source" % len(_entries))
 
 elif any(_p.exists() for _p in (ROOT / 'plugin').glob('*.cs')):
-    warn('(13) 没找到 plugin/lang/en.txt（如果是还没开始做英文化，忽略本条）')
+    warn("(13) plugin/lang/en.txt not found (ignore if the translation has not started)")
 
 # === 面板控件里还有没有裸中文 ===
 # 第 (13) 条查的是「表里的 key 能不能对上源码」—— 它抓不到
@@ -531,12 +527,12 @@ for _m in re.finditer(r'\bGU(?:ILayout|I)\.(?:Button|Label|Toggle|Box|TextField|
             _bare.append('%d：%s' % (_line, _s[:40]))
 
 if _bare:
-    fail('(14) 面板控件里有 %d 处中文字面量没走 L.T：%s'
-         % (len(_bare), '，'.join(_bare[:5])))
+    fail("(14) %d Chinese literals in panel controls bypass L.T: %s"
+         % (len(_bare), ", ".join(_bare[:4])))
 else:
-    ok('(14) 面板控件里没有裸中文')
+    ok("(14) no bare Chinese in panel controls")
 
 # ── 汇总 ──────────────────────────────────────────────────────
 print()
-print(f'结论：{len(fails)} 项失败，{len(warns)} 项提醒')
+print(f'result: {len(fails)} failed, {len(warns)} warnings')
 sys.exit(1 if fails else 0)

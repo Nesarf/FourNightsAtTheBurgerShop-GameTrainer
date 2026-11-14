@@ -1,6 +1,6 @@
 name: build
 
-# 触发：push 到 main、打 tag、手动作
+# Triggers: push to main, tag, manual run
 on:
   push:
     branches: [main]
@@ -9,64 +9,67 @@ on:
 
 jobs:
   # ─────────────────────────────────────────────────────────────
-  # CI 能做什么、不能做什么
+  # What CI can and cannot do here
   #
-  # 【不能】编译 plugin/ —— 它需要 refs/*.dll（游戏程序集），
-  #        而那是版权内容，被有意排除在仓库外。CI 上没有游戏。
-  #        所以「从源码自动构建」在这类 Mod 项目上做不到，
-  #        除非把游戏 DLL 传上去 —— 那正是我们不做的事。
+  # [cannot] Build plugin/ — it needs refs/*.dll (the game assemblies),
+  #          and those are copyrighted content that is deliberately kept
+  #          out of this repository. There is no game on CI, so
+  #          "build from source" is impossible for this kind of mod
+  #          unless the game DLLs were uploaded, which is exactly what
+  #          we refuse to do.
   #
-  # 【能做】(1) 安全闸：确认仓库里没有混进游戏内容
-  #        (2) 产物完整性：dist/ 里的文件在不在、是不是有效 PE
-  #        (3) 生成 SHA256 校验和，随 Release 一起发
-  #        (4) 打 tag 时自动建 Release
+  # [can]    (1) Guard: prove no game content slipped into the repo
+  #          (2) Artifact integrity: the files in dist/ exist and are PE
+  #          (3) SHA256 checksums shipped alongside the release
+  #          (4) Create the Release automatically on a tag
   # ─────────────────────────────────────────────────────────────
 
   guard:
-    name: 安全闸 + 产物完整性
+    name: Guard — no game content, dist complete
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: 确认仓库里没有游戏内容
+      - name: No game assets or game assemblies in the repo
         shell: pwsh
         run: |
           $bad = @()
-          # 游戏素材的扩展名
+          # Extensions used by game assets
           $exts = @('.moc3', '.assets', '.bundle', '.resource', '.ress', '.dat', '.anm')
-          # 游戏程序集的特征名
+          # Names that identify the game assemblies
           $names = @('Assembly-CSharp', 'UnityEngine.', '0Harmony', 'Mono.Cecil', 'BepInEx.dll')
 
           $files = Get-ChildItem -Recurse -File | Where-Object { $_.FullName -notmatch '\\\.git\\' }
           foreach ($f in $files) {
             $e = $f.Extension.ToLower()
-            if ($exts -contains $e) { $bad += "扩展名: $($f.FullName)" }
+            if ($exts -contains $e) { $bad += "extension: $($f.FullName)" }
             foreach ($n in $names) {
               if ($f.Name -like "*$n*" -and $f.Extension -ne '.cs') {
-                $bad += "文件名: $($f.FullName)"
+                $bad += "file name: $($f.FullName)"
               }
             }
-            # dll / exe 里不能内嵌 moc3
+            # dll / exe must not embed moc3
             if ($e -in @('.dll', '.exe')) {
               $bytes = [IO.File]::ReadAllBytes($f.FullName)
               $txt = [Text.Encoding]::ASCII.GetString($bytes)
-              if ($txt -match 'moc3') { $bad += "内嵌 moc3: $($f.FullName)" }
+              if ($txt -match 'moc3') { $bad += "embedded moc3: $($f.FullName)" }
             }
           }
 
           if ($bad.Count -gt 0) {
-            Write-Host "::error::仓库里混进了游戏内容："
+            Write-Host "::error::Game content found in the repository:"
             $bad | ForEach-Object { Write-Host "  $_" }
             exit 1
           }
-          Write-Host "没有游戏素材、没有游戏程序集、exe/dll 里没有内嵌 moc3"
-          Write-Host "  共检查 $($files.Count) 个文件"
+          Write-Host "No game assets, no game assemblies, no embedded moc3 in exe/dll"
+          Write-Host "  checked $($files.Count) files"
 
-      - name: 确认 dist/ 产物齐全
+      - name: dist/ artifacts are present
         shell: pwsh
         run: |
-          # 插件文件名含数学乘号与方括号：用变量构造，
-          # 且 Test-Path / Copy-Item 一律 -LiteralPath（-Path 会把方括号当通配字符类）
+          # The plugin file name contains a multiplication sign and square brackets,
+          # so build it from code points and always use -LiteralPath
+          # (-Path would treat the brackets as wildcard character classes).
           $plug = '2' + [char]0x00D7 + '9+9L+6[ED]+7+2' + [char]0x00D7 + '45' + [char]0x2192 + '1[C]+LS.dll'
 
           $want = @(
@@ -78,69 +81,69 @@ jobs:
           $miss = @()
           foreach ($w in $want) { if (-not (Test-Path -LiteralPath $w)) { $miss += $w } }
           if ($miss.Count -gt 0) {
-            Write-Host "::error::dist/ 缺文件："
+            Write-Host "::error::dist/ is missing files:"
             $miss | ForEach-Object { Write-Host "  $_" }
             exit 1
           }
-          # 确认 exe/dll 是有效 PE（以 MZ 开头）
+          # Every exe/dll must be a valid PE (starts with MZ)
           foreach ($p in @((Join-Path 'dist' $plug), 'dist/数值修改器.exe', 'dist/汉堡店修改器-安装程序.exe')) {
             $b = [IO.File]::ReadAllBytes($p)
-            if ($b[0] -ne 0x4D -or $b[1] -ne 0x5A) { Write-Host "::error::$p 不是有效 PE"; exit 1 }
+            if ($b[0] -ne 0x4D -or $b[1] -ne 0x5A) { Write-Host "::error::$p is not a valid PE"; exit 1 }
             $kb = [math]::Round($b.Length / 1KB)
             Write-Host "$p  (${kb} KB)"
           }
 
-      - name: 确认安装程序自带了载荷
+      - name: Installer carries its own payload
         shell: pwsh
         run: |
           $asm = [Reflection.Assembly]::LoadFrom((Resolve-Path 'dist/汉堡店修改器-安装程序.exe'))
           $res = $asm.GetManifestResourceNames()
-          Write-Host "内嵌资源: $($res -join ', ')"
+          Write-Host "embedded resources: $($res -join ', ')"
           foreach ($need in @('payload.zip', 'art.png', 'art.ico')) {
-            if ($res -notcontains $need) { Write-Host "::error::安装程序缺少内嵌资源 $need"; exit 1 }
+            if ($res -notcontains $need) { Write-Host "::error::installer is missing embedded resource $need"; exit 1 }
           }
-          Write-Host "安装程序自包含"
+          Write-Host "installer is self-contained"
 
-      - name: 静态一致性检查
+      - name: Static consistency check
         shell: pwsh
         env:
-          # runner 的 Python 默认 cp1252，打印中文会崩
+          # The runner's Python defaults to cp1252, which breaks on non-ASCII output
           PYTHONIOENCODING: utf-8
           PYTHONUTF8: '1'
         run: |
-          # 配置项要同时出现在 BindP3 / 面板 / set 命令 / 说明书里，
-          # 漏掉任何一处都是【静默失败】。这里把它做成可自动检查的规则。
+          # Every config entry must appear in BindP3 / the panel / the set command /
+          # the manual. Missing any one of them is a SILENT failure, so it is a rule.
           python tools/static-check.py .
           if ($LASTEXITCODE -ne 0) {
-            Write-Host "::error::静态一致性检查未通过"
+            Write-Host "::error::static consistency check failed"
             exit 1
           }
-          Write-Host "静态一致性检查通过"
+          Write-Host "static consistency check passed"
 
-      - name: 生成 SHA256
+      - name: SHA256 checksums
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path out | Out-Null
-          # 安装程序与修改器用 ASCII 名另存一份（Release 资产必须 ASCII）
+          # Rename the installer and trainer to ASCII (release assets must be ASCII)
           Copy-Item 'dist/汉堡店修改器-安装程序.exe' "out/18-9L-6_ED-7-45-45_C-LS-Installer.exe"
           Copy-Item 'dist/数值修改器.exe'            "out/18-9L-6_ED-7-45-45_C-LS-Trainer.exe"
           $plug = '2' + [char]0x00D7 + '9+9L+6[ED]+7+2' + [char]0x00D7 + '45' + [char]0x2192 + '1[C]+LS.dll'
-          # 发布资产名保持可读的 BurgerShopModder.dll，只有源路径是程序集名
           Copy-Item -LiteralPath (Join-Path 'dist' $plug) "out/18-9L-6_ED-7-45-45_C-LS.dll"
           Copy-Item '使用说明.md'               'out/Manual-zh-CN.md'
           Copy-Item '使用说明.en.md'            'out/Manual-en.md'
-          
-          # 【只列 out/ 里的资产】
-          # 原来遍历 dist/ 算哈希，但 dist/ 里可能有上一步 artifact 下载回来的旧文件 ——
-          # v1.0.8 就因此把 v1.0.7 的旧哈希写进了表里，用户照着核对会以为文件被改过。
-          # out/ 里就是最终要发布的四个文件，不会有残留。
+
+          # [list only what is in out/]
+          # It used to walk dist/, but dist/ can hold older files downloaded back
+          # from a previous artifact — v1.0.8 shipped v1.0.7 hashes that way, and
+          # anyone verifying a download would think the file had been tampered with.
+          # out/ holds exactly the files about to be published.
           $lines = @()
           foreach ($f in Get-ChildItem -LiteralPath 'out' -File | Where-Object { $_.Name -ne 'SHA256SUMS.txt' } | Sort-Object Name) {
             $h = (Get-FileHash -LiteralPath $f.FullName -Algorithm SHA256).Hash.ToLower()
             $lines += "$h  $($f.Name)"
           }
           $lines | Set-Content -Encoding utf8 out/SHA256SUMS.txt
-          Write-Host "校验和："
+          Write-Host "checksums:"
           $lines | ForEach-Object { Write-Host "  $_" }
 
       - uses: actions/upload-artifact@v4
@@ -149,7 +152,7 @@ jobs:
           path: out/
 
   release:
-    name: 打 tag 时自动建 Release
+    name: Create the release on a tag
     needs: guard
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
@@ -165,14 +168,14 @@ jobs:
           name: release-assets
           path: out
 
-      - name: 从 CHANGELOG 提取本版说明
+      - name: Extract this version's notes from CHANGELOG
         id: notes
         shell: pwsh
         run: |
           $tag = $env:GITHUB_REF_NAME
           if (Test-Path CHANGELOG.md) {
             $txt = Get-Content CHANGELOG.md -Raw
-            # 抓 "## <tag>" 到下一个 "## " 之间
+            # Take "## <tag>" up to the next "## "
             $pat = "(?ms)^##\s+" + [regex]::Escape($tag) + "\s*\r?\n(.*?)(?=^##\s|\z)"
             $m = [regex]::Match($txt, $pat)
             if ($m.Success) {
@@ -180,10 +183,10 @@ jobs:
             }
           }
           if (-not (Test-Path notes.md)) {
-            "见仓库 README 与 使用说明.md。" | Set-Content -Encoding utf8 notes.md
+            "See the repository README and 使用说明.md." | Set-Content -Encoding utf8 notes.md
           }
 
-      - name: 建 Release
+      - name: Create release
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -197,19 +200,19 @@ jobs:
           )
           gh release view $tag 2>$null
           if ($LASTEXITCODE -eq 0) {
-            # 【不覆盖已存在的 release】
-            # 这个 workflow 只做 dotnet build，**不签名**（没有证书）。
-            # 而正式发布的资产是人工签名后上传的 —— 如果这里 clobber，
-            # 那些带签名的文件会被未签名的构建产物替换掉。
-            # 所以已存在就什么都不做，让人工发布的结果保持原样。
-            Write-Host "Release $tag 已存在 —— 跳过。"
-            Write-Host "  正式资产由人工签名后上传；这里不覆盖，避免把签名版本换掉。"
+            # [never clobber an existing release]
+            # This workflow only runs dotnet build and does NOT sign anything
+            # (there is no certificate here). The real assets are signed by hand
+            # and uploaded afterwards, so clobbering would replace signed files
+            # with unsigned build output. If a release exists, leave it alone.
+            Write-Host "release $tag already exists — skipping."
+            Write-Host "  the published assets are signed by hand; not overwriting them."
             exit 0
           }
-          
-          # 兜底：tag 打了但没人建 release 时，先建一个能用的。
-          # 明确标注未签名，免得有人以为它和手动发布的一样。
-          $banner = "> **注意：本页资产由 CI 构建，未经代码签名。**`n> 正式发布请以带 S.M.Y.T. 签名的版本为准。`n`n"
+
+          # Fallback: a tag was pushed but nobody created the release yet.
+          # Mark it clearly as unsigned so nobody mistakes it for the real one.
+          $banner = "> **Note: the assets on this page were built by CI and are NOT code-signed.**`n> Use the release carrying the S.M.Y.T. signature instead.`n`n"
           Set-Content -Encoding utf8 notes-final.md -Value $banner
           Get-Content notes.md -Raw | Add-Content -Encoding utf8 notes-final.md
           gh release create $tag @assets --title "数值修改器 $tag" --notes-file notes-final.md

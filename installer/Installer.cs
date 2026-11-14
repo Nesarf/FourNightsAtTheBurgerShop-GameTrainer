@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -9,13 +9,15 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
+using Txt = BurgerShopLocale.Txt;
 
 namespace BurgerShopInstaller
 {
     internal static class Program
     {
-        internal const string AppTitle = "汉堡店 数值修改器 · 安装程序";
-        internal const string Version = "1.0.93";
+        /// <summary>窗口标题。随界面语言走，所以是属性而不是 const。</summary>
+        internal static string AppTitle { get { return Txt.T("汉堡店 数值修改器 · 安装程序"); } }
+        internal const string Version = "1.0.94";
         internal const string GameExe = "Four Nights at the Burger Shop.exe";
 
         /// <summary>插件的 BepInPlugin GUID。用来识别"这个 dll 是我们的旧版"。</summary>
@@ -33,6 +35,11 @@ namespace BurgerShopInstaller
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            // 界面语言：--lang 优先，其次游戏目录里 cfg 的 Language，其次系统 UI 语言。
+            // 装之前还没有 cfg，所以系统语言是首次安装时的兜底。
+            string hint = args.Length >= 2 ? args[1] : Installer.LocateGame();
+            Txt.Init(hint, Txt.LangFromArgs(args));
+
             // 静默模式（给脚本 / 自动化用）：
             //   汉堡店修改器-安装程序.exe --install   [游戏目录]
             //   汉堡店修改器-安装程序.exe --uninstall [游戏目录]
@@ -43,7 +50,7 @@ namespace BurgerShopInstaller
                 string root = args.Length >= 2 ? args[1] : Installer.LocateGame();
                 if (root == null)
                 {
-                    Console.Error.WriteLine("找不到游戏目录，请显式传入。");
+                    Console.Error.WriteLine(Txt.T("找不到游戏目录，请显式传入。"));
                     Environment.ExitCode = 2;
                     return;
                 }
@@ -52,26 +59,26 @@ namespace BurgerShopInstaller
                     if (uninstall)
                     {
                         int n = Installer.Uninstall(root, null);
-                        Console.WriteLine("已卸载，删除 " + n + " 个文件：" + root);
+                        Console.WriteLine(Txt.T("已卸载，删除 {0} 个文件：{1}", n, root));
                         if (Installer.LastUninstallPending)
-                            Console.WriteLine("注意：有文件被游戏占用，已登记为下次重启时自动删除。");
+                            Console.WriteLine(Txt.T("注意：有文件被游戏占用，已登记为下次重启时自动删除。"));
                     }
                     else
                     {
                         if (!File.Exists(Path.Combine(root, Program.GameExe)))
                         {
-                            Console.Error.WriteLine("该目录里没有 " + Program.GameExe + "：" + root);
+                            Console.Error.WriteLine(Txt.T("该目录里没有 {0}：{1}", Program.GameExe, root));
                             Environment.ExitCode = 2;
                             return;
                         }
                         int n = Installer.Install(root, s => Console.WriteLine("  " + s.Percent + "%  " + s.Text));
-                        Console.WriteLine("安装完成，" + n + " 个文件：" + root);
-                        Console.WriteLine("游戏里按 F9 打开数值面板；也可运行「数值修改器.exe」预先设置。");
+                        Console.WriteLine(Txt.T("安装完成，{0} 个文件：{1}", n, root));
+                        Console.WriteLine(Txt.T("游戏里按 F9 打开数值面板；也可运行「数值修改器.exe」预先设置。"));
                     }
                 }
                 catch (Exception e)
                 {
-                    Console.Error.WriteLine((uninstall ? "卸载" : "安装") + "失败：" + e.Message);
+                    Console.Error.WriteLine(Txt.T("{0}失败：{1}", uninstall ? Txt.T("卸载") : Txt.T("安装"), e.Message));
                     Environment.ExitCode = 1;
                 }
                 return;
@@ -142,7 +149,7 @@ namespace BurgerShopInstaller
             }
             catch { }
 
-            throw new IOException("文件被占用且无法登记重启删除：" + path);
+            throw new IOException(Txt.T("文件被占用且无法登记重启删除：{0}", path));
         }
     }
 
@@ -294,7 +301,7 @@ namespace BurgerShopInstaller
                     File.Move(path, bak);
                     File.Delete(bak);
 
-                    report?.Invoke(new Step { Text = "清理旧版插件 " + name, Percent = 3 });
+                    report?.Invoke(new Step { Text = Txt.T("清理旧版插件 {0}", name), Percent = 3 });
                 }
                 catch
                 {
@@ -334,7 +341,7 @@ namespace BurgerShopInstaller
             Assembly asm = Assembly.GetExecutingAssembly();
             using (Stream raw = asm.GetManifestResourceStream(Program.PayloadResource))
             {
-                if (raw == null) throw new InvalidOperationException("安装包内缺少载荷资源，文件可能已损坏。");
+                if (raw == null) throw new InvalidOperationException(Txt.T("安装包内缺少载荷资源，文件可能已损坏。"));
 
                 var installed = new List<string>();
                 using (var zip = new ZipArchive(raw, ZipArchiveMode.Read))
@@ -343,7 +350,7 @@ namespace BurgerShopInstaller
                     foreach (ZipArchiveEntry e in zip.Entries)
                     {
                         done++;
-                        report?.Invoke(new Step { Text = "解出 " + e.FullName, Percent = 5 + done * 70 / Math.Max(1, total) });
+                        report?.Invoke(new Step { Text = Txt.T("解出 {0}", e.FullName), Percent = 5 + done * 70 / Math.Max(1, total) });
 
                         string rel = e.FullName.Replace('/', Path.DirectorySeparatorChar);
                         string dest = Path.Combine(root, rel);
@@ -373,18 +380,18 @@ namespace BurgerShopInstaller
                     }
                 }
 
-                report?.Invoke(new Step { Text = "写入安装清单", Percent = 80 });
+                report?.Invoke(new Step { Text = Txt.T("写入安装清单"), Percent = 80 });
 
                 string manifest = Path.Combine(root, Program.ManifestName);
                 var sb = new StringBuilder();
-                sb.AppendLine("# 汉堡店数值修改器 安装清单 —— 卸载时按此表精确还原");
-                sb.AppendLine("# 格式：相对路径 <TAB> sha256（空 = 安装前已存在，卸载不删）");
-                sb.AppendLine("# 安装时间 " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                sb.AppendLine("# 版本 " + Program.Version);
+                sb.AppendLine(Txt.T("# 汉堡店数值修改器 安装清单 —— 卸载时按此表精确还原"));
+                sb.AppendLine(Txt.T("# 格式：相对路径 <TAB> sha256（空 = 安装前已存在，卸载不删）"));
+                sb.AppendLine(Txt.T("# 安装时间 {0}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")));
+                sb.AppendLine(Txt.T("# 版本 {0}", Program.Version));
                 foreach (string line in installed) sb.AppendLine(line);
                 File.WriteAllText(manifest, sb.ToString(), new UTF8Encoding(false));
 
-                report?.Invoke(new Step { Text = "完成", Percent = 100 });
+                report?.Invoke(new Step { Text = Txt.T("完成"), Percent = 100 });
                 return installed.Count;
             }
         }
@@ -394,7 +401,7 @@ namespace BurgerShopInstaller
         {
             var manifest = ReadManifest(root);
             if (manifest.Count == 0)
-                throw new InvalidOperationException("这个目录里没有安装记录（找不到 " + Program.ManifestName + "）。");
+                throw new InvalidOperationException(Txt.T("这个目录里没有安装记录（找不到 {0}）。", Program.ManifestName));
 
             int removed = 0, skipped = 0, pending = 0;
             var errors = new List<string>();
@@ -413,7 +420,7 @@ namespace BurgerShopInstaller
                 if (string.IsNullOrEmpty(kv.Value))
                 {
                     skipped++;
-                    report?.Invoke(new Step { Text = "保留原有文件 " + kv.Key, Percent = 50 * removed / Math.Max(1, manifest.Count) });
+                    report?.Invoke(new Step { Text = Txt.T("保留原有文件 {0}", kv.Key), Percent = 50 * removed / Math.Max(1, manifest.Count) });
                     continue;
                 }
                 try
@@ -423,9 +430,9 @@ namespace BurgerShopInstaller
                 }
                 catch (Exception ex)
                 {
-                    errors.Add(kv.Key + "：" + ex.Message);
+                    errors.Add(Txt.T("{0}：{1}", kv.Key, ex.Message));
                 }
-                report?.Invoke(new Step { Text = "删除 " + kv.Key, Percent = 50 + 40 * (removed + pending) / Math.Max(1, manifest.Count) });
+                report?.Invoke(new Step { Text = Txt.T("删除 {0}", kv.Key), Percent = 50 + 40 * (removed + pending) / Math.Max(1, manifest.Count) });
             }
 
             // 自底向上删空目录
@@ -503,7 +510,7 @@ namespace BurgerShopInstaller
                 {
                     if (!FileEraser.Delete(selfManifest)) pending++;
                 }
-                catch (Exception ex) { errors.Add(Program.ManifestName + "：" + ex.Message); }
+                catch (Exception ex) { errors.Add(Txt.T("{0}：{1}", Program.ManifestName, ex.Message)); }
             }
 
             // 清单删掉后再试一次清空目录
@@ -523,10 +530,10 @@ namespace BurgerShopInstaller
                 RemoveEmptyDirs(Path.Combine(root, "BepInEx"));
             }
 
-            string summary = "完成：删除 " + removed + " 个文件"
-                           + (skipped > 0 ? "，保留 " + skipped + " 个原有文件" : "")
-                           + (pending > 0 ? "，" + pending + " 个被占用、已登记重启后删除" : "")
-                           + (errors.Count > 0 ? "，失败 " + errors.Count + " 个" : "");
+            string summary = Txt.T("完成：删除 {0} 个文件", removed)
+                           + (skipped > 0 ? Txt.T("，保留 {0} 个原有文件", skipped) : "")
+                           + (pending > 0 ? Txt.T("，{0} 个被占用、已登记重启后删除", pending) : "")
+                           + (errors.Count > 0 ? Txt.T("，失败 {0} 个", errors.Count) : "");
             foreach (string err in errors) report?.Invoke(new Step { Text = "× " + err, Percent = 100 });
 
             report?.Invoke(new Step { Text = summary, Percent = 100 });
@@ -534,7 +541,7 @@ namespace BurgerShopInstaller
             if (errors.Count > 0)
             {
                 var ex = new InvalidOperationException(
-                    "有 " + errors.Count + " 个文件没能删除（多为游戏仍在运行占用）：\n" + string.Join("\n", errors.ToArray()));
+                    Txt.T("有 {0} 个文件没能删除（多为游戏仍在运行占用）：\n{1}", errors.Count, string.Join("\n", errors.ToArray())));
                 ex.Data["pending"] = pending;
                 throw ex;
             }
@@ -641,7 +648,7 @@ namespace BurgerShopInstaller
 
             var title = new Label
             {
-                Text = "数值修改器 · 安装程序",
+                Text = Txt.T("数值修改器 · 安装程序"),
                 Font = new Font("Microsoft YaHei UI", 15f, FontStyle.Bold),
                 ForeColor = Ink,
                 Location = new Point(20, 14),
@@ -651,7 +658,7 @@ namespace BurgerShopInstaller
 
             var sub = new Label
             {
-                Text = "安装 BepInEx 与修改器插件；游戏本体不会被改动。版本 " + Program.Version,
+                Text = Txt.T("安装 BepInEx 与修改器插件；游戏本体不会被改动。版本 {0}", Program.Version),
                 ForeColor = Color.FromArgb(110, 116, 132),
                 Location = new Point(22, 46),
                 AutoSize = true
@@ -660,7 +667,7 @@ namespace BurgerShopInstaller
 
             var dirLabel = new Label
             {
-                Text = "游戏目录",
+                Text = Txt.T("游戏目录"),
                 ForeColor = Ink,
                 Location = new Point(22, 82),
                 AutoSize = true
@@ -671,7 +678,7 @@ namespace BurgerShopInstaller
             _path.Size = new Size(470, 26);
             Controls.Add(_path);
 
-            _browse.Text = "浏览…";
+            _browse.Text = Txt.T("浏览…");
             _browse.Location = new Point(500, 101);
             _browse.Size = new Size(96, 28);
             _browse.FlatStyle = FlatStyle.Flat;
@@ -699,13 +706,13 @@ namespace BurgerShopInstaller
             _log.Font = new Font("Consolas", 8.5f);
             Controls.Add(_log);
 
-            _launch.Text = "  装完启动游戏";
+            _launch.Text = Txt.T("  装完启动游戏");
             _launch.Location = new Point(22, 434);
             _launch.Size = new Size(200, 24);
             _launch.ForeColor = Ink;
             Controls.Add(_launch);
 
-            _install.Text = "安装";
+            _install.Text = Txt.T("安装");
             _install.Location = new Point(300, 430);
             _install.Size = new Size(140, 36);
             _install.FlatStyle = FlatStyle.Flat;
@@ -715,7 +722,7 @@ namespace BurgerShopInstaller
             _install.Click += (s, e) => DoInstall();
             Controls.Add(_install);
 
-            _uninstall.Text = "卸载还原";
+            _uninstall.Text = Txt.T("卸载还原");
             _uninstall.Location = new Point(450, 430);
             _uninstall.Size = new Size(146, 36);
             _uninstall.FlatStyle = FlatStyle.Flat;
@@ -731,15 +738,15 @@ namespace BurgerShopInstaller
             if (found != null)
             {
                 _path.Text = found;
-                _status.Text = "已自动找到游戏目录。";
+                _status.Text = Txt.T("已自动找到游戏目录。");
                 _status.ForeColor = Color.FromArgb(60, 130, 90);
-                Log("找到游戏：" + found);
+                Log(Txt.T("找到游戏：{0}", found));
             }
             else
             {
-                _status.Text = "没有自动找到游戏目录，请点「浏览…」手动选择。";
+                _status.Text = Txt.T("没有自动找到游戏目录，请点「浏览…」手动选择。");
                 _status.ForeColor = Color.FromArgb(200, 120, 40);
-                Log("未自动定位到游戏目录。");
+                Log(Txt.T("未自动定位到游戏目录。"));
             }
             RefreshButtons();
         }
@@ -754,7 +761,7 @@ namespace BurgerShopInstaller
         {
             using (var dlg = new FolderBrowserDialog())
             {
-                dlg.Description = "选择游戏根目录（里面要有 " + Program.GameExe + "）";
+                dlg.Description = Txt.T("选择游戏根目录（里面要有 {0}）", Program.GameExe);
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
                     _path.Text = dlg.SelectedPath;
@@ -768,17 +775,17 @@ namespace BurgerShopInstaller
             string root = _path.Text.Trim();
             if (!Directory.Exists(root))
             {
-                Fail("目录不存在：" + root);
+                Fail(Txt.T("目录不存在：{0}", root));
                 return false;
             }
             if (!File.Exists(Path.Combine(root, Program.GameExe)))
             {
-                Fail("这个目录里没有 " + Program.GameExe + "，请选择正确的游戏根目录。");
+                Fail(Txt.T("这个目录里没有 {0}，请选择正确的游戏根目录。", Program.GameExe));
                 return false;
             }
             if (Installer.GameRunning())
             {
-                Fail("游戏正在运行，请先关闭游戏再安装（会占用 winhttp.dll）。");
+                Fail(Txt.T("游戏正在运行，请先关闭游戏再安装（会占用 winhttp.dll）。"));
                 return false;
             }
             return true;
@@ -826,7 +833,7 @@ namespace BurgerShopInstaller
 
             if (Installer.ReadManifest(root).Count > 0)
             {
-                if (MessageBox.Show("检测到这个目录里已经装过。\n继续会覆盖安装（设置文件也会被重置为默认）。\n\n要继续吗？",
+                if (MessageBox.Show(Txt.T("检测到这个目录里已经装过。\n继续会覆盖安装（设置文件也会被重置为默认）。\n\n要继续吗？"),
                         Program.AppTitle, MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK)
                     return;
             }
@@ -834,7 +841,7 @@ namespace BurgerShopInstaller
             SetBusy(true);
             _bar.Value = 0;
             _log.Clear();
-            TryTrace("=== 开始安装: " + root);
+            TryTrace(Txt.T("=== 开始安装: {0}", root));
 
             var worker = new BackgroundWorker();
             // 【必须显式声明】BackgroundWorker 默认 WorkerReportsProgress = false，
@@ -856,16 +863,16 @@ namespace BurgerShopInstaller
                 SetBusy(false);
                 if (e.Error != null)
                 {
-                    Fail("安装失败：" + e.Error.Message);
+                    Fail(Txt.T("安装失败：{0}", e.Error.Message));
                     return;
                 }
                 _bar.Value = 100;
                 Log("");
-                Log("(自然) 安装完成。");
-                Log("  · 游戏里按 F9 打开数值面板");
-                Log("  · 也可以运行「数值修改器.exe」在进游戏前改");
-                Log("  · 想还原就点「卸载还原」或运行「卸载还原.ps1」");
-                _status.Text = "安装完成。";
+                Log(Txt.T("(自然) 安装完成。"));
+                Log(Txt.T("  · 游戏里按 F9 打开数值面板"));
+                Log(Txt.T("  · 也可以运行「数值修改器.exe」在进游戏前改"));
+                Log(Txt.T("  · 想还原就点「卸载还原」或运行「卸载还原.ps1」"));
+                _status.Text = Txt.T("安装完成。");
                 _status.ForeColor = Color.FromArgb(60, 130, 90);
                 RefreshButtons();
 
@@ -879,7 +886,7 @@ namespace BurgerShopInstaller
                             WorkingDirectory = root
                         });
                     }
-                    catch (Exception ex) { Log("× 启动游戏失败：" + ex.Message); }
+                    catch (Exception ex) { Log("× " + Txt.T("启动游戏失败：{0}", ex.Message)); }
                 }
             };
             worker.RunWorkerAsync();
@@ -888,17 +895,17 @@ namespace BurgerShopInstaller
         private void DoUninstall()
         {
             string root = _path.Text.Trim();
-            if (!Directory.Exists(root)) { Fail("目录不存在。"); return; }
-            if (Installer.GameRunning()) { Fail("游戏正在运行，请先关闭游戏。"); return; }
+            if (!Directory.Exists(root)) { Fail(Txt.T("目录不存在。")); return; }
+            if (Installer.GameRunning()) { Fail(Txt.T("游戏正在运行，请先关闭游戏。")); return; }
 
-            if (MessageBox.Show("将从游戏目录删除 BepInEx 与修改器，游戏回到原样。\n\n（安装前就存在的文件会保留）\n\n确定卸载？",
+            if (MessageBox.Show(Txt.T("将从游戏目录删除 BepInEx 与修改器，游戏回到原样。\n\n（安装前就存在的文件会保留）\n\n确定卸载？"),
                     Program.AppTitle, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) != DialogResult.OK)
                 return;
 
             SetBusy(true);
             _log.Clear();
             _bar.Value = 0;
-            TryTrace("=== 开始卸载: " + root);
+            TryTrace(Txt.T("=== 开始卸载: {0}", root));
 
             var worker = new BackgroundWorker();
             // 同上：不声明就会在第一次 ReportProgress 时抛异常
@@ -916,11 +923,11 @@ namespace BurgerShopInstaller
             worker.RunWorkerCompleted += (s, e) =>
             {
                 SetBusy(false);
-                if (e.Error != null) { Fail("卸载失败：" + e.Error.Message); return; }
+                if (e.Error != null) { Fail(Txt.T("卸载失败：{0}", e.Error.Message)); return; }
                 _bar.Value = 100;
                 Log("");
-                Log("(自然) 已还原。游戏现在是原版状态。");
-                _status.Text = "已卸载还原。";
+                Log(Txt.T("(自然) 已还原。游戏现在是原版状态。"));
+                _status.Text = Txt.T("已卸载还原。");
                 _status.ForeColor = Color.FromArgb(60, 130, 90);
                 RefreshButtons();
             };
