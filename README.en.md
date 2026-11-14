@@ -241,7 +241,7 @@ hold these characters.
 | `dist/` | the compiled products |
 | `使用说明.md` | **the full manual** (features, parameters, troubleshooting) |
 | `KNOWN-ISSUES.md` | **what is currently unresolved** (only the unfixed ones) |
-| `ENGINEERING-NOTES.md` | **engineering notes**: symptom / root cause / fix / lesson for every pitfall (41 numbered entries + 5 appendices + 5 S-series entries, with a table of contents) |
+| `ENGINEERING-NOTES.md` | **engineering notes**: symptom / root cause / fix / lesson for every pitfall (42 numbered entries + 5 appendices + 5 S-series entries, with a table of contents) |
 | `CHANGELOG.md` | per-version changes |
 
 ## Just download it (no build)

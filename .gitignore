@@ -1,15 +1,15 @@
-# 游戏的引用程序集（版权内容，不入库）—— 见 README「编译」
+# Reference assemblies from the game (copyrighted, not committed) — see "Building" in the README
 refs/
 *.dll
 !dist/*.dll
 !installer/art.ico
 
-# 本机配置与路径
+# Local config and paths
 tools/gamepath.txt
 cfg-snapshots/
 *.cfg
 
-# 运行记录与分析产物
+# Runtime logs and analysis output
 watch-archive/
 src/
 tex/
@@ -18,20 +18,20 @@ dxt/
 demosaic-audit/
 .venv*/
 
-# 编译中间产物
+# Build intermediates
 bin/
 obj/
 
-# 临时脚本
+# Throwaway scripts
 _*.py
 *.bak
 
-# 安装程序打包用的临时目录
+# Scratch directory used when packing the installer
 /_tmp/
 
-# 安装程序的编译中间产物（由 installer/make_payload.ps1 生成，嵌进 exe 后就没用了）
+# Installer build intermediate (produced by installer/make_payload.ps1; worthless once embedded in the exe)
 installer/payload.zip
 
-# static-check 的孤儿清单（每次运行都会重写，不进仓库）
+# static-check orphan list (rewritten on every run, never committed)
 _orphan.txt
 /_tmp/orphan.txt

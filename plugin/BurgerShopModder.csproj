@@ -9,7 +9,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <Version>1.0.95</Version>
-    <Product>Four Nights at the Burger Shop 数值修改器</Product>
+    <Product>Four Nights at the Burger Shop Numeric Modifier</Product>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <DebugType>none</DebugType>
     <NoWarn>CS0436</NoWarn>

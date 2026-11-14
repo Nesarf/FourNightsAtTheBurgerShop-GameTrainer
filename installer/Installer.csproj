@@ -11,7 +11,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <Version>1.0.95</Version>
-    <Product>Four Nights at the Burger Shop 数值修改器 安装程序</Product>
+    <Product>Four Nights at the Burger Shop Numeric Modifier - Installer</Product>
     <DebugType>none</DebugType>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <NoWarn>CS0649</NoWarn>
