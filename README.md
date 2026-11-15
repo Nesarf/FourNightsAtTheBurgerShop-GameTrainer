@@ -362,7 +362,7 @@ bash tools/gcmd.sh demand status   # 索取/榨取模式状态
 
 | 想找什么 | 去哪 |
 | --- | --- |
-| 怎么用、每个参数是什么 | [`使用说明.md`](使用说明.md) · [`MANUAL.en.md`](MANUAL.en.md) |
+| 怎么用、每个参数是什么 | [`使用说明.md`](使用说明.md) · [`MANUAL.md`](MANUAL.md) |
 | **现在还有什么没修** | [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md) · [`KNOWN-ISSUES.en.md`](KNOWN-ISSUES.en.md) |
 | **某个功能为什么长这样**（逆向发现、踩过的坑） | [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) · [`ENGINEERING-NOTES.en.md`](ENGINEERING-NOTES.en.md) |
 | 每个版本改了什么 | [`CHANGELOG.md`](CHANGELOG.md) · [`CHANGELOG.en.md`](CHANGELOG.en.md) |

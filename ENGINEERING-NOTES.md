@@ -3,7 +3,7 @@
 > **Note for English readers:** this file is the developer's working log and is kept in
 > Chinese. It is where every real problem is written down — symptom, root cause, fix and
 > lesson — one numbered entry each. The English documents are
-> [README.en.md](README.en.md), [MANUAL.en.md](MANUAL.en.md), [KNOWN-ISSUES.en.md](KNOWN-ISSUES.en.md)
+> [README.en.md](README.en.md), [MANUAL.md](MANUAL.md), [KNOWN-ISSUES.en.md](KNOWN-ISSUES.en.md)
 > and [CHANGELOG.en.md](CHANGELOG.en.md). If you are reading this to understand *why* a
 > feature behaves the way it does, the entries are short and the code samples are readable
 > even without the prose; issue numbers here match the ones cited by the English documents.

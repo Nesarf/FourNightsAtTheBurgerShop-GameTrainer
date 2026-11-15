@@ -130,7 +130,7 @@ jobs:
           $plug = '2' + [char]0x00D7 + '9+9L+6[ED]+7+2' + [char]0x00D7 + '45' + [char]0x2192 + '1[C]+LS.dll'
           Copy-Item -LiteralPath (Join-Path 'dist' $plug) "out/18-9L-6_ED-7-45-45_C-LS.dll"
           Copy-Item '使用说明.md'               'out/Manual-zh-CN.md'
-          Copy-Item 'MANUAL.en.md'               'out/Manual-en.md'
+          Copy-Item 'MANUAL.md'                  'out/Manual-en.md'
 
           # [list only what is in out/]
           # It used to walk dist/, but dist/ can hold older files downloaded back
