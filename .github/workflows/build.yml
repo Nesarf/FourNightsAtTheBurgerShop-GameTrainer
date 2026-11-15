@@ -200,6 +200,8 @@ jobs:
             "out/18-9L-6_ED-7-45-45_C-LS-Installer.exe",
             "out/18-9L-6_ED-7-45-45_C-LS-Trainer.exe",
             "out/18-9L-6_ED-7-45-45_C-LS.dll",
+            'out/Manual-zh-CN.md',
+            'out/Manual-en.md',
             'out/SHA256SUMS.txt'
           )
           gh release view $tag 2>$null
