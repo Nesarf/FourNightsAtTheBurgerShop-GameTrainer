@@ -1,850 +1,797 @@
-# 变更记录
+> This changelog is an English translation of the Chinese original, [更新日志.md](更新日志.md); the Chinese version is authoritative.
+> Where the two disagree, trust the Chinese text and fix this file instead.
+> Everything below follows the original structure exactly: same versions, same order, same entries.
 
-本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+# Changelog
 
-详细的**根因 / 修法 / 教训**在 [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md)，
-每条后面的 `#N` 是那份文件里的编号。
+This project follows [Semantic Versioning](https://semver.org/).
 
----
-
-## v1.0.99
-
-**命令回执的英文补齐，加上三处排版修正（栏标签挤进一行、提示行真的换行、预设输入框定宽）。**
-
-### 命令回执：`Say(...)` 之外的那些
-
-v1.0.94 包的是 `Say(...)` 的直接实参。但 `StateLine()` / `states` / `ecs` / `parts` / `pix`
-这些是**先拼 `StringBuilder` 再 Say**，内部拼接全漏了。英文模式下 `state` 的回执是
-`scene=TabemiTitle （无 TabemiControl） 强制=OFF` 这种一半一半的样子。
-
-这次补了 30 处：状态机、点击归属、动画层、绝顶一览的每一段标签，以及
-`TabShotPublic` / `ScrollPublic` / `AboutPublic` / `DumpTabsPublic` 四个命令方法的回执。
-
-### 三处排版
-
-- **栏标签挤进一行**：写死 62px 时英文 `Fellatio` / `Presets` 被截；改成 `TabW()`
-  （padding 从 14 收到 4）后八个刚好放得下，再多 10px 就会被挤出面板
-- **`Hint()` 真的换行**：`wordWrap` 早就开着，但 Label 没有宽度约束就不会折行，
-  超长英文句子被裁在右边界。加 `GUILayout.ExpandWidth(true)` 之后才生效
-- **预设名输入框定宽 210px**：它原来 expand，把「Save as preset」挤出了右边
-
-### 工程笔记补两条
-
-`#43` 英文化的三类盲区（`L.T` 套 `L.T`、日志打在 `L.Init` 之前、正则只认大写 `Log.`），
-`#44` 排版：按钮铺满整行，以及「看不出来的形状」该怎么用规则盯着。
-
-### 验证
-
-```
-静态检查      16 条，0 失败
-翻译覆盖      1048 / 1049（剩 bilibili）
-回归          装 27 / 卸 27 且全清
-游戏内        英文模式八栏逐个截图，栏标签无截字、提示行正常换行
-签名          三个文件 Valid + DigiCert 时间戳
-```
-
-**调参值一个字节没动**，`Language` 仍是 `zh`。
+The detailed **root cause / fix / lesson** for each item lives in [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md);
+the `#N` after an entry is its number in that file.
 
 ---
 
-## v1.0.98
+## v1.0.99 — command replies in English, plus three layout fixes
 
-**英文模式下运行时日志的最后几处中文，还有一条防止排版回退的检查规则。**
+### Command replies: the ones outside `Say(...)`
 
-### 日志：v1.0.94 漏掉的那一类
+v1.0.94 wrapped the arguments passed straight to `Say(...)`. But `StateLine()`, `states`, `ecs`,
+`parts` and `pix` build a `StringBuilder` first and `Say` it afterwards — everything inside was
+missed. In English mode a `state` reply read `scene=TabemiTitle （无 TabemiControl） 强制=OFF`.
 
-v1.0.94 把所有 `Log.LogInfo` 包进了 `L.T`，但那时用的正则是 `Log\.Log*` ——
-**没匹配到小写的 `log.Log*`**（方法参数里的 `ILogger log`）。于是 `GameBuild.cs` 的三条
-程序集核对日志从来没被翻过，英文模式下照样打中文。
+Thirty sites covered this round: every label in the state machine / click ownership / anim layer /
+ecstasy overview replies, plus the replies of `TabShotPublic`, `ScrollPublic`, `AboutPublic` and
+`DumpTabsPublic`.
 
-更隐蔽的是第二条：这三条日志打在 `L.Init` **之前**。即使包了 `L.T`，那时对照表还没载入，
-`L.T` 只能原样返回中文。所以修法是两件事一起：包 `L.T`，并把 `GameBuild.ReportOnce(Log)`
-挪到 `L.Init` 之后。
+### Three layout fixes
 
-还有一处同类：`ProbeWhy("没有 Live2D_ModelControl 实例")` 这类探针失败原因，
-参数是中文、内部才过 `L.T`。这次一并处理 —— `ProbeWhy` 内部改成 `L.T(why)`，
-九个原因都补了译文。
+- **Tab labels fit on one row**: hard-coded at 62 px the English `Fellatio` / `Presets` were
+  clipped; with `TabW()` (4 px padding instead of 14) all eight fit, and ten more pixels would push
+  the last one off the panel
+- **`Hint()` actually wraps**: `wordWrap` was on all along, but a Label without a width constraint
+  does not wrap — long English sentences were cut at the right edge. `GUILayout.ExpandWidth(true)`
+  made it take effect
+- **The preset name field is 210 px wide**: it used to expand and pushed "Save as preset" off the row
 
-`L.Init` 自己的诊断文案（「英文模式，共 N 条」）也改成英文了，它不受 `L.T` 管。
+### Two new engineering notes
 
-### 检查器：第 (16) 条
+`#43` the three blind spots of the translation (an `L.T` inside `L.T`, a log firing before
+`L.Init`, a regex that only knew the capitalised `Log.`), and `#44` layout: buttons that stretch
+across the row, and how to watch a shape you cannot see.
 
-`GUILayout.Button(text)` 不带宽度的会 expand width —— v1.0.97 手工修了 46 个按钮，
-但下一次谁再写一个裸按钮，同样的毛病会悄悄回来，而且**在代码里看不出来**（它跟普通按钮长得一模一样）。
-
-于是加了一条规则：扫每个 `GUILayout.Button(...)` 的整段调用，里面既没有 `GUILayout.Width(`、
-也没有 `Btn(` / `BtnText(` 就报。它上线时立刻抓出了 9 个 —— 其中 8 个是「文案是变量或三元」的
-形式，我这轮手工补了宽度；剩下的一个是注释里的示例，规则已经跳过注释区间。
-
-顺带把规则 (13) 的范围补上 `ProbeWhy(...)` 的参数（否则那 9 条译文会被判成孤儿）。
-
-### 验证
+### Verification
 
 ```
-静态检查      16 条，0 失败
-翻译覆盖      1014 / 1015（剩 bilibili）
-回归          装 27 / 卸 27 且全清
-英文实测      启动日志 12 行里已无中文（产品名与游戏 API 名除外）
-签名          三个文件 Valid + DigiCert 时间戳
+static check   16 rules, 0 failed
+coverage       1048 / 1049 (the one left is bilibili)
+regression     install 27 / uninstall 27 and fully clean
+in game        all eight English tabs captured: no clipped tab labels, hints wrap
+signing        3 files Valid + DigiCert timestamp
 ```
 
-**调参值一个字节没动**，`Language` 仍是 `zh`。
+**No tuned value was touched**; `Language` is still `zh`.
 
 ---
 
-## v1.0.97
+## v1.0.98 — the last Chinese in runtime logs, plus a rule against layout regressions
 
-**面板排版：按钮不再铺满整行。**
+### Logs: the class v1.0.94 missed
 
-`GUILayout.Button(text)` 不带宽度时会 expand width，于是在 540px 宽的面板里，
-连一个「删除」都占满整行。这一版给按钮按文字实际宽度排版（不低于 88px），左边对齐。
+v1.0.94 wrapped every `Log.LogInfo` in `L.T`, but the pattern it used was `Log\.Log*` — it
+**never matched a lowercase `log.Log*`** (the `ILogger log` method parameter). So the three
+assembly-check lines in `GameBuild.cs` had never been translated and still printed Chinese.
 
-### 改了哪三处
+The second half was subtler: those three lines fire **before `L.Init`**. Even wrapped in `L.T`
+the table is not loaded yet, so `L.T` returns the Chinese unchanged. The fix is both things:
+wrap them, and move `GameBuild.ReportOnce(Log)` after `L.Init`.
 
-- **46 个「一个字面量、无宽度」的按钮**：`Button(L.T("X"))` 全部改成 `Button(L.T("X"), Btn("X"))`，
-  `Btn` 就是 `GUILayout.Width(BtnW(...))`。
-- **栏标签的 62px 写死宽度**：英文 "Fellatio" / "Presets" 在 62px 里会被截成 "Fellati…"。
-  现在按译文实际宽度算。
-- **「展开 / 收起」的 56px**：英文 "Collapse" 比中文「收起」宽，同理。
+One more of the same shape: `ProbeWhy("没有 Live2D_ModelControl 实例")` — the reason is passed
+in as Chinese and translated inside. `ProbeWhy` now does `L.T(why)` and all nine reasons have
+translations.
 
-### 截图
+`L.Init`'s own diagnostic text ("English mode: N entries") is English now too; it never went
+through `L.T` in the first place.
 
-中文与英文各截了一张标题画面下的面板，按钮都是紧凑的，栏标签没有截字。
+### Checker: rule (16)
 
-### 验证
+A `GUILayout.Button(text)` without a width expands to fill — v1.0.97 fixed 46 of them by hand,
+but the next bare button written would quietly bring the problem back, and it **does not show
+up when reading the code** (it looks exactly like a normal button).
+
+So there is a rule now: take each whole `GUILayout.Button(...)` call, and fail it if the span
+contains neither `GUILayout.Width(`, `Btn(` nor `BtnText(`. It caught 9 on its first run — 8 of
+them were buttons whose label is a variable or a ternary, given a width by hand this round;
+the ninth was an example inside a comment, and the rule blanks comments out.
+
+Rule (13) was widened to accept the argument of `ProbeWhy(...)` too, otherwise those nine
+translations would be reported as orphans.
+
+### Verification
 
 ```
-静态检查      15 条，0 失败
-回归          装 27 / 卸 27 且全清
-签名          三个文件 Valid + DigiCert 时间戳
+static check   16 rules, 0 failed
+coverage       1014 / 1015 (the one left is bilibili)
+regression     install 27 / uninstall 27 and fully clean
+English run    no Chinese left in the 12 startup log lines (except the product name and game API names)
+signing        3 files Valid + DigiCert timestamp
 ```
 
-**调参值一个字节没动**，`Language` 仍是 `zh`。
+**No tuned value was touched**; `Language` is still `zh`.
 
 ---
 
-## v1.0.96
+## v1.0.97 — panel layout: buttons no longer stretch to full width
 
-**元数据与检查器注释的英文化，顺带把这一轮清查的尾巴收干净。**
+**`GUILayout.Button(text)` without a width expands to fill**, so inside a 540 px panel even a
+"Delete" button took the whole row. Buttons are now laid out at their actual text width
+(never below 88 px), left aligned.
 
-### 产品名改成英文
+### The three places
 
-三个 `.csproj` 的 `<Product>` 原来是「Four Nights at the Burger Shop 数值修改器」。
-这一栏会显示在 Windows 的资源管理器「属性 → 详细信息」里，英文用户看得见。
-现在三个都是 `Four Nights at the Burger Shop Numeric Modifier`（安装程序另加 `- Installer`）。
+- **46 single-literal buttons with no width**: `Button(L.T("X"))` became `Button(L.T("X"), Btn("X"))`,
+  where `Btn` is `GUILayout.Width(BtnW(...))`.
+- **The hard-coded 62 px tab width**: English "Fellatio" / "Presets" were clipped to "Fellati…"
+  at 62 px. Now measured from the translated text.
+- **The 56 px "Expand / Collapse" button**: "Collapse" is wider than 收起, same fix.
 
-### `static-check.py` 的注释也翻了
+### Screens
 
-之前只翻了它的输出与 15 条规则名（CI 日志是英文），146 行注释留着中文。
-这一版把注释全部译成英文，包括每条规则背后踩过的坑。代码一个字没动，改完重跑 15 条仍然全过。
+The panel was captured on the title screen in both languages: buttons compact, no clipped tabs.
 
-剩下没翻的中文都是代码本身要用的：`索取` / `榨取` / `吸取` 三个模式词、文件名
-（`使用说明.md`、`数值修改器.exe`）、日志标签与 `{模式}` 占位符 —— 翻了程序就不工作了。
-
-### 验证
+### Verification
 
 ```
-静态检查      15 条，0 失败
-回归          装 27 / 卸 27 且全清
-签名          三个文件 Valid + DigiCert 时间戳
+static check   15 rules, 0 failed
+regression     install 27 / uninstall 27 and fully clean
+signing        3 files Valid + DigiCert timestamp
 ```
 
-**调参值一个字节没动**，`Language` 仍是 `zh`。
+**No tuned value was touched**; `Language` is still `zh`.
 
 ---
 
-## v1.0.95
+## v1.0.96 — English product metadata and checker comments
 
-**仓库洁净度：清掉临时产物、补全签名记录、把卸载脚本做成双语。**
+**Metadata and the checker's comments in English; the tail of this round's audit tidied up.**
 
-发完 v1.0.94 又扫了一遍仓库本身，找到四处陈旧的东西 —— 都不是功能问题，
-但会让「仓库里躺着的东西」和「实际发布的东西」对不上。
+### Product names in English
 
-### 四处陈旧
+The three `.csproj` files carried `<Product>Four Nights at the Burger Shop 数值修改器</Product>`.
+That field shows up in Windows Explorer under Properties → Details, so an English user sees it.
+All three now read `Four Nights at the Burger Shop Numeric Modifier` (the installer adds `- Installer`).
 
-- **`_orphan.txt` 从仓库里删掉。** 它是 `static-check.py` 每次运行都会重写的临时清单，
-  却一直躺在根目录里 —— 每跑一次检查工作区就变脏一次。输出改到 `_tmp/orphan.txt`，
-  这两条都进 `.gitignore`。
-- **`SIGNINGS.ndjson` 从 32 条补到 138 条。** 仓库里那份停在 v1.0.9，
-  v1.0.91 到 v1.0.94 的签名记录（插件 / 修改器 / 安装程序共 12 次）一条都没进去。
-  它本该是签名总账本的导出，只是很久没重新导出过。
-- **`卸载还原.ps1` 改成双语。** 它是用户真会双击的脚本，原来只有中文输出；
-  现在按系统 UI 语言选中文或英文，注释也给了两套。
-- **README 里「41 条历史记录」改成 42 条。** 第 42 条 v1.0.92 就加进去了，README 没跟上。
+### The `static-check.py` comments are translated too
 
-### 安装包重打
+Only its output and the 15 rule names had been translated (CI logs are English); the 146 lines
+of comments were still Chinese. They are all English now, including the pitfalls behind each
+rule. No code changed, and the 15 rules still pass after the edit.
 
-`卸载还原.ps1` 是随安装包分发的，所以载荷与安装程序重新打包并重新签名 ——
-v1.0.94 那份安装程序里带的还是纯中文的卸载脚本。
+What remains in Chinese is what the code itself needs: the three mode words `吸取` / `索取` / `榨取`,
+file names (`使用说明.md`, `数值修改器.exe`), log tags and the `{模式}` placeholder — translating
+those would stop the program working.
 
-### 验证
+### Verification
 
 ```
-静态检查      15 条，0 失败
-回归          装 27 / 卸 27 且全清
-签名          三个文件 Valid + DigiCert 时间戳
+static check   15 rules, 0 failed
+regression     install 27 / uninstall 27 and fully clean
+signing        3 files Valid + DigiCert timestamp
 ```
 
-**调参值一个字节没动**，`Language` 仍是 `zh`。
-
-### 文档补充（未发版）
-
-工程笔记的英文版与 tools/ 脚本的英文化是在 v1.0.95 之后补的，没有改代码，
-所以不占一个新版本号。
-
-- **`ENGINEERING-NOTES.en.md` 新增** —— 42 条历史记录、5 篇附录、5 条 S 系列全部译出，
-  代码块与日志样例保留原样（那些是拿去 grep 的字面量）。中文版仍是权威版本。
-- **`tools/` 下的脚本英文化** —— `cfgsnap.sh`、`cfgmerge-check.sh`、`drive.sh`、
-  `gcmd.sh`、`gcmd.ps1`、`holdkey.ps1`、`restore-user-cfg.sh`、`tabshot.sh`、
-  `watch.sh`、`sync.sh` 的注释与输出全部英文。里面 grep 的中文模式**故意保留**
-  （`状态机:`、`索取欲=` 之类是中文日志的字面量，译了就匹配不到）。
-- **修工程笔记里两处陈旧内容** —— 目录写「40 条编号记录、4 篇附录、4 条 S 系列」，
-  实际是 42 / 5 / 5；另有两行树路径被 `\b` 转义吃成了退格字符。
-- **`static-check.py` 的注释仍是中文** —— 它的输出与 15 条规则名早就英文了，
-  CI 日志是英文；注释是维护者笔记，这一轮没有动。
+**No tuned value was touched**; `Language` is still `zh`.
 
 ---
 
-## v1.0.94
+## v1.0.95 — repository hygiene
 
-**运行侧英文化：面板之外，日志、命令回执、安装程序、修改器、CI 也全是英文了。**
+**Temporary artefacts removed, signing records completed, the uninstall script made bilingual.**
 
-之前几轮翻的都是「画在面板上的字」。可英文用户提 issue 要贴日志、要跑安装程序、
-要看 CI 结果 —— 这些都在面板之外。这一版把它们一并对齐。
+After v1.0.94 shipped, the repository itself got a second sweep. Four stale things turned up —
+none of them functional, but each one made what sits in the repository disagree with what was
+actually released.
 
-### 插件：426 处日志与回执过 L.T
+### The four
 
-`Log.LogInfo` / `LogWarning` / `LogError`、`Say()`（命令通道回执）、`warn` / `info`
-（绑定校验）里含中文的字面量全部包进 `L.T`，新增 439 条译文，对照表从 602 条到 997 条。
+- **`_orphan.txt` removed from the repository.** It is a temporary list that `static-check.py`
+  rewrites on every run, yet it sat in the repository root — so every check dirtied the working
+  tree. Output now goes to `_tmp/orphan.txt`, and both are in `.gitignore`.
+- **`SIGNINGS.ndjson` went from 32 to 138 records.** The copy in the repository had stopped at
+  v1.0.9; the signing records for v1.0.91 through v1.0.94 (12 signings across the plugin, the
+  editor and the installer) were missing. It is meant to be an export of the signing ledger and
+  had simply not been re-exported for a long time.
+- **`卸载还原.ps1` is bilingual.** It is a script users actually double-click and it only
+  printed Chinese; it now picks Chinese or English from the system UI language, with both sets
+  of comments.
+- **README said "41 historical entries", now 42.** Entry 42 was added back in v1.0.92 and the
+  README had not caught up.
 
-中文模式下 `L.T` 原样返回，所以中文日志一个字节都没变。
+### Installer rebuilt
 
-### 两处「嵌套 L.T」其实一直没翻成
+`卸载还原.ps1` ships inside the installer payload, so the payload and the installer were rebuilt
+and re-signed — the v1.0.94 installer still carried the Chinese-only uninstall script.
 
-`[绝顶骤降]` 与 `[骤降溯源]` 这两条长日志的写法是
-`L.T("A" + "B" + L.T("C"), args)` —— 外层 `L.T` 拿到的是拼接后的整串，
-而表里存的是分段 key，永远匹配不上。改成 `L.T("A" + "B" + "C", args)`
-之后一条 key 覆盖整句。
-
-### 两个转义把路径变成了控制字符
-
-命令回执里有两条字面量写成了 `cmd\anim.csv` 与 `cmd\tremor.csv`。
-C# 里 `\a` 是响铃、`\t` 是制表符 —— 日志里那两个路径中间一直是个不可见字符。
-改成 `\\a` / `\\t`，现在打出来是真的反斜杠。
-
-### 安装程序与外部修改器：双语，跟游戏内的语言开关走
-
-两个 exe 原来只有中文界面 —— 插件翻得再全，第一步就过不去。
-
-新增 `shared/Locale.cs`，两个工程引用同一份字典（112 条）。语言按三层决定：
-`--lang` 命令行 > `<游戏目录>/BepInEx/config/nesarf.burgershop.modder.cfg` 的 `Language`
-> 系统 UI 语言（中文系统中文，其余英文）。安装时还没有 cfg，所以系统语言兜底。
-
-### 外部修改器的三个既有问题
-
-排查英文界面时暴露出来的，与翻译无关：
-
-- **四个按钮从来没挂到窗口上** —— `MakeButton` 造好、事件也绑了，就是没有 `Controls.Add`。
-  打开后只有一片滑块，保存键点不到。
-- **状态行被滑动面板整个盖住** —— 面板从 y=78 起，状态行在 88。
-- **英文比中文宽，参数名被截** —— 英文模式下名称列 122→150px、滑块起点右移 30px，
-  提示行改成按文字自适应。
-
-### 工具与 CI
-
-`tools/static-check.py` 的 15 条规则消息与结论全英文；
-`.github/workflows/build.yml` 的 job / step 名与所有消息也英文化。
-
-### 文档
-
-- `使用说明.en.md` 补齐到与中文版同结构
-- `KNOWN-ISSUES.en.md` 新增
-- `CHANGELOG.en.md` 新增
-- `README.en.md` 补齐到与中文版同结构
-
-### 验证
+### Verification
 
 ```
-静态检查      15 条，0 失败（发布树）
-翻译覆盖      997 / 998（剩 bilibili，产品名不翻）
-回归          装 27 / 卸 27 且全清 / 再装 27
-界面          安装程序与修改器各截中英两版，逐项核对
-签名          三个文件 Valid + DigiCert 时间戳
+static check   15 rules, 0 failed
+regression     install 27 / uninstall 27 and fully clean
+signing        3 files Valid + DigiCert timestamp
 ```
 
-**调参值一个字节没动**，`Language` 仍是 `zh`。
+**No tuned value was touched**; `Language` is still `zh`.
+
+### Documentation supplement (not a release)
+
+The English engineering notes and the English `tools/` scripts landed after v1.0.95.
+No code changed, so they do not take a version number of their own.
+
+- **`ENGINEERING-NOTES.md` added** — all 42 entries, 5 appendices and 5 S-series entries
+  translated. Code blocks and log samples are left as-is (they are the literals people grep
+  for). The Chinese version remains authoritative.
+- **`tools/` scripts in English** — comments and output of `cfgsnap.sh`, `cfgmerge-check.sh`,
+  `drive.sh`, `gcmd.sh`, `gcmd.ps1`, `holdkey.ps1`, `restore-user-cfg.sh`, `tabshot.sh`,
+  `watch.sh` and `sync.sh`. The Chinese grep patterns inside them are **deliberately kept**
+  (`状态机:`, `索取欲=` and the like are literals of the Chinese log; translating them would
+  break the match).
+- **Two stale things fixed in the engineering notes** — the table of contents said "40
+  numbered entries, 4 appendices, 4 S-series entries" while the file holds 42 / 5 / 5; and two
+  tree paths had been eaten into backspace characters by a `\b` escape.
+- **`static-check.py` comments are still Chinese** — its output and all 15 rule names have been
+  English for a while and CI logs are English; the comments are maintainer notes and were left
+  alone this round.
 
 ---
 
-## v1.0.93
+## v1.0.94 — runtime-side English
 
-**第二轮之后又找到三批「运行时才拼出来」的文案。**
+**Beyond the panel: logs, command replies, the installer, the editor, the static checker and CI are English now too.**
 
-这类字符串静态扫描看不出是不是中文 —— `L.T` 拿到的 key 是拼接后的整串，
-对照表里没有那一整串，就回落成中文。它们大多出现在蓝色小字（`Hint` 的说明行）里。
+Earlier rounds translated what was drawn on the panel. English users also have to paste logs
+into an issue, run the installer, and read CI results — none of which live on the panel.
+This version aligns all of that.
 
-### 第一批：四处拼接的提示
+### Plugin: 426 log and reply literals go through L.T
 
-- **吸精 · 当前状态** —— `"当前场景：" + ChainSlotName() + "，上限 " + …`
-- **索取 / 榨取的状态行** —— `"当前：" + DemandCmd("status")`
-- **模式状态本身** —— `DemandCmd` 返回的是 `ModeWord() + "模式中 {1} 段 / 共剩余 {0:0.#}s"`
-- **正骑栏的素材绑定提示** —— `"当前绑定：" + (… ? "（无，用手拖的矩形）" : 名字)`
+Every Chinese literal inside `Log.LogInfo` / `LogWarning` / `LogError`, `Say()` (command-channel
+replies) and `warn` / `info` (binding verification) is wrapped in `L.T`. 439 new translations,
+the table grows from 602 to 997 entries. In Chinese mode `L.T` returns the literal unchanged,
+so not a byte of the Chinese logs changed.
 
-### 第二批：状态串里的参数值
+### Two "nested L.T" cases had never actually been translated
 
-`demand status` 那条长回执里，三个参数本身是中文：`[未生效]`、`(未武装)`、`·闸门关`。
-模板早就翻了，值没翻，英文模式下一半一半。
+The `[绝顶骤降]` and `[骤降溯源]` log lines were written as
+`L.T("A" + "B" + L.T("C"), args)` — the outer `L.T` receives the concatenated string while the
+table stores the segment keys, so it never matched. Rewritten as
+`L.T("A" + "B" + "C", args)`, one key now covers the whole line.
 
-### 第三批：其它文件里的 11 条
+### Two escapes turned paths into control characters
 
-第 (13) 条原来只扫 `BurgerShopModder.cs`。把同目录其它 `.cs` 并入扫描之后，
-`GameBuild.cs` 的 7 处（`Game version:` 后面那整句）与 `PresetStore.cs` 的 11 条
-（预设的保存 / 应用 / 删除回执）一起露了出来 —— 它们**从来没有过译文**。
+Two command replies were written as `cmd\anim.csv` and `cmd\tremor.csv`. In C#, `\a` is a bell
+and `\t` is a tab — those log paths had carried an invisible character all along.
+Corrected to `\\a` / `\\t`, so a real backslash is printed now.
 
-顺带把「吸精 · 当前状态」那条 `当前{0}欲 {1:0.#}% · 距叠第 {2} 层还差 {3:0.#}%` 也补了。
+### Installer and editor: bilingual, following the in-game language switch
 
-### 怎么找的
+Both executables were Chinese-only — translate the plugin all you like, the very first step
+still blocks an English user.
 
-新增 `tools/_runtime_scan.py`：把 `L.T` / `Hint` / `Sub` / `Section` / `SliderF` /
-`SliderI` / `AboutRow` 的第一个实参取出来，凡是「纯字面量以外」的（变量、拼接、三元、
-`string.Format`）就列出来，逐条看过。
+New `shared/Locale.cs`, referenced by both projects (112 entries). The language is decided in
+three layers: `--lang` on the command line > `Language` in
+`<game folder>/BepInEx/config/nesarf.burgershop.modder.cfg` > the system UI language
+(Chinese systems get Chinese, everything else English). There is no cfg before the install,
+so the system language is the fallback.
 
-静态检查第 (13) 条的范围也扩到了全部 `.cs`。
+### Three pre-existing bugs in the editor
 
-### 验证
+Surfaced while checking the English layout; unrelated to translation:
 
-游戏内逐栏截图：八栏、上下各滚到底，蓝色小字全部英文（含 `Game version:` 那行、
-`demand status` 的长回执）。翻译覆盖率 **602 / 603**（剩一个是 `bilibili`，产品名不翻）。
+- **The four buttons had never been added to the window** — `MakeButton` built them and the
+  events were wired, but `Controls.Add` was missing. The window showed nothing but sliders
+  and the save button could not be clicked.
+- **The status line sat behind the scrolling panel** — the panel started at y=78, the status
+  line at 88.
+- **English is wider than Chinese, so names were clipped** — in English mode the label column
+  goes 122 to 150 px, the slider start moves 30 px right, and hint rows size themselves.
 
-## v1.0.92
+### Tooling and CI
 
-**界面英文化的第二轮：把第一轮扫描器看不见的那一半补齐。**
+All 15 rule messages and the result line of `tools/static-check.py` are English;
+the job / step names and every message in `.github/workflows/build.yml` are English too.
 
-第一轮（v1.0.91）翻的是「直接包 `L.T` 的绘制调用」。这一轮换了个方向找 —— 把所有含中文的
-字符串字面量全抓出来，减掉「落在翻译 helper 实参区间里」的那些，剩下的逐条判断。结果找出
-七类形状，一共 96 条新译文。
+### Documentation
 
-### 补上的七类
+- `MANUAL.md` brought up to the same structure as the Chinese manual
+- `KNOWN-ISSUES.md` and `CHANGELOG.md` added
+- `README.eng.md` brought up to the same structure as the Chinese README
+- `ENGINEERING-NOTES.md` opens with an English reading note
 
-- **`Sub()` 二级小节标题** —— 这个 helper 内部原来没套 `L.T`，14 个调用点全显示中文
-- **`_snapHint` 状态行** —— 面板底部那行提示是裸字面量直出的，约 25 处
-- **`SevTag()` 的五个等级标签** —— `[蓝·提示]` 这类
-- **`ChainSlotName()`** —— 屏幕上「骑乘位·常规」这类标签
-- **`PoseDesc()` 与 55 条配置描述模板** —— 配置管理器（F1）里那些说明原来是纯中文
-- **`GameBuild.Summary()` / `PresetStore` 的返回消息** —— 面板上直接显示
-- **拼在格式化参数里的中文** —— `"   ← 「全部显示」生效中"` 这种
+### Verification
 
-### 顺带修掉的两个问题
+```
+static check   15 rules, 0 failed (release tree)
+coverage       997 / 998 (the one left is "bilibili", a product name)
+regression     install 27 / uninstall 27 and fully clean / reinstall 27
+UI             installer and editor each captured in both languages, item by item
+signing        3 files Valid + DigiCert timestamp
+```
 
-- **英文模式下「补丁可能挂不上」的假警告** —— 判定原来是 `verdict.Contains("一致")`，
-  英文串里没有这两个字，于是永远判为不一致。改成 `GameBuild.IsMatch`
-- **系统栏四处布局截字** —— `Recording` 被挤成 `Recor ding`、几个长按钮被切掉尾巴。
-  `Sub` 标题从水平行里挪出来，长按钮各占一行
-
-### 工具
-
-- **`tools/zh-scan.py`（新增）** —— 全量扫描：词法提取所有字面量，再减掉翻译 helper 的
-  实参区间。「文案先存进变量」这一类只有这个方向看得见
-- **静态检查第 (14) 条放宽** —— 从三种控件扩到全部显示类控件，并改成按括号配对取整段调用
-  （原来的非贪婪匹配遇到嵌套调用会截断，把已翻译的按钮误报成裸中文）
-- **静态检查第 (15) 条（新增）** —— BindP3 描述模板归一后的那一版才是对照表的 key，
-  第 (13) 条的比对看不见它们
-
-### 校验和
-
-见 `README.md` 的「校验和」一节，或 `SHA256SUMS.txt`。
-
-## v1.0.91
-
-**界面全英文。** 插件里每一句用户能看到的话都有英文版了，一共 465 条。
-
-### 覆盖范围
-
-- **面板** 316 条：栏名、按钮、开关、滑块标签、提示行、窗口标题、底部状态行
-- **配置描述** 112 条：写进 `.cfg` 的那些说明，修改器也会显示
-- **自检与日志** 37 条：诊断报告和 `[drop trace]` 追踪行。用户平时看不到，
-  但英文模式下导出诊断报告时，看到的是自己的语言
-
-### 怎么做的
-
-翻译不是逐条改调用点，是三层结构：
-
-1. **四个绘制 helper 内部统一套 `T`** —— `Section` / `Hint` / `SliderF` / `SliderI`。
-   一处改动覆盖几乎所有调用点，之后的工作就只剩下往对照表里加行。
-2. **按钮直接包 `L.T`**，包括几个形态不规整的：三元表达式传参、拼接字符串、
-   从 `TabNames` 数组取值的拷贝按钮。
-3. **`string.Format` 换成 `L.T(fmt, args)` 重载** —— 先翻模板再填参数，数字不会被翻。
-
-`L.T("中文原文")` 查表，查到用英文，查不到把中文原样还回去。所以「翻了一半」
-是一个能用的正常状态，而不是不能碰的中间态。
-
-### 切换
-
-系统栏最前面，`中文` / `English` 两个按钮，默认中文，切换不用重启。
-
-一个限制：配置描述是在启动时 bind 的，所以切换语言后面板立刻变，但已经写进
-`.cfg` 的描述注释要等下一次启动才更新。
-
-### 顺手修的布局问题
-
-英文比中文长，几处写死宽度的地方被截断或换行了：
-
-- 预设栏的「存为预设」按钮固定 90px，`Save as preset` 被截成 `Save as prese`
-- 关于栏的 `Feedback email` 在 74px 里被拆成两行
-- 口交栏的 `Copied from:` 同样被拆行
-
-加了 `BtnW` / `LabelW` 两个按实际排版宽度算的助手。写死宽度在只有一种语言时
-完全看不出问题，一加语言就全冒出来了。
-
-### 静态检查加了三条
-
-- **第 13 条**：对照表里每一行的中文，必须能在源码里找到对应的 `L.T` 调用。
-  中文字改一个，表里那行就永远匹配不上，而回落机制会让它安静地显示中文。
-- **第 14 条**：面板控件里不能有裸中文字面量。第 13 条查的是「表里的 key 能不能
-  对上源码」，抓不到「源码里新写了一句中文却没包 `L.T`」—— 拷贝按钮就是这么漏的。
-- 第 13 条的 key 提取改成括号配对，能识别 `L.T("A" + "B")` 这种编译期合并的拼接。
-
-### 已知
-
-面板上那 37 条自检/日志文案在中文模式下也是中文，这符合预期 —— 它们跟着
-语言设置走，只是不在面板上显示。
+**No tuned value was touched**; `Language` is still `zh`.
 
 ---
 
-## v1.0.9
+## v1.0.93 — runtime-built strings translated
 
-修一个用户报告的安装 bug，加上遍历源码时找到的几处小问题，以及一批文档补充。
+**After the second round, three more batches of text that is "only assembled at runtime" turned up.**
 
-### 代码
+These strings cannot be spotted as Chinese by a static scan — the key `L.T` receives is the whole concatenated string, the table has no row for that exact string, and it falls back to Chinese. Most of them appear in the small blue text (the description lines drawn by `Hint`).
 
-- **修 issue #1：安装程序把自己当成游戏** —— `GameRunning()` 里除了精确比对，
-  还有一条 `ProcessName.IndexOf("Burger")` 的宽匹配。而安装程序自己叫
-  `BurgerShopModder-Installer`、修改器叫 `BurgerShopModder-Trainer`，都含 `Burger`。
-  于是安装程序一打开就命中，点安装永远弹「游戏正在运行，请先关闭游戏」。
-  改成排除当前进程，并且只精确比对游戏进程名。
-  这两个 exe 的名字是这一轮改资产名时定下来的；之前叫「汉堡店修改器-安装程序.exe」，
-  中文进程名不含 Burger —— 所以这是那次改名带来的一次回归。
+### Batch one: four concatenated hints
 
-- **诊断导出的版本号改成用常量** —— 「全量自检」导出的头部一直写着硬编码的 `1.0.0`，
-  而常量 `PluginVersion` 早就是 1.0.8 了
-- **系统栏显式成 `case 5`** —— 原来落在 `default` 上，`_tab` 越界时也会静默进系统栏；
-  现在 `default` 换成回到玩家栏
-- **删掉未使用的字段 `_hitRectDbg`** —— 只声明、从未引用
+- **Absorb · current state** — `"当前场景：" + ChainSlotName() + "，上限 " + …`
+- **Demand / Drain status lines** — `"当前：" + DemandCmd("status")`
+- **The mode status itself** — what `DemandCmd` returns is `ModeWord() + "模式中 {1} 段 / 共剩余 {0:0.#}s"`
+- **The material binding hint in the Riding column** — `"当前绑定：" + (… ? "（无，用手拖的矩形）" : 名字)`
 
-### 文档
+### Batch two: parameter values inside a status string
 
-- **新增英文使用说明**（`使用说明.en.md`，347 行）。
-  没有逐字翻译那 1479 行：表格逐行翻，长段的"为什么这样设计"压缩成一两句，
-  并在开头说明「游戏内面板仍是中文，这里给的是对照用的英文名」。
-  两份说明顶部各有语言切换
-- **新增英文 README**（`README.en.md`，190 行），两个 README 顶部各有语言切换。
-  没有逐字翻译，按英文读者需要的信息重排：怎么装、要什么、为什么会被报毒、怎么核对文件
-- **合并重复的 `使用说明.md`** —— 原来根目录与 `dist/` 各一份、内容完全相同，
-  靠 `tools/sync.sh` 手动同步。现在只剩根目录一份，打包与 CI 都读它
-- **README 与 Description 的「六栏」改成「八栏」** —— v1.0.4 加了预设与关于两栏，
-  但三处还写着六。措辞上区分了「前六栏按姿势分，后两栏是工具与信息」，
-  不然读者会以为多了两个姿势
-- **README「功能概览」补上主要功能与设计取舍** —— 原来只讲栏位结构和三份参数，
-  核心机制一个都没提
-- 仓库加中文别名「汉堡店的四个夜晚」与 Big Smoke 那次点单的命名由来
+In the long `demand status` receipt, three of the parameter values themselves were Chinese: `[未生效]`, `(未武装)`, `·闸门关`. The templates had been translated long ago, the values had not, so English mode showed half and half.
 
-### 问题状态
+### Batch three: 11 more in other files
 
-- **第 7 条**（Sit 的索取模式导致绝顶值变化异常）由用户实测确认无问题，移出 `KNOWN-ISSUES`
-- **第 S9 条**（Manman 判定区可能出屏）同样确认无问题。这条原本只记在 `KNOWN-ISSUES` 里，
-  工程笔记没有，所以先把正文搬过去再删
-- **第 5 条**（零实战验证的功能）状态改为「待反馈」—— 功能已可用，但使用量不够
+Item (13) used to scan only `BurgerShopModder.cs`. Once the other `.cs` files in the same directory joined the scan, 7 spots in `GameBuild.cs` (the whole sentence after `Game version:`) and 11 in `PresetStore.cs` (the save / apply / delete receipts for presets) surfaced together — they had **never had a translation**.
 
-### 重发：仓库状态修正
+While there, the `当前{0}欲 {1:0.#}% · 距叠第 {2} 层还差 {3:0.#}%` line under "Absorb · current state" got a translation too.
 
-这一版重发过一次。第一次发出去之后遍历工程，发现**仓库里 tag v1.0.9 指向的那份代码还是 v1.0.8**。
+### How they were found
 
-- 源码五处版本号停在 1.0.8：`[BepInPlugin]`、`PluginVersion`、`Installer.Version`、三个 `.csproj` 的 `<Version>`
-- `dist/` 里三个产物也是 v1.0.8
-- README 那三个 SHA256 跟着旧
+Added `tools/_runtime_scan.py`: it takes the first argument of `L.T` / `Hint` / `Sub` / `Section` / `SliderF` / `SliderI` / `AboutRow` and lists every one that is "anything other than a plain literal" (a variable, a concatenation, a ternary, `string.Format`), then each was read by hand.
 
-线上 release 里的文件是对的（手工签名上传的那一份），错的是仓库这一侧，以及 README 里给人核对的那三个数字 —— 用户下载 v1.0.9 照着算，三条全不符。
+The scope of static check item (13) also widened to every `.cs` file.
 
-根因在 `tools/sync.sh`。它原来拿「脚本所在目录的上一层」当工作副本，再拿「工作副本/../burger-shop-publish」当发布副本。可它两棵树里各放了一份 —— 在发布副本里跑时，两个变量会算出同一个目录，于是每条 diff 都相等，脚本打印一片「同」、最后「共 0 个文件」，看起来像同步成功了。现在按目录名认出自己在哪一棵树，算不出两棵不同的树就直接停下报错。
+### Verification
 
-一并修好的几处：
+In-game screenshots column by column: eight columns, scrolled to the top and to the bottom of each, all small blue text in English (including the `Game version:` line and the long `demand status` receipt). Translation coverage **602 / 603** (the one left out is `bilibili`, a product name, not translated).
 
-- 同步清单补上 `GameBuild.cs`、`PresetStore.cs`、`dist/` 里两个 exe 与 `卸载还原.ps1`；
-  `installer/` 那四项也从「人工看 diff」改成自动同步
-- 发布副本里 `make_payload.ps1` 还指着早就删掉的 `dist/使用说明.md`，在那边打包必然断
-- `dist/BurgerShopModder.dll`（改名前的旧产物）从仓库移除；
-  `installer/payload.zip` 是安装程序的编译中间产物，从仓库移除并加进 `.gitignore`
-- `SIGNINGS.ndjson` 停在 v1.0.2，补上 v1.0.3 到 v1.0.9 的 27 条
-- 静态检查新增两条：(11) 源码里六处版本号必须一致，(12) `dist/` 里三个产物必须带同一个版本。
-  第 (12) 条是粗检 —— 版本资源一定以 UTF-16 存在 PE 里，找不到就说明那份产物是别的版本编出来的
+## v1.0.92 — English UI round two: filling in the half the first scan could not see
+
+**English UI, round two: filling in the half the first scanner could not see.**
+
+The first round (v1.0.91) translated "the drawing calls that wrap `L.T` directly". This round searched from the other side — grab every string literal that contains Chinese, subtract the ones that fall inside a translation helper's argument span, judge what is left one by one. That turned up seven shapes and 96 new translations in total.
+
+### The seven shapes filled in
+
+- **`Sub()` level-two subsection headers** — this helper had no `L.T` inside it, so all 14 call sites showed Chinese
+- **The `_snapHint` status line** — the hint at the bottom of the panel was a bare literal printed straight out, about 25 of them
+- **The five severity labels of `SevTag()`** — things like `[蓝·提示]`
+- **`ChainSlotName()`** — the on-screen labels such as `骑乘位·常规`
+- **`PoseDesc()` and 55 config description templates** — the explanations in the config manager (F1) used to be pure Chinese
+- **The return messages of `GameBuild.Summary()` / `PresetStore`** — displayed directly on the panel
+- **Chinese baked into format arguments** — such as `"   ← 「全部显示」生效中"`
+
+### Two problems fixed along the way
+
+- **The false "the patch may not have attached" warning in English mode** — the test used to be `verdict.Contains("一致")`; the English string does not contain those two characters, so it always judged a mismatch. Changed to `GameBuild.IsMatch`
+- **Clipped text in four places on the system column** — `Recording` was squeezed into `Recor ding`, and a few long buttons lost their tails. `Sub` headers moved out of the horizontal row, long buttons each get a row of their own
+
+### Tools
+
+- **`tools/zh-scan.py` (new)** — a full scan: lexically extract every literal, then subtract the argument spans of the translation helpers. The "the text is stored in a variable first" shape is only visible from this direction
+- **Static check item (14) relaxed** — from three control types to every display-type control, and it now takes the whole call by matching parentheses (the old non-greedy match truncated on nested calls and reported already-translated buttons as bare Chinese)
+- **Static check item (15) (new)** — the normalised form of the BindP3 description template is what the table keys hold; the comparison in item (13) cannot see them
+
+### Checksums
+
+See the "checksums" section of `README.eng.md`, or `SHA256SUMS.txt`.
+
+## v1.0.91 — full English UI
+
+**Full English UI.** Every sentence a user can see in the plugin now has an English version, 465 in total.
+
+### Coverage
+
+- **Panel** 316: column names, buttons, toggles, slider labels, hint lines, window titles, the bottom status line
+- **Config descriptions** 112: the explanations written into `.cfg`, which the mod also displays
+- **Self-check and logs** 37: the diagnostic report and the `[drop trace]` trace lines. Users do not normally see them, but in English mode an exported diagnostic report is in their own language
+
+### How it was done
+
+The translation was not done by editing call sites one by one; it is a three-layer structure:
+
+1. **The four drawing helpers wrap `T` internally** — `Section` / `Hint` / `SliderF` / `SliderI`. One change covers nearly every call site, and the rest of the work is only adding rows to the table.
+2. **Buttons wrap `L.T` directly**, including the irregular ones: a ternary passed as an argument, a concatenated string, the copy button that reads from the `TabNames` array.
+3. **`string.Format` replaced by the `L.T(fmt, args)` overload** — translate the template first, then fill in the arguments, so numbers never get translated.
+
+`L.T("中文原文")` looks the table up; a hit gives English, a miss hands the Chinese back unchanged. So "half translated" is a usable normal state rather than an intermediate state that must not be touched.
+
+### Switching
+
+At the very front of the system column, two buttons, `中文` / `English`, Chinese by default, and switching needs no restart.
+
+One limitation: config descriptions are bound at startup, so after switching the panel changes at once, but the description comments already written into `.cfg` only update on the next start.
+
+### Layout problems fixed along the way
+
+English is longer than Chinese, so a few hard-coded widths clipped the text or wrapped it:
+
+- The "save as preset" button in the preset column is fixed at 90px, and `Save as preset` was clipped to `Save as prese`
+- `Feedback email` in the about column was split over two lines inside 74px
+- `Copied from:` in the Fellatio column was wrapped the same way
+
+Added two helpers, `BtnW` / `LabelW`, that compute width from the actual layout. Hard-coded widths show no problem at all with only one language; add a second language and they all surface.
+
+### Three items added to the static check
+
+- **Item 13**: every Chinese row in the table must have a matching `L.T` call in the source. Change one character of the Chinese and that row can never match again, while the fallback mechanism quietly keeps showing Chinese.
+- **Item 14**: no bare Chinese literals in panel controls. Item 13 checks "can every key in the table be matched to the source", which cannot catch "a new line of Chinese was written into the source without wrapping `L.T`" — the copy button was missed exactly that way.
+- The key extraction in item 13 changed to parenthesis matching, so it recognises compile-time merged concatenations such as `L.T("A" + "B")`.
+
+### Known
+
+The 37 self-check / log strings stay Chinese in Chinese mode too, which is expected — they follow the language setting, they just do not appear on the panel.
 
 ---
 
-## v1.0.8
+## v1.0.9 — install bug fix, source sweep, documentation
 
-**插件的程序集名改了。功能没有变化。**
+Fixed one install bug reported by a user, plus a handful of small problems found while sweeping the source, and a batch of documentation additions.
 
-### 新的程序集名
+### Code
+
+- **Fix issue #1: the installer mistook itself for the game** — besides the exact comparison, `GameRunning()` had a loose `ProcessName.IndexOf("Burger")` match. But the installer is called `BurgerShopModder-Installer` and the mod `BurgerShopModder-Trainer`, both containing `Burger`. So the installer matched the moment it opened, and clicking install always popped "the game is running, please close it first". Changed to exclude the current process and compare only the exact game process name. These two exe names were settled in the round that renamed the assets; before that they were `汉堡店修改器-安装程序.exe`, and a Chinese process name contains no Burger — so this was a regression brought by that rename.
+
+- **The version number in the diagnostic export now uses the constant** — the header of the "full self-check" export had always printed a hard-coded `1.0.0`, while the constant `PluginVersion` had long been 1.0.8
+- **The system column is now an explicit `case 5`** — it used to land on `default`, so an out-of-range `_tab` would silently enter the system column too; `default` now returns to the player column
+- **Removed the unused field `_hitRectDbg`** — declared, never referenced
+
+### Documentation
+
+- **New English usage guide** (`MANUAL.md`, 347 lines). The 1479 lines were not translated word for word: tables were translated row by row, the long "why it is designed this way" passages were condensed to a sentence or two, and the top states that "the in-game panel is still Chinese; what you get here are the English names for reference". Both guides have a language switch at the top
+- **New English README** (`README.eng.md`, 190 lines), with a language switch at the top of both READMEs. Not a word-for-word translation; rearranged around what an English reader needs: how to install, what it requires, why it gets flagged, how to verify the files
+- **Merged the duplicate `使用说明.md`** — there was one in the repository root and one in `dist/`, identical in content, kept in sync by hand with `tools/sync.sh`. Now only the root copy exists, and both packaging and CI read it
+- **"six columns" changed to "eight columns" in the README and Description** — v1.0.4 added the preset and about columns but three places still said six. The wording now distinguishes "the first six columns are by pose, the last two are tools and information", otherwise a reader would think two more poses had been added
+- **README "feature overview" gained the main features and the design trade-offs** — it used to describe only the column structure and the three parameter sets and mention none of the core mechanics
+- The repository gained the Chinese alias「汉堡店的四个夜晚」and the naming origin from that Big Smoke order
+
+### Issue status
+
+- **Issue 7** (Sit's demand mode causing abnormal ecstasy changes) confirmed fine by the user's own testing, moved out of `KNOWN-ISSUES`
+- **Issue S9** (the Manman hit area may leave the screen) likewise confirmed fine. It was recorded only in `KNOWN-ISSUES`, not in the engineering notes, so the body was moved there first and then deleted
+- **Issue 5** (features with zero live verification) changed to "awaiting feedback" — the features are usable, but usage is not enough
+
+### Re-release: repository state corrected
+
+This version was released twice. After the first release, sweeping the project showed that **the code tag v1.0.9 pointed at in the repository was still v1.0.8**.
+
+- Five places in the source still said 1.0.8: `[BepInPlugin]`, `PluginVersion`, `Installer.Version`, the `<Version>` of the three `.csproj` files
+- The three artifacts in `dist/` were v1.0.8 as well
+- The three SHA256 values in the README followed the old files
+
+The files in the online release were correct (the hand-signed, hand-uploaded copy); what was wrong was this side of the repository, and the three numbers in the README that people check against — downloading v1.0.9 and computing them found all three mismatched.
+
+The root cause was `tools/sync.sh`. It used "one level above the script's own directory" as the working copy, and "working copy/../burger-shop-publish" as the publish copy. But it sat in both trees — run from the publish copy, the two variables resolved to the same directory, so every diff compared equal, the script printed a page of "same" and finally "0 files in total", and it looked like a successful sync. It now works out which tree it is in from the directory name, and stops with an error when it cannot compute two distinct trees.
+
+Other things fixed along the way:
+
+- The sync list gained `GameBuild.cs`, `PresetStore.cs`, the two exes in `dist/` and `卸载还原.ps1`; the four items under `installer/` changed from "review the diff by hand" to automatic sync
+- `make_payload.ps1` in the publish copy still pointed at the long-deleted `dist/使用说明.md`, so packaging there was bound to break
+- `dist/BurgerShopModder.dll` (an old artifact from before the rename) removed from the repository; `installer/payload.zip` is a build intermediate of the installer, removed from the repository and added to `.gitignore`
+- `SIGNINGS.ndjson` stopped at v1.0.2; the 27 entries for v1.0.3 through v1.0.9 added
+- Two static check items added: (11) the six version numbers in the source must agree, (12) the three artifacts in `dist/` must carry the same version. Item (12) is a coarse check — the version resource always lives in the PE as UTF-16, so not finding it means that artifact was built from another version
+
+---
+
+## v1.0.8 — assembly renamed
+
+**The plugin's assembly name changed. No functional change.**
+
+### The new assembly name
 
 ```
 2×9+9L+6[ED]+7+2×45→1[C]+LS
 ```
 
-这是 Big Smoke 在 GTA San Andreas 那次点单的紧凑记法：
+This is the compact notation for Big Smoke's order in GTA San Andreas:
 
 > I'll have two number 9s, a number 9 large, a number 6 with extra dip,
 > a number 7, two number 45s, one with cheese, and a large soda.
 
-两个 9 号、一个 9 号加大、一个 6 号加双份酱、一个 7 号、两个 45 号其中一个加奶酪、一大杯汽水。
+Two number 9s, one number 9 large, one number 6 with extra dip, one number 7, two number 45s one of them with cheese, and a large soda.
 
-装进 `BepInEx/plugins/` 之后文件名就是它。**下载的 Release 资产仍叫 `BurgerShopModder.dll`**（可读），
-BepInEx 靠反射读插件特性来识别，文件名不影响加载。
+Once installed into `BepInEx/plugins/` this is the file name. **The downloadable Release asset is still called `BurgerShopModder.dll`** (readable); BepInEx identifies plugins by reflecting over the plugin attributes, and the file name does not affect loading.
 
-### 这个名字带来的连锁改动
+### Knock-on changes this name brought
 
-里面的**方括号**在 PowerShell 的 `-Path` 里是通配字符类，会让路径静默找不到。所以：
+The **square brackets** in it are a wildcard character class in PowerShell's `-Path`, which makes the path silently unfindable. Therefore:
 
-- `make_payload.ps1`、`sync.sh`、CI 三处改成变量构造文件名 + `-LiteralPath`
-- 静态检查里 README 哈希与 dist 文件的映射表跟着改
-- 使用说明里的安装路径、README 的插件章节标题跟着改
+- `make_payload.ps1`, `sync.sh` and CI were changed to build the file name into a variable and use `-LiteralPath`
+- The mapping table between README hashes and dist files in the static check changed with it
+- The install path in the usage guide and the plugin section heading in the README changed with it
 
-### 资产名用另一套写法
+### Asset names use another spelling
 
-Releases 上三个资产的文件名**和程序集名不一样**，这是有意的：
+The three asset file names on Releases **differ from the assembly name**, on purpose:
 
-| 位置 | 名字 | 为什么 |
+| Location | Name | Why |
 | --- | --- | --- |
-| Releases 资产 | `18-9L-6_ED-7-45-45_C-LS-*` | 资产名只能放 ASCII；单引号还会被 GitHub 换成点 |
-| 装进 plugins | 带乘号与方括号的那串 | 没有这些限制，能完整表达意思 |
+| Releases asset | `18-9L-6_ED-7-45-45_C-LS-*` | asset names may only hold ASCII; single quotes get turned into dots by GitHub |
+| Installed into plugins | the string with multiplication signs and brackets | no such limits, so it can express the meaning in full |
 
-`18` 就是两个 9 号相乘的写法，`_ED` 是 extra dip、`_C` 是 cheese —— 同一份订单的两种记法。
+`18` is how two number 9s multiply, `_ED` is extra dip, `_C` is cheese — two notations for the same order.
 
-两条实测出来的规矩：**单引号**传上去会变成点（`6.ED` 看着像扩展名），**方括号**会让 `gh` 的 glob 解析失败、根本传不上去。
+Two rules established by experiment: **single quotes** become dots on upload (`6.ED` looks like an extension), and **square brackets** break `gh`'s glob parsing so the upload does not happen at all.
 
-### 新增：安装时清理旧版遗留
+### New: leftovers from older versions are cleaned up at install time
 
-换程序集名之后，从旧版升级上来的人 `plugins` 里会留着旧的 `BurgerShopModder.dll` ——
-**两个插件同 GUID 同时在场，BepInEx 的行为是不确定的**。
+After the assembly rename, people upgrading from an older version still have the old `BurgerShopModder.dll` in `plugins` — **two plugins with the same GUID present at once, and BepInEx's behaviour is undefined**.
 
-安装程序现在会在解包之前先检查并清理它。判据是文件里有没有我们的 GUID 字符串
-（字符串常量以 UTF-16 存在 `#US` 堆里），不是只看文件名 ——
-用户可能手动复制过别的东西放在那儿。删之前先改名成 `.old`，万一判断错了还能找回来。
+The installer now checks for it and removes it before unpacking. The criterion is whether the file contains our GUID string (string constants live in the `#US` heap as UTF-16), not the file name alone — a user may have copied something else in there by hand. Before deleting it, it is renamed to `.old`, so a wrong call can still be undone.
 
-清理放在**解包之前**，而不是装完之后：否则中途失败会留下两个插件同时在场的状态。
+The cleanup happens **before unpacking**, not after installing: otherwise a failure halfway leaves two plugins present at once.
 
-### 安装
+### Install
 
-回归：装 26 个文件，装 / 卸 / 再装 退出码全 0。
-装完 `plugins` 里只有一个文件。
+Regression: installs 26 files, install / uninstall / reinstall all exit code 0. After installing there is only one file in `plugins`.
 
 ---
 
-## v1.0.7
+## v1.0.7 — about-tab repository URL corrected
 
-**功能没有变化。** 只是把面板「关于」栏里的仓库地址改正。
+**No functional change.** Only the repository URL in the panel's "about" column was corrected.
 
-上一版之后试过一次给仓库改名（`BurgerShop-FourNights-Mod`），出发点是搜索排序，
-但方向错了 —— `FourNightsAtTheBurgerShop-GameTrainer` 里的 `FourNightsAtTheBurgerShop`
-就是**游戏自己的名字**（Four Nights At The Burger Shop 去掉空格），
-为了排序去改游戏名的词序不合适。名字已经改回来了。
+After the previous version the repository was renamed once (`BurgerShop-FourNights-Mod`), the motivation being search ranking, but the direction was wrong — `FourNightsAtTheBurgerShop` in `FourNightsAtTheBurgerShop-GameTrainer` is **the game's own name** (Four Nights At The Burger Shop with the spaces removed), and reordering the words of a game's name for ranking is not appropriate. The name has been changed back.
 
-中文别名「汉堡店的四个夜晚」写在 README 与仓库描述里 —— 搜索引擎索引的是页面内容，
-名字里放不下中文，放在正文里一样能被匹配到。
+The Chinese alias「汉堡店的四个夜晚」is written into the README and the repository description — search engines index page content, the name cannot hold Chinese characters, and in the body it matches just as well.
 
-回归：装 26 个文件，装 / 卸 / 再装 退出码全 0。
+Regression: installs 26 files, install / uninstall / reinstall all exit code 0.
 
 ---
 
-## v1.0.6
+## v1.0.6 — game build verification
 
-新增「游戏构建核对」。**功能没有变化**，只是让插件自己告诉用户版本对不对。
+Added "game build verification". **No functional change**; it only lets the plugin tell the user whether the version is right.
 
-### 新增：游戏构建核对
+### New: game build verification
 
-这个游戏**没有版本号** —— exe 的 `FileVersion` 填的是 Unity 的版本（2022.1.24f1），
-`app.info` 里只有厂商名和标题。所以用户没法说"我是 1.2.3 版"，
-而补丁能不能挂上完全取决于程序集里的方法名与签名有没有变。
+This game **has no version number** — the exe's `FileVersion` holds the Unity version (2022.1.24f1), and `app.info` has only the vendor name and the title. So a user cannot say "I am on version 1.2.3", while whether the patch attaches at all depends entirely on whether the method names and signatures in the assembly have changed.
 
-插件启动时现在会读一次
-`<游戏目录>/<exe名>_Data/Managed/Assembly-CSharp.dll`，算 SHA256，和开发时那份比。
+At startup the plugin now reads
+`<game directory>/<exe name>_Data/Managed/Assembly-CSharp.dll`, computes its SHA256 and compares it with the copy from development time.
 
-结论写在两处：
+The verdict is written in two places:
 
-- **日志**：搜「程序集核对」
-- **面板**：「系统 → 取证 / 自检」的第一行；不一致时会多出「看详情（程序集指纹）」按钮
+- **Log**: search for「程序集核对」
+- **Panel**: the first line of "System → forensics / self-check"; on a mismatch an extra button, "see details (assembly fingerprint)", appears
 
-**只报告，不拦截** —— 版本不同不一定坏，硬拦会把「或许能用」变成「一定不能用」。
+**Report only, never block** — a different version is not necessarily broken, and a hard block turns "might work" into "definitely does not work".
 
-两个实现细节：
+Two implementation details:
 
-- 用 `FileShare.ReadWrite` 打开那个 dll —— 它正被 Mono 运行时映射着，
-  默认共享读很可能打不开，那样检查会永远报「查不到」，比没有还糟
-- **「查不到」与「不一致」分开报** —— 没能核对不等于不匹配
+- The dll is opened with `FileShare.ReadWrite` — the Mono runtime has it mapped, so default shared read very likely fails to open it, and the check would then always report "not found", which is worse than having no check
+- **"Not found" and "mismatch" are reported separately** — failing to check is not the same as not matching
 
-### 文档
+### Documentation
 
-README 新增「支持的游戏版本」一节：给出引擎版本与程序集指纹，
-说明为什么用指纹而不是版本号，以及版本对不上会有什么表现。
+The README gained a "supported game versions" section: it gives the engine version and the assembly fingerprint, explains why a fingerprint rather than a version number, and what a version mismatch looks like.
 
-回归：装 26 个文件，装 / 卸 / 再装 退出码全 0。
+Regression: installs 26 files, install / uninstall / reinstall all exit code 0.
 
 ---
 
-## v1.0.5
+## v1.0.5 — invocation warning fix
 
-修一条挂了很久的调用警告。**功能没有变化**，改的是内部的一处判断与日志。
+Fixed a call warning that had been hanging around for a long time. **No functional change**; what changed is one internal check and its logging.
 
-### 修：两条调用警告
+### Fix: two call warnings
 
-日志里偶发过：
+Occasionally seen in the log:
 
 ```
 [Warning] 调用 HPGaugeChangePercent 失败：Exception has been thrown by the target of an invocation.
 [Warning] 调用 EcstasyGaugeChangePercent 失败：Exception has been thrown by the target of an invocation.
 ```
 
-**根因不是「调用时机不对」**，是两件事叠在一起：
+(the message reads: calling HPGaugeChangePercent failed: Exception has been thrown by the target of an invocation.)
 
-1. `InvokeFloat` 的第一行是 `if (obj == null) return;`，而 `obj` 的类型是 `object` ——
-   这走的是**引用相等**，会绕过 `UnityEngine.Object` 重载的 `==`。
-   Unity 的物体被销毁之后 C# 引用**并不为 null**，所以场景切换后缓存下来的 `player`
-   能通过那行检查，然后在 `Invoke` 里炸掉
-2. `TargetInvocationException` 把真实原因包住，日志只记外层消息 ——
-   **这才是它挂了这么久的原因：不是难修，是日志把线索吞了**
+**The root cause is not "the call timing is wrong"**; two things overlap:
 
-**修法**：加一道 `obj is UnityEngine.Object uo && uo == null` 的前置判断；
-把内层异常挖出来记进日志（类型 + 消息 + 栈 + 对象类型 + 参数），每种方法只详记一次防刷屏。
+1. The first line of `InvokeFloat` is `if (obj == null) return;`, and `obj` is typed `object` — that is a **reference equality** test, which bypasses the `==` overloaded on `UnityEngine.Object`. After a Unity object is destroyed the C# reference **is not null**, so the cached `player` passes that line after a scene change and then blows up inside `Invoke`
+2. `TargetInvocationException` wraps the real cause, and the log recorded only the outer message — **that is why it stayed broken so long: not hard to fix, the log swallowed the clue**
 
-**未能验证的部分**：这两条警告是**偶发**的。修完跑了一轮没再出现，
-但一次没有复现不等于不会再复现。可确认的是前置判断已生效、正常调用路径未被破坏。
+**The fix**: add a guard, `obj is UnityEngine.Object uo && uo == null`; dig the inner exception out and log it (type + message + stack + object type + arguments), detailing each method only once so the log is not flooded.
 
-### 文档
+**What could not be verified**: these two warnings are **occasional**. One round after the fix did not show them again, but not reproducing them once does not mean they will never recur. What is confirmed is that the guard takes effect and the normal call path is not broken.
 
-第 3 与第 16 条各加了一条声明：**可能不是固定触发**，难以稳定复现；
-也要考虑**游戏自身源码质量不高**这一可能。
+### Documentation
 
-回归：装 27 个文件，装 / 卸 / 再装 退出码全 0。
+Issues 3 and 16 each gained a note: **it may not trigger deterministically**, and is hard to reproduce reliably; the possibility that **the game's own source quality is poor** should also be considered.
+
+Regression: installs 27 files, install / uninstall / reinstall all exit code 0.
 
 ---
 
-## v1.0.4
+## v1.0.4 — config presets, about column, NSFW notice
 
-新增配置预设，并把「关于」独立成一个栏。仓库同时明示为 NSFW。
+Added configuration presets, and made "about" a column of its own. The repository is now also explicitly marked NSFW.
 
-### 新增：配置预设
+### New: configuration presets
 
-第八栏「预设」。把当前全部设置存成一份命名快照，随时切回去。
+The eighth column, "presets". Store all current settings as a named snapshot and switch back to it whenever you like.
 
-- 名字输入框 + 「存为预设」；列表里每项有 应用 / 覆盖 / 删除
-- 存储位置：`<游戏目录>/BepInEx/config/nesarf.burgershop.modder.presets/`
-- **用通用快照，不逐参数列名单** —— 靠 `ConfigDefinitions` 整份存整份读，
-  以后新增参数自动进预设
-- **覆盖之前一定先备份** —— 「应用」会覆盖全部设置，所以先写一份时间戳备份，
-  提示里写出文件名。这条来自本项目的一次事故：
-  早期调 defaults 把用户三十来项调参覆盖成了代码默认值
-- 实测往返：值 20 → 存预设 → 改成 77 → 应用预设 → 回到 20，备份正常生成
+- A name field plus "save as preset"; each row of the list has apply / overwrite / delete
+- Storage location: `<game directory>/BepInEx/config/nesarf.burgershop.modder.presets/`
+- **A generic snapshot, no per-parameter roster** — `ConfigDefinitions` is stored and read as a whole, so parameters added later join presets automatically
+- **Always back up before overwriting** — "apply" overwrites every setting, so a timestamped backup is written first and its file name shown in the hint. This comes from an accident in this project: early tuning of the defaults overwrote a user's thirty-odd tuned parameters with the code defaults
+- Round trip verified in practice: value 20 → save preset → change to 77 → apply preset → back to 20, and the backup was generated as expected
 
-### 新增：「关于」栏
+### New: the "about" column
 
-第七栏。仓库地址、bilibili 主页、反馈邮箱，各配「打开」与「复制」。
+The seventh column. Repository URL, bilibili profile, feedback email, each with "open" and "copy".
 
-邮箱只留复制：`mailto:` 在有些环境会弹「选择应用」甚至毫无反应，
-一个点了没用的按钮比没有这个按钮更让人困惑。
+The email keeps copy only: `mailto:` pops an "choose an app" dialog in some environments, or does nothing at all, and a button that does nothing when clicked is more confusing than not having the button.
 
-### 仓库明示为 NSFW
+### Repository explicitly marked NSFW
 
-README 顶部加警示块、仓库 Description 以「18+ ·」开头、Topics 加 `nsfw` / `adult` / `18-plus`。
+A warning block at the top of the README, the repository Description starting with "18+ ·", and `nsfw` / `adult` / `18-plus` added to Topics.
 
-### 修正
+### Corrections
 
-- 预设列表把备份文件也当成预设列了出来，改成「含点的都不是预设」
-- 八个栏放不下，第八个被挤出可视区；栏位宽度 66 → 62
-- `plugin/BurgerShopModder.csproj` 里写死着 `<Version>1.0.0</Version>`，
-  导致 DLL 的文件版本一直是 1.0.0.0
+- The preset list listed backup files as presets too; changed to "anything containing a dot is not a preset"
+- Eight columns did not fit, the eighth was pushed out of the visible area; column width 66 → 62
+- `plugin/BurgerShopModder.csproj` hard-coded `<Version>1.0.0</Version>`, so the DLL's file version stayed at 1.0.0.0
 
-回归：装 27 个文件，装 / 卸 / 再装 退出码全 0。
+Regression: installs 27 files, install / uninstall / reinstall all exit code 0.
 
 ---
 
-## v1.0.3
+## v1.0.3 — button placement fix
 
-外观小修，**不影响功能**。
+Small appearance fixes, **no effect on function**.
 
-- **「手动触发动摇」「本次状态」两个按钮放错了位置** ——
-  它们属于「动摇」，却排在「吸精」小节下面。已挪进「绝顶动摇」小节
-- **「吸精」小节改名「吸精 · 当前状态」** ——
-  里面只有连榨状态和吸精发生率两行只读显示，原名太笼统
+- **Two buttons, "trigger tremor manually" and "this run's state", were in the wrong place** — they belong to "tremor" but sat under the "absorb" subsection. Moved into the "ecstasy tremor" subsection
+- **The "absorb" subsection renamed to "absorb · current state"** — it holds only two read-only rows, the chain drain state and the absorb rate, and the old name was too broad
 
-### 内部
+### Internal
 
-- 静态检查加了规则 (10)：核对 README 里的 SHA256 与 `dist/` 里的实际文件
-- 后来把这条从硬性失败改成**提醒** —— README 里的哈希描述的是「已发布的版本」，
-  而 `dist/` 是工作产物，改代码之后两者不同是正常的
-- 签名记录 `SIGNINGS.ndjson` 进仓库（脱敏：去掉本机路径）
+- Static check item (10) added: verify the SHA256 values in the README against the actual files in `dist/`
+- Later that item was changed from a hard failure to a **reminder** — the hashes in the README describe "the released version", while `dist/` holds build output, so a difference after a code change is normal
+- The signing record `SIGNINGS.ndjson` added to the repository (redacted: local paths removed)
 
 ---
 
-## v1.0.2
+## v1.0.2 — emergency installer fix
 
-**紧急修复：安装程序装不上。**
+**Emergency fix: the installer could not install.**
 
-### 修了什么
+### What was fixed
 
-**一、BackgroundWorker 没声明报告进度**
+**One, BackgroundWorker did not declare progress reporting**
 
 ```
 此 BackgroundWorker 声明它不报告进度。
 请修改 WorkerReportsProgress 以声明它报告进度。
 ```
 
-装和卸载两条路径都有这个问题。
+(the message reads: this BackgroundWorker declares that it does not report progress. Please change WorkerReportsProgress to declare that it does report progress.)
 
-**二、zip 的目录条目被当成文件创建**
+Both the install and the uninstall path had this problem.
 
-修完第一个之后装到 7% 又断了：
+**Two, directory entries in the zip were created as files**
+
+After fixing the first one, the install broke again at 7%:
 
 ```
 安装失败：未能找到路径"…\BepInEx\config\"的一部分
 ```
 
-### 为什么两处都漏了
+(the message reads: install failed: could not find a part of the path "…\BepInEx\config\".)
 
-发布前只验证了「能编译 + 资源内嵌」，**没有真的把安装程序跑一遍**。
-这一版之后补了完整回归：装 / 卸 / 再装 三条路径都跑。
+### Why both were missed
 
----
-
-## v1.0.1
-
-从 v1.0.0 之后的全部改动。这一版的重心不在新功能，而在**把看不见的问题变成看得见**。
-
-### 新增功能
-
-- **汉堡制作倒计时调节** —— 每单时长与倒计时速度（0 = 冻结，可以慢慢做）
-- **配置自动迁移** —— 从旧版升级不再静默丢调参。启动时检查配置版本，
-  发现旧格式就备份、搬值、写日志。实测一次迁移 105 个键
-
-### 新增的检查手段
-
-- **游戏绑定层** —— 把「方法属于哪个类」变成一张可校验的表。
-  挂错类在 Harmony 里是静默失败，现在会变成启动日志里的一条告警
-- **静态一致性检查**（`tools/static-check.py`，9 条规则）——
-  检查配置项是否在面板 / `set` 命令 / 说明书里都有；
-  补丁方法有无重名；有无本机路径；有无装饰符
-- **CI**（`.github/workflows/build.yml`）—— 每次推送跑安全闸、产物完整性、
-  静态检查；打 tag 时自动建 Release
-- **截图验证链路**（`tools/tabshot.sh`）—— 切栏与截图在同一帧完成，
-  面板矩形由插件给出，裁切精确
-
-### 修复
-
-- **屏幕中间的模式名一律显示「索取」** —— 三处硬编码，口交/正骑栏也一样。
-  改用模式进入时的姿势判定，模式中途换姿势也不会显示错
-- **Manman 判定区可能整块跑到屏幕外** —— 实测出现过 y 为负的矩形。
-  加了退化检测与屏幕求交两道闸
-- **同一批配置在面板上出现两个滑块** —— 连榨上限在动摇段和各栏各画了一遍
-- **面板可读性** —— 默认皮肤太透，游戏画面压过来时标签几乎读不出来，加了不透明底
-- 六个栏的小节结构统一（`Section` / `Sub` / `Hint` / `Rule`）
-
-### 内部整理
-
-- `DrawDemandSection` 从 296 行拆开，正骑专属抽成 `DrawSitExtras`，
-  背榨专属抽成 `DrawOsiriExtras`，两栏在同一处调用，结构对称
-- 装饰符与判定符全部清除（圆圈对勾、叉号、警告三角、圈码序号等），
-  并做成 CI 规则 (9) 强制
-- `installer/` 写死的路径改成可推导（脚本自身位置 / `tools/gamepath.txt`）
-- 文档收敛：`KNOWN-ISSUES` 只放未解决的，历史条目在 `ENGINEERING-NOTES`
-- 临时文件不再写 C 盘（改用仓库内 `_tmp`，可用环境变量覆盖）
-
-### 已知
-
-见 [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md)（6 条）。
-其中一条是「零实战验证的功能」—— 有一批功能写完没有在真实游玩中跑过。
+Before release only "it compiles + the resources are embedded" was verified; **the installer was never actually run once**. After this version a full regression was added: install / uninstall / reinstall, all three paths.
 
 ---
 
-## v1.0.0 — 首个公开版本
+## v1.0.1 — everything after v1.0.0
 
-### 功能
+Every change since v1.0.0. The focus of this version is not new features but **turning the invisible problems into visible ones**.
 
-- **六栏面板**：玩家 / 口交 / 背榨 / 正骑 / 换装 / 系统
-- **按姿势三份参数**：54 个参数 × 3 = 162 个独立键（`_Fella` / `_Osiri` / `_Sit`）
-- **索取 / 榨取模式**：打屁股或点击攒欲望 → 叠层 → 延长时长 + 提升攻击力 + 动画加速
-- **余韵**：模式结束后一段"基础速度更低、单次更持久"的连榨收尾
-- **束缚之吻**：自动进入、阻止窗口衰减、三段独立调速
-- **绝顶值动摇 / 适应**：衰减正弦波动 + 生命加成需在适应期内还清
-- **自建点按区** `HitArea_Manman_By_Plugins`：模型里没有这一块，由插件自己判矩形
-- **安装程序**：单文件、安装清单精确卸载、命令行静默安装
+### New features
 
-### 诊断体系
+- **Burger-making countdown adjustment** — per-order duration and countdown speed (0 = frozen, take your time)
+- **Automatic config migration** — upgrading from an older version no longer silently loses tuned parameters. At startup the config version is checked, and on an old format it backs up, moves values and logs. One migration moved 105 keys in testing
 
-- 游戏内**文件式命令通道**（不碰键鼠驱动游戏）
-- `xcheck` —— **23 条运行时状态不变量**
-- `states` / `manman` / `demand status` / `urgeaudit` / `animlog` 等诊断命令
-- 活动记录器、配置快照与还原、逻辑交叉检查
+### New ways to check
 
-### 汉堡制作倒计时调节
+- **Game binding layer** — turns "which class does the method belong to" into a verifiable table. Getting the class wrong is a silent failure in Harmony; it now becomes a warning in the startup log
+- **Static consistency check** (`tools/static-check.py`, 9 items) — checks whether a config entry exists in the panel / the `set` command / the manual; whether patched methods collide by name; whether local paths are present; whether decorative symbols are present
+- **CI** (`.github/workflows/build.yml`) — runs the safety valve, artifact integrity and the static check on every push; builds a Release automatically when a tag is pushed
+- **Screenshot verification chain** (`tools/tabshot.sh`) — column switching and the screenshot happen in the same frame, the panel rectangle comes from the plugin and the crop is exact
 
-- `BurgerTimeAll`：每单制作时长（0 = 原版 10 秒）
-- `BurgerTimeSpeed`：倒计时速度（100 = 原速，50 = 慢一半，0 = 冻结）
-- 面板在「玩家」栏，带三个快捷键：原版 / 冻结 / 宽松
+### Fixes
 
-挂在 `MenuControl.Timing` 的**前缀**上，因为游戏是「先递减、再判零」。
+- **The mode name in the middle of the screen always showed "Demand"** — three hard-coded places, and the Fellatio / Riding columns showed it too. Changed to determine the pose when the mode is entered, so changing pose mid-mode does not display the wrong name
+- **The Manman hit area could leave the screen entirely** — a rectangle with a negative y was observed. Added two gates: degenerate detection and screen intersection
+- **The same setting appeared as two sliders on the panel** — the chain drain cap was drawn once in the tremor section and once per column
+- **Panel readability** — the default skin is too transparent, and labels were nearly unreadable when the game scene showed through; an opaque background was added
+- The subsection structure of the six columns unified (`Section` / `Sub` / `Hint` / `Rule`)
 
-### 配置 Schema 化（第一块）
+### Internal cleanup
 
-`set` 命令的 54 个手写分支改成**通用路径**（走 `_p3ByName` 索引）：
+- `DrawDemandSection` split up from 296 lines, the Riding-only parts extracted into `DrawSitExtras`, the Rear-only parts into `DrawOsiriExtras`, both called from the same place, so the structure is symmetric
+- Decorative and judgement symbols all removed (circle check marks, cross marks, warning triangles, circled numbers and so on), and enforced as CI item (9)
+- Hard-coded paths in `installer/` made derivable (the script's own location / `tools/gamepath.txt`)
+- Documentation tightened: `KNOWN-ISSUES` holds only unresolved items, historical entries live in `ENGINEERING-NOTES`
+- Temporary files no longer write to the C drive (an in-repository `_tmp` instead, overridable by an environment variable)
 
-- **新增一个按姿势参数，`set` 命令自动支持**，不用再改 switch
-- 三种类型都覆盖（float / int / bool）
-- 实测：`set DemandAttBonus` / `set DemandEnabled 42` / `set AfterglowPerSyasei` 全部走通
+### Known
 
-### 配置迁移
+See [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md) (6 items).
+One of them is "features with zero live verification" — a batch of features was written and never ran in real play.
 
-从旧版升级时**自动迁移**（旧版是"全局单份键"，本版是"按姿势三份"）：
+---
 
-- 启动时检查 `ConfigVersion`，发现旧配置就自动搬
-- **只在三份副本都是默认值时才搬** —— 已调过的参数不会被覆盖
-- 原配置自动备份为 `*.bak-before-v1`
-- 日志里列出搬了哪些键
+## v1.0.0 — first public release
 
-实测：**105 个键**一次迁移成功。
+### Features
 
-### 本版修复（34 项）
+- **Six-column panel**: player / Fellatio / Rear / Riding / outfit / system
+- **Three parameter sets by pose**: 54 parameters × 3 = 162 independent keys (`_Fella` / `_Osiri` / `_Sit`)
+- **Demand / Drain modes**: spank or click to build urge → stack layers → longer duration + more attack power + faster animation
+- **Afterglow**: a tail of chain drain after the mode ends, "lower base speed, each one lasts longer"
+- **Binding kiss**: entered automatically, prevents the window from decaying, three independent speed controls
+- **Ecstasy tremor / adaptation**: decaying sine wave + the health bonus must be paid back within the adaptation window
+- **Self-built hit area** `HitArea_Manman_By_Plugins`: the model has no such part, the plugin works out the rectangle itself
+- **Installer**: single file, precise uninstall from a manifest, silent install on the command line
 
-- 攻击累积的索取欲不会触发第二段及以后的叠层（#1）
-- 配置并发写的合并路径未干净验证（#2）
-- `xcheck` 的不变量没覆盖新增状态（#4）
-- Sit 模式没有便于手动累积榨取欲的部位（#6）
-- Sit 无法触发连榨，因此也无法触发余韵（#8）
-- 手动进入余韵功能无效（#9）
-- 索取模式太久会导致坐姿入口被无限期堵死（#10）
-- 连榨上限拆成四套（功能变更，非缺陷）（#11）
-- 余韵只能由索取/榨取模式中的活动触发（不变量）（#12）
-- 连榨被莫名提前终止（正骑）（#13）
-- 坐姿到点会把正在进行的索取模式顶掉（#15）
-- 面板改的是"当前姿势"那份，而不是"你正在看的栏"那份（#17）
-- 叠满段数后刷新持续时间（功能新增）（#18）
-- 【实验性】可点击区域高亮（#19）
-- Manman 区：Cubism 路线走不通，改为"素材绑定 + 手拖"两条腿（#20）
-- 素材绑定只列了 HitArea*，实际选不到有用的素材（补充完成）（#21）
-- 说明书补完（96 项参数 + 六个新概念）（#22）
-- 剩余 31 个参数也做成了按姿势三份（附带一次用户调参救援）（#23）
--  HitArea_Manman 只接了「触摸」那条路，鼠标点击根本没经过它（#24）
--  HitArea_Manman 不能冒充 HitArea_Head_Sit（功能会串）（#25）
-- HitArea_Manman 应与「打屁股」对称：涨榨取欲 + 给坐姿动作速度冲量（#26）
--  坐姿榨取欲一满就跳到 Osiri（三个症状一个根因）（#27）
-- 看起来有"两个 Manman 区"（一个是自建、一个像是依据模型）（#28）
-- 束缚之吻需要【自己的】调速（进入吻  !=  触发连榨）（#29）
-- HitArea_Manman 终于有了实证（顺带修好诊断命令）（#30）
-- HitArea_Manman_By_Plugins：改名 + 可视化与其他 HitArea 统一（#31）
-- 最后三个参数补进三份体系 + 第 18 条验证通过（#32）
-- xcheck 不变量扩到新状态（#4）（#34）
-- 坐姿锁定 + 正骑栏删除口交相关项 + 日志标签按姿势取名（#35）
-- 坐姿锁定：出口路径已核实「全覆盖」（#36）
-- 游戏变卡：每帧的反射与顶点扫描（已缓存）（#37）
-- 束缚之吻的桥接审计 + 三个缺口 + 「层上直接播」的动画加不上速（#38）
-- 三栏用词统一：描述模板按栏位自动换词（#39）
-- 骤降溯源日志 + 说明书补三节（#40）
+### Diagnostics
+
+- An in-game **file-based command channel** (never touches the keyboard or mouse driving the game)
+- `xcheck` — **23 runtime state invariants**
+- Diagnostic commands: `states` / `manman` / `demand status` / `urgeaudit` / `animlog` and others
+- An activity recorder, config snapshot and restore, logic cross-checks
+
+### Burger-making countdown adjustment
+
+- `BurgerTimeAll`: per-order make duration (0 = the original 10 seconds)
+- `BurgerTimeSpeed`: countdown speed (100 = normal, 50 = half speed, 0 = frozen)
+- The panel is in the "player" column, with three shortcuts: original / frozen / relaxed
+
+It hooks the **prefix** of `MenuControl.Timing`, because the game decrements first and tests for zero second.
+
+### Config schema-isation (part one)
+
+The 54 hand-written branches of the `set` command became a **generic path** (through the `_p3ByName` index):
+
+- **A new per-pose parameter is supported by the `set` command automatically**, no need to edit the switch again
+- All three types covered (float / int / bool)
+- Verified in practice: `set DemandAttBonus` / `set DemandEnabled 42` / `set AfterglowPerSyasei` all went through
+
+### Config migration
+
+Upgrading from an older version **migrates automatically** (the old version had "one global set of keys", this version has "three sets by pose"):
+
+- At startup `ConfigVersion` is checked, and an old config is moved automatically
+- **Moved only when all three copies are still at their defaults** — parameters already tuned are never overwritten
+- The original config is backed up as `*.bak-before-v1`
+- The log lists which keys were moved
+
+Verified: **105 keys** migrated successfully in one pass.
+
+### Fixes in this version (34 items)
+
+- Demand urge accumulated by attacks did not trigger the second and later stacks (#1)
+- The merge path of concurrent config writes was not cleanly verified (#2)
+- `xcheck` invariants did not cover the new state (#4)
+- Sit mode had no convenient place to accumulate drain urge by hand (#6)
+- Sit could not trigger chain drain, and therefore could not trigger afterglow (#8)
+- Manually entering afterglow did not work (#9)
+- Demand mode lasting too long blocked the seated entry indefinitely (#10)
+- The chain drain cap split into four sets (a feature change, not a defect) (#11)
+- Afterglow could only be triggered by activity inside the demand / drain modes (an invariant) (#12)
+- Chain drain was terminated early for no reason (Riding) (#13)
+- Seated reaching its mark pushed aside a demand mode in progress (#15)
+- The panel changed the "current pose" copy rather than the copy of the column you were looking at (#17)
+- Refresh the duration once the stacks are full (a new feature) (#18)
+- [experimental] clickable-area highlight (#19)
+- Manman area: the Cubism route did not work out, changed to two legs, "material binding + drag by hand" (#20)
+- Material binding listed only HitArea*, so no useful material could actually be picked (completed) (#21)
+- The manual completed (96 parameters + six new concepts) (#22)
+- The remaining 31 parameters were also made three sets by pose (with a rescue of a user's tuning along the way) (#23)
+- HitArea_Manman was wired only to the "touch" path, and a mouse click never went through it (#24)
+- HitArea_Manman could not stand in for HitArea_Head_Sit (the functions would cross) (#25)
+- HitArea_Manman should be symmetric with "spank": raise drain urge + give the seated motion a speed impulse (#26)
+- Seated drain urge reaching full jumped to Osiri (three symptoms, one root cause) (#27)
+- There appeared to be "two Manman areas" (one self-built, one apparently from the model) (#28)
+- Binding kiss needed **its own** speed control (entering the kiss is not the same as triggering chain drain) (#29)
+- HitArea_Manman finally has empirical evidence (and the diagnostic command fixed along the way) (#30)
+- HitArea_Manman_By_Plugins: renamed + visualisation unified with the other HitAreas (#31)
+- The last three parameters brought into the three-set system + item 18 verified (#32)
+- xcheck invariants extended to the new state (#4) (#34)
+- Seated lock + Fellatio-related items removed from the Riding column + log tags named by pose (#35)
+- Seated lock: the exit paths verified as "fully covered" (#36)
+- The game got laggy: per-frame reflection and vertex scanning (now cached) (#37)
+- Binding kiss bridge audit + three gaps + animations "played directly on the layer" could not be sped up (#38)
+- Wording unified across the three columns: description templates swap words by column (#39)
+- Sudden-drop tracing log + three more sections in the manual (#40)
 
 ---

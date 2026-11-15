@@ -12,7 +12,7 @@
 
 ---
 
-**中文** | [**English**](README.en.md)
+**中文** | [**English**](README.eng.md)
 
 ---
 
@@ -363,17 +363,17 @@ bash tools/gcmd.sh demand status   # 索取/榨取模式状态
 | 想找什么 | 去哪 |
 | --- | --- |
 | 怎么用、每个参数是什么 | [`使用说明.md`](使用说明.md) · [`MANUAL.md`](MANUAL.md) |
-| **现在还有什么没修** | [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md) · [`KNOWN-ISSUES.en.md`](KNOWN-ISSUES.en.md) |
-| **某个功能为什么长这样**（逆向发现、踩过的坑） | [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) · [`ENGINEERING-NOTES.en.md`](ENGINEERING-NOTES.en.md) |
-| 每个版本改了什么 | [`CHANGELOG.md`](CHANGELOG.md) · [`CHANGELOG.en.md`](CHANGELOG.en.md) |
+| **现在还有什么没修** | [`已知问题.md`](已知问题.md) · [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md) |
+| **某个功能为什么长这样**（逆向发现、踩过的坑） | [`工程笔记.md`](工程笔记.md) · [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) |
+| 每个版本改了什么 | [`更新日志.md`](更新日志.md) · [`CHANGELOG.md`](CHANGELOG.md) |
 
-**英文读者**：上面带 `.en.md` 的那几份是完整英文版（说明书与中文版同结构）；
-`ENGINEERING-NOTES.md` 是中文工作日志，英文版没有对应文件，开头写了一段英文导读。
+**英文读者**：`README.eng.md`、`MANUAL.md`、`KNOWN-ISSUES.md`、`CHANGELOG.md`、`ENGINEERING-NOTES.md`
+是完整英文版，与中文版同结构。
 
-`ENGINEERING-NOTES.md` 有 **44 条**历史记录 + **5 篇**附录 + **5 条** S 系列，
+`工程笔记.md` 有 **44 条**历史记录 + **5 篇**附录 + **5 条** S 系列，
 每条都写了**症状 / 根因 / 修法 / 教训**。开头有一张**目录**，可以直接跳到某一条。
 
-`KNOWN-ISSUES.md` 是它的**派生视图** —— 只列还没解决的，
+`已知问题.md` 是它的**派生视图** —— 只列还没解决的，
 每条的状态一行写清，编号与工程笔记对应。
 
 踩过的坑包括：

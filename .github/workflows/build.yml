@@ -173,8 +173,12 @@ jobs:
         shell: pwsh
         run: |
           $tag = $env:GITHUB_REF_NAME
-          if (Test-Path CHANGELOG.md) {
-            $txt = Get-Content CHANGELOG.md -Raw
+          # The Chinese changelog is authoritative; the English file is only a
+          # fallback for a runner that cannot address the non-ASCII file name.
+          $clog = @('更新日志.md', 'CHANGELOG.md') |
+            Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+          if ($clog) {
+            $txt = Get-Content -LiteralPath $clog -Raw
             # Take "## <tag>" up to the next "## "
             $pat = "(?ms)^##\s+" + [regex]::Escape($tag) + "\s*\r?\n(.*?)(?=^##\s|\z)"
             $m = [regex]::Match($txt, $pat)

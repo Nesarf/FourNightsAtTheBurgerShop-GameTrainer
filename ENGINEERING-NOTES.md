@@ -1,124 +1,120 @@
-# 工程笔记 · 踩过的坑与逆向发现
+# Engineering notes: the traps we hit and what the reverse-engineering found
 
-> **Note for English readers:** this file is the developer's working log and is kept in
-> Chinese. It is where every real problem is written down — symptom, root cause, fix and
-> lesson — one numbered entry each. The English documents are
-> [README.en.md](README.en.md), [MANUAL.md](MANUAL.md), [KNOWN-ISSUES.en.md](KNOWN-ISSUES.en.md)
-> and [CHANGELOG.en.md](CHANGELOG.en.md). If you are reading this to understand *why* a
-> feature behaves the way it does, the entries are short and the code samples are readable
-> even without the prose; issue numbers here match the ones cited by the English documents.
+> **This is the English edition of the engineering notes.** The Chinese original,
+> [工程笔记.md](工程笔记.md), is authoritative; this file follows it
+> entry for entry, in the same order, with the same `#N` numbers.
 >
-> 这份文件是**历史记录**，不是待办清单。
-> 它记录了开发过程中每一个真实问题：**症状 / 根因 / 修法 / 教训**。
+> This file is a **historical record**, not a to-do list. It records every real problem
+> hit during development: **symptom / root cause / fix / lesson**.
 >
-> **想找"现在还有什么没修" → 看 [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md)。**
-> **想找"某个功能为什么长这样" → 就在这里搜关键词。**
+> **Looking for "what is still unfixed"? → see [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md).**
+> **Looking for "why does this feature look like that"? → search this file for a keyword.**
 
-这份笔记的价值不在"修了什么"，而在**为什么会那样**。
-下面很多条都对应一条可复用的规律，比如：
+The value of these notes is not "what got fixed" but **why it behaved that way**.
+Many of the entries below stand for a reusable rule, for example:
 
-- Harmony **挂错类会静默失败**（同一个方法名可能属于不同的类）
-- 游戏的动画有**两种播法**（混合器 `*.State` 与层上 `Play` 的 `*.CurrentState`）
-- **鼠标与触摸走两条完全不同的路**（静态字段 vs 方法返回值）
-- 三份参数下，`set` 命令落在哪个物理键上**取决于当时的姿势**
-- **"_demandMode 为真"不等于"当前在 Osiri"** —— 这个坑踩了四次
+- hooking the **wrong class with Harmony fails silently** (one method name may belong to different classes)
+- the game's animations have **two playback paths** (the mixer's `*.State`, and `*.CurrentState` of `Play` on a layer)
+- **mouse and touch go through two completely different paths** (a static field vs. a method return value)
+- with three copies of the parameters, **which physical key a `set` command lands on depends on the pose at that moment**
+- **"_demandMode is true" does not mean "we are currently in Osiri"** — this trap was hit four times
 
 ---
 
 
-## 目录
+## Table of contents
 
-全 **44** 条编号记录，另有 **5** 篇附录与 **5** 条 S 系列。顺序是**时间顺序**（按写的先后），不是重要度 —— 保留这个顺序是因为后面的条目经常引用前面的结论。
+**44** numbered entries in total, plus **5** appendices and **5** S-series entries. The order is **chronological** (in the order they were written), not by importance — it is kept because later entries frequently refer back to earlier conclusions.
 
-`1-40` 编号记录
+`1-40` numbered entries
 
-| # | 标题 |
+| # | Title |
 | --- | --- |
-| 1 | 攻击累积的索取欲不会触发第二段及以后的叠层 |
-| 2 | 配置并发写的合并路径未干净验证 |
-| 3 | `EffectiveSpeed` 的语义未确认 |
-| 4 | `xcheck` 的不变量没覆盖新增状态 |
-| 5 | 零实战验证的功能 |
-| 6 | Sit 模式没有便于手动累积榨取欲的部位 |
-| 7 | Sit 的索取模式会导致绝顶值变化异常 |
-| 8 | Sit 无法触发连榨，因此也无法触发余韵 |
-| 9 | 手动进入余韵功能无效 |
-| 10 | 索取模式太久会导致坐姿入口被无限期堵死 |
-| 11 | 连榨上限拆成四套（功能变更，非缺陷） |
-| 12 | 余韵只能由索取/榨取模式中的活动触发（不变量） |
-| 13 | 连榨被莫名提前终止（正骑） |
-| 14 | 两条调用警告（已修） |
-| 15 | 坐姿到点会把正在进行的索取模式顶掉 |
-| 16 | 坐姿仍然顶掉索取模式（第 15 条修完还不行） |
-| 17 | 面板改的是"当前姿势"那份，而不是"你正在看的栏"那份 |
-| 18 | 叠满段数后刷新持续时间（功能新增） |
-| 19 | 【实验性】可点击区域高亮 |
-| 20 | Manman 区：Cubism 路线走不通，改为"素材绑定 + 手拖"两条腿 |
-| 21 | 素材绑定只列了 HitArea*，实际选不到有用的素材（补充完成） |
-| 22 | 说明书补完（96 项参数 + 六个新概念） |
-| 23 | 剩余 31 个参数也做成了按姿势三份（附带一次用户调参救援） |
-| 24 | HitArea_Manman 只接了「触摸」那条路，鼠标点击根本没经过它 |
-| 25 | HitArea_Manman 不能冒充 HitArea_Head_Sit（功能会串） |
-| 26 | HitArea_Manman 应与「打屁股」对称：涨榨取欲 + 给坐姿动作速度冲量 |
-| 27 | 坐姿榨取欲一满就跳到 Osiri（三个症状一个根因） |
-| 28 | 看起来有"两个 Manman 区"（一个是自建、一个像是依据模型） |
-| 29 | 束缚之吻需要【自己的】调速（进入吻  !=  触发连榨） |
-| 30 | HitArea_Manman 终于有了实证（顺带修好诊断命令） |
-| 31 | HitArea_Manman_By_Plugins：改名 + 可视化与其他 HitArea 统一 |
-| 32 | 最后三个参数补进三份体系 + 第 18 条验证通过 |
-| 33 | 第 7 条（Sit 绝顶值异常）改为「疑似已修」+ 加了复发警报 |
-| 34 | xcheck 不变量扩到新状态（#4） |
-| 35 | 坐姿锁定 + 正骑栏删除口交相关项 + 日志标签按姿势取名 |
-| 36 | 坐姿锁定：出口路径已核实「全覆盖」 |
-| 37 | 游戏变卡：每帧的反射与顶点扫描（已缓存） |
-| 38 | 束缚之吻的桥接审计 + 三个缺口 + 「层上直接播」的动画加不上速 |
-| 39 | 三栏用词统一：描述模板按栏位自动换词 |
-| 40 | 骤降溯源日志 + 说明书补三节 |
-| 41 | 界面英文化：回落机制与两个静默失效 |
-| 42 | 英文化第二轮的盲区：检查器看得见调用点，看不见变量 |
-| 43 | 英文化的三类盲区：拼接、初始化顺序、正则的盲点 |
-| 44 | 排版：按钮铺满整行，以及「看不出来的形状」怎么盯 |
+| 1 | Demand urge accumulated by attacks does not trigger the second and later stacks |
+| 2 | The merge path for concurrent config writes was never cleanly verified |
+| 3 | The semantics of `EffectiveSpeed` are unconfirmed |
+| 4 | `xcheck` invariants do not cover the newly added state |
+| 5 | Features with zero real-play verification |
+| 6 | Sit mode has no convenient body part for accumulating drain urge by hand |
+| 7 | Demand mode in Sit makes the ecstasy value jump abnormally |
+| 8 | Sit cannot trigger a chain drain, and therefore cannot trigger the afterglow |
+| 9 | The manual "start afterglow" function does nothing |
+| 10 | A very long demand mode blocks the seated entry point indefinitely |
+| 11 | The chain-drain limit split into four (a feature change, not a defect) |
+| 12 | The afterglow can only be triggered by activity inside demand / drain mode (an invariant) |
+| 13 | The chain drain gets cut short for no reason (Riding) |
+| 14 | Two call warnings (fixed) |
+| 15 | The seated pose, once its timer fires, displaces an active demand mode |
+| 16 | The seated pose still displaces demand mode (fix #15 was not enough) |
+| 17 | The panel edits the copy for the "current pose", not the copy for "the tab you are looking at" |
+| 18 | Refresh the duration once all stacks are full (a new feature) |
+| 19 | [Experimental] clickable-area highlighting |
+| 20 | The Manman zone: the Cubism route is a dead end, switched to "asset binding + hand-dragged rectangle" |
+| 21 | The asset binding only listed HitArea*, so no useful asset could actually be picked (completed) |
+| 22 | The manual finished (96 parameters + six new concepts) |
+| 23 | The remaining 31 parameters also got three pose-specific copies (plus one user-tuning rescue) |
+| 24 | HitArea_Manman was only wired to the "touch" path; mouse clicks never went through it |
+| 25 | HitArea_Manman cannot impersonate HitArea_Head_Sit (the features would cross) |
+| 26 | HitArea_Manman should be symmetric with "spank": raises drain urge and gives the seated action a speed impulse |
+| 27 | The seated drain urge reaching full jumps straight to Osiri (three symptoms, one root cause) |
+| 28 | There appear to be "two Manman zones" (one built by us, one that looks model-driven) |
+| 29 | The binding kiss needs **its own** speed control (entering the kiss != triggering a chain drain) |
+| 30 | HitArea_Manman finally got empirical proof (and the diagnostic command was fixed along the way) |
+| 31 | HitArea_Manman_By_Plugins: renamed, and its visualisation unified with the other HitAreas |
+| 32 | The last three parameters added to the three-copy scheme + entry 18 verified |
+| 33 | Entry 7 (seated ecstasy anomaly) changed to "probably fixed" + a recurrence alarm added |
+| 34 | `xcheck` invariants extended to the new state (#4) |
+| 35 | Seated-pose lock + fellatio items removed from the Riding tab + log tags named after the pose |
+| 36 | Seated-pose lock: the exit paths were verified to be "fully covered" |
+| 37 | The game got slow: per-frame reflection and vertex scanning (now cached) |
+| 38 | The binding-kiss bridging audit + three gaps + "playing directly on the layer" cannot be sped up |
+| 39 | Three-tab wording unified: description templates swap the word according to the tab |
+| 40 | Drop-tracing logs + three new sections in the manual |
+| 41 | UI English: the fallback mechanism and two silent failures |
+| 42 | The blind spot of the second English round: the checker sees call sites, not variables |
+| 43 | Three blind spots of the translation: concatenation, init order, the regex |
+| 44 | Layout: buttons that stretch across the row, and how to watch a shape you cannot see |
 
-附录（机制说明与规则，不是缺陷）
+Appendices (mechanism descriptions and rules, not defects)
 
-- 附：证据归档
-- 附：坐姿「攻击行程」的机制（参考知识，非缺陷）
-- 附：视角拖动（游戏机制，非缺陷）
-- 附：两棵树的同步规则（踩了很多次才理清）
-- 附：仓库在 GitHub 那一侧的设置
+- Appendix: evidence archive
+- Appendix: the seated "attack travel" mechanism (reference knowledge, not a defect)
+- Appendix: view dragging (a game mechanic, not a defect)
+- Appendix: the two-tree sync rules (it took many rounds to work out)
+- Appendix: the settings on the GitHub side of the repository
 
-S 系列（与编号记录并行的另一套编号，出现较晚）
+S series (a separate numbering that runs alongside the numbered entries, started later)
 
-| # | 标题 |
+| # | Title |
 | --- | --- |
-| S6 | 面板布局整理与装饰符清理 |
-| S7 | 汉堡制作倒计时：已实现，行为未实测 |
-| S8 | 屏幕中间的模式名一律显示「索取」（已修） |
-| S9 | Manman 判定区可能整块跑到屏幕外（已解决） |
-| S10 | 告警分级配色 + (16) 的幅度其实会很大 |
+| S6 | Panel layout clean-up and decoration-glyph removal |
+| S7 | Burger-making countdown: implemented, behaviour never measured |
+| S8 | The mode name in the middle of the screen always showed "索取" (fixed) |
+| S9 | The Manman hit area can end up entirely off-screen (resolved) |
+| S10 | Severity colour coding + the amplitude in (16) is actually large |
 
 ---
 
-## 1. 攻击累积的索取欲不会触发第二段及以后的叠层
+## 1. Demand urge accumulated by attacks does not trigger the second and later stacks
 
-**状态：已修（2026-10-07）**
+**Status: fixed (2026-10-07)**
 
-**症状**
-角色**攻击**累积起来的「索取欲」不会触发索取/榨取模式的第 2 段及以后的叠层。
-索取欲会一直涨（实测到 314%），但段数长期停在 1。
+**Symptom**
+Demand urge accumulated by the character's **attacks** does not trigger the 2nd and later stacks of demand / drain mode.
+The urge keeps rising (measured up to 314%), but the stack count sits at 1 for a long time.
 
-**根因**
-叠层判定**只存在于打屁股那条路径**里：
+**Root cause**
+The stacking check **only exists on the spank path**:
 
-| 路径 | 做什么 |
+| Path | What it does |
 | --- | --- |
-| `DoSpankLogic()`（打屁股） | 加值 → **评估门槛 → `EnterOrStackDemand()`** |
-| `Postfix_OsiriGirlMainMixer` / `Postfix_SitGirlMainMixer`（攻击） | **只加值**，从不评估门槛 |
+| `DoSpankLogic()` (spank) | adds the value → **evaluates the threshold → `EnterOrStackDemand()`** |
+| `Postfix_OsiriGirlMainMixer` / `Postfix_SitGirlMainMixer` (attacks) | **only adds the value**, never evaluates the threshold |
 
-所以攻击只能把进度条填满，**消费进度条的只有打屁股这一下**。这是有意设计
-（让玩家能控制节奏），但表现上就是"第 2 段以后叠不上去"。
+So an attack can fill the progress bar, and **only the spank consumes it**. That is deliberate
+(the player is meant to control the pace), but what it looks like is "nothing stacks past the 2nd segment".
 
-**证据** —— `BepInEx/l2d_dump/cmd/watch.csv`（`tools/watch.sh` 的产出）
+**Evidence** — `BepInEx/l2d_dump/cmd/watch.csv` (produced by `tools/watch.sh`)
 
 ```
 t,pose,subState,...,urge,stacks,demandLeft,...
@@ -127,26 +123,26 @@ t,pose,subState,...,urge,stacks,demandLeft,...
 1791378474,Osiri,kyusei,   ...,314.1,1,61.6,...
 ```
 
-该用户 `DemandThresholdBase=100` / `Step=49.78`，第 2 段需 149.8%，
-索取欲早已越过很多，`stacks` 始终为 1。
+That user had `DemandThresholdBase=100` / `Step=49.78`, so the 2nd segment needs 149.8%;
+the urge had long passed that and `stacks` stayed at 1.
 
-**修法（已实施）**
+**Fix (implemented)**
 
-把叠层判定抽成唯一实现 `TryStackNow(source)`，**所有累积来源共用**：
+The stacking check was pulled out into a single implementation, `TryStackNow(source)`, **shared by every accumulation source**:
 
-| 来源 | 累积 | 叠层判定 |
+| Source | Accumulates | Stacking check |
 | --- | --- | --- |
-| 打屁股 `AccumulateAndMaybeStack(..., applyEscapePenalty: true, ...)` | 是 ||
-| 坐姿任意点击（修 #6 新增） | 是 ||
-| 角色攻击（骑乘位 / 坐姿） | 是 |**← 本次补上** |
+| Spank `AccumulateAndMaybeStack(..., applyEscapePenalty: true, ...)` | yes | |
+| Any click in the seated pose (added in fix #6) | yes | |
+| Character attacks (Riding / seated) | yes | **← added this time** |
 
-开关：`AttackCanStackDemand`（默认开）。关掉就回到"只有打屁股能叠"的旧行为。
+Switch: `AttackCanStackDemand` (on by default). Turn it off and you are back to the old behaviour where only spanking stacks.
 
-**验证**（`urgeaudit` 现场日志）：
+**Verification** (live log from `urgeaudit`):
 
 ```
 攻击命中 +23.45 → 115.82%
-叠加·清零 -115.82 → 0%              ← 角色攻击触发的叠加
+叠加·清零 -115.82 → 0%              ← a stack triggered by a character attack
 [索取] 叠加第 6 段（角色攻击），+91.1 秒
 [索取] 叠加第 7 段（角色攻击），+113.8 秒
 [索取] 叠加第 8 段（角色攻击），+101.3 秒
@@ -156,17 +152,17 @@ t,pose,subState,...,urge,stacks,demandLeft,...
 
 ---
 
-## 2. 配置并发写的合并路径未干净验证
+## 2. The merge path for concurrent config writes was never cleanly verified
 
-**状态：已验证通过（2026-10-07）—— 用 `tools/cfgmerge-check.sh` 一键跑**
+**Status: verified (2026-10-07) — one command runs it, `tools/cfgmerge-check.sh`**
 
-**做法**：脚本做了三件事 ——
-(1) 先等 8 秒确认**没有别的写入者**（不安静就直接退出，不给你假结果）
-(2) 让两个写入者改**不同的键**：游戏侧走 `set` 命令（会触发 `Config.Save` 整份重写），
-   外部侧同时直接改文件
-(3) 验**两边都还在**；任一被覆盖就 FAIL，并自动还原起始配置
+**What the script does** — three things:
+(1) first wait 8 seconds to confirm **no other writer** is active (if it is not quiet, exit right away rather than give you a false result)
+(2) have the two writers change **different keys**: the game side goes through the `set` command (which triggers a full `Config.Save` rewrite),
+   while the outside side edits the file directly at the same time
+(3) check that **both changes are still there**; if either was overwritten it is a FAIL, and the starting config is restored automatically
 
-**实测**
+**Measured**
 
 ```
 安静（8 秒内无写入）
@@ -178,127 +174,131 @@ t,pose,subState,...,urge,stacks,demandLeft,...
 结果：PASS —— 两边都没丢，合并路径成立
 ```
 
-**脚本自己先给我上了一课**：第一版写成 `FAIL`，我差点当成产品缺陷报出去 ——
-实际是**测错了键**：`set` 命令按**当前姿势**写那一份（`PIdx` 用 `PoseIdx()`），
-而当时姿势是正骑，我却在验 `_Osiri`
+**The script taught me a lesson itself**: the first version printed `FAIL`, and I nearly reported it
+as a product defect — what actually happened is that **the test checked the wrong key**: the `set`
+command writes the copy for the **current pose** (`PIdx` uses `PoseIdx()`), the pose at that moment
+was Riding, and I was verifying `_Osiri`.
 
-> **凡是走 `set` 的测试，必须先问当前姿势、再决定验哪个键** ——
-> 三份参数带来的一个新陷阱：**同一个逻辑名，落在哪个物理键上取决于当时的姿势。**
-> 脚本现在会先跑 `states` 问出来，并在输出里写明"set 会写 _XXX 那一份"。
+> **Any test that goes through `set` must first ask for the current pose, then decide which key
+> to verify** — a new trap introduced by the three copies: **one logical name lands on different
+> physical keys depending on the pose at that moment.**
+> The script now runs `states` first and states in its output which `_XXX` copy `set` will write.
 
-**用法**（找一个不调参的安静窗口）：
+**Usage** (pick a quiet window where you are not tuning anything):
 
 ```bash
 bash tools/cfgmerge-check.sh
 ```
 
-`CfgGuard`（修订号 + 锁 + 逐键合并）的**检测**部分验证过 —— 日志能打出
-「检测到外部改动，已按文件合并」。但**"并入 N 项"从未成功出现过**：
-实测时外部写入 `DemandAttBonus = 777` + 递增 rev，游戏内 `set` 之后
-该值仍被写回 125。
+The **detection** half of `CfgGuard` (revision number + lock + per-key merge) is verified — the log
+does print "检测到外部改动，已按文件合并". But **"并入 N 项" has never appeared**:
+in that measurement an outside write of `DemandAttBonus = 777` with an incremented rev was
+still overwritten back to 125 after an in-game `set`.
 
-**当时无法干净复现的原因**：测试期间用户正在用面板实时调参，
-他自己的写入不断覆盖我的测试写入。
+**Why it could not be reproduced cleanly at the time**: during the test the user was live-tuning
+through the panel, and their own writes kept overwriting mine.
 
-**下次要在「用户不动配置」的安静时段重测。** 复现步骤：
+**Next time, re-test in a quiet period where the user is not touching the config.** Steps to reproduce:
 1. `bash tools/cfgsnap.sh save`
-2. 记下 `DemandAttBonus` 的当前值
-3. 用脚本把文件里的 `DemandAttBonus` 改成 777，并把 `<cfg>.rev` 加 1
-4. 游戏内 `set AttackUrgeJitter <另一个值>`
-5. 看 cfg 里 `DemandAttBonus` 是否保住 777，以及日志有没有「并入 N 项」
+2. Note the current value of `DemandAttBonus`
+3. Use a script to change `DemandAttBonus` in the file to 777 and bump `<cfg>.rev` by 1
+4. In game, `set AttackUrgeJitter <some other value>`
+5. See whether `DemandAttBonus` in the cfg kept 777, and whether the log shows "并入 N 项"
 
 ---
 
-## 3. `EffectiveSpeed` 的语义未确认
+## 3. The semantics of `EffectiveSpeed` are unconfirmed
 
-**状态：待用户手感判断**
+**Status: waiting on hands-on judgement**
 
-> **声明：本问题可能不是固定触发的。**
-> 也就是说它难以稳定复现，排查成本高于一般缺陷 ——
-> **也要考虑一种可能：游戏本身的源码质量不高**，
-> 这个现象是游戏自身在特定状态下产生的，而插件只是恰好经过。
-> 在拿到稳定的复现步骤之前，不建议为它改插件的逻辑。
+> **Disclaimer: this issue may not trigger deterministically.**
+> In other words it is hard to reproduce reliably and costs more to investigate than an ordinary
+> defect — **and one possibility must be kept in mind: the game's own source quality is not high**,
+> so the symptom may be something the game produces in a particular state, with the plugin merely
+> passing through. Until stable reproduction steps exist, changing the plugin logic for it is not
+> advisable.
 
-绝顶动画倍速走的是 Animancer 的 `EffectiveSpeed`。设 800% 时实测读到 **3.38**，
-不是 8。
+The climax animation speed goes through Animancer's `EffectiveSpeed`. Setting 800% was measured as **3.38**, not 8.
 
-可能是这个属性的正常语义（按片段长度归一化），也可能被别处限了。
-**只能靠手感判断**：倍速拉到 800% 够快就不用管；偏慢则改用 `Speed`（更直接），或两层都设。
-
----
-
-## 4. `xcheck` 的不变量没覆盖新增状态
-
-**状态：已扩充（2026-10-07）—— 见第 34 条**
-
-`xcheck` 现有 16 条不变量都是早期的（动摇、上限、UI `sizeDelta`）。
-新加的状态之间**有约束关系但没人核对**：
-
-- `_afterglowRemaining > 0` 时不应处于索取模式中
-- `_afterglowPending > 0` 时闸门 `_demandEntered` 必须是开的
-- `_chainDemand` / `_chainNormal` 不应同时非零
-- `_sitDeferred` 为真时 `centerGirlState` 应是 `Osiri`
-- `_demandStacks` 不应超过 `DemandMaxStacks`
-
-这正是当初做 `xcheck` 要防的那类问题。
+That may be the property's normal semantics (normalised by clip length), or something else may be
+clamping it. **It can only be settled by feel**: if 800% is fast enough, leave it; if it feels slow,
+use `Speed` instead (more direct), or set both layers.
 
 ---
 
-## 5. 零实战验证的功能
+## 4. `xcheck` invariants do not cover the newly added state
 
-**状态：待玩**
+**Status: extended (2026-10-07) — see entry 34**
 
-以下路径**挂了补丁但日志里一次都没出现过**（截至最后一次盘点）：
+The 16 invariants `xcheck` has are all early ones (tremor, caps, UI `sizeDelta`).
+The newly added state has **constraints between fields but nobody checks them**:
 
-| 功能 | 日志标签 |
+- while `_afterglowRemaining > 0` it should not be inside demand mode
+- while `_afterglowPending > 0` the gate `_demandEntered` must be open
+- `_chainDemand` / `_chainNormal` should not both be non-zero
+- while `_sitDeferred` is true, `centerGirlState` should be `Osiri`
+- `_demandStacks` should not exceed `DemandMaxStacks`
+
+This is exactly the class of problem `xcheck` was built to catch.
+
+---
+
+## 5. Features with zero real-play verification
+
+**Status: waiting to be played**
+
+The following paths **have patches hooked but have never appeared in the log** (as of the last census):
+
+| Feature | Log tag |
 | --- | --- |
-| Sit「榨取模式」整条链路 | `[榨取]` |
-| 「回归累积」+ 坐姿挂起 | `[回归]` |
-| 坐姿 / 口交的射精吸精累积索取欲 | `坐姿吸精` / `坐姿射精` / `口交吸精` / `口交射精` |
-| 余韵的新闭环（累积 → 稳定后发动 → 清空前不换姿势） | `[余韵]` |
+| The whole seated "Drain mode" chain | `[榨取]` |
+| "Return accumulation" + holding the seated pose | `[回归]` |
+| Demand urge from seated / fellatio ejaculation and absorb | `坐姿吸精` / `坐姿射精` / `口交吸精` / `口交射精` |
+| The new afterglow loop (accumulate → fire once settled → hold the pose until cleared) | `[余韵]` |
 
-**`_sitDeferred` 那条最可疑** —— 我只在 `Show_CenterGirlSit` 上加了前缀拦截，
-游戏若从别的路径进坐姿就漏了。
+**`_sitDeferred` is the most suspicious one** — only `Show_CenterGirlSit` has a prefix interceptor;
+if the game enters the seated pose by another path, it slips through.
 
-### 注意：用日志判断"有没有跑过"时有个陷阱
+### Careful: there is a trap in using the log to decide "has this ever run"
 
-**索取欲的来源日志（`骑乘位吸精` / `坐姿射精` / `口交吸精` 之类）只在
-`urgeaudit` 开着的时候才打**（`AuditUrge` 开头就是 `if (_urgeAuditLeft <= 0) return;`）。
-审计条数用完后再看日志，会误判成"这条路径没跑过"。
+**The demand-urge source log lines (`骑乘位吸精` / `坐姿射精` / `口交吸精` and similar) are only
+written while `urgeaudit` is on** (`AuditUrge` starts with `if (_urgeAuditLeft <= 0) return;`).
+Looking at the log after the audit budget is used up will make it look as though "this path never ran".
 
-实测踩到过：`[榨取]`（Sit 射精不减速）已出现 1 次，说明 `Event_SitSyaseiStart`
-确实触发了、它的后缀也跑了，而同一个后缀里的 `NoteUrgeEvent("坐姿射精", ...)`
-却因为审计关了而没留下任何痕迹。
+This has actually happened: `[榨取]` (seated ejaculation does not slow down) appeared once, which
+proves `Event_SitSyaseiStart` fired and its postfix ran — yet `NoteUrgeEvent("坐姿射精", ...)` in the
+same postfix left no trace at all, because the audit had already switched off.
 
-**要验证这些来源，先 `urgeaudit 200` 再玩。**
+**To verify these sources, run `urgeaudit 200` before playing.**
 
-### 2026-10-07 复盘点
+### 2026-10-07 census
 
-| 功能 | 日志标签 | 状态 |
+| Feature | Log tag | Status |
 | --- | --- | --- |
-| Sit 榨取模式（Sit 射精不减速） | `[榨取]` | **已跑通 1 次**|
-| 余韵闭环 | `[余韵]` | 已跑通 5 次|
-| 回归累积 + 坐姿挂起 | `[回归]` | **仍为 0** |
-| 坐姿 / 口交的射精吸精累积 | — | 需开 `urgeaudit` 才能判定 |
+| Seated drain mode (seated ejaculation does not slow down) | `[榨取]` | **ran once** |
+| Afterglow loop | `[余韵]` | ran 5 times |
+| Return accumulation + holding the seated pose | `[回归]` | **still 0** |
+| Seated / fellatio ejaculation and absorb accumulation | — | needs `urgeaudit` to judge |
 
 ---
 
-## 6. Sit 模式没有便于手动累积榨取欲的部位
+## 6. Sit mode has no convenient body part for accumulating drain urge by hand
 
-**状态：已修（2026-10-07）**
+**Status: fixed (2026-10-07)**
 
-**症状**
-背面骑乘（Osiri）有**打屁股**这个又大又明确的目标，随手点就能累积索取欲；
-而坐姿（Sit）**没有一个方便的部位**去手动累积榨取欲。
+**Symptom**
+Rear riding (Osiri) has the **spank** — a big, unambiguous target that accumulates demand urge with
+a casual click. The seated pose (Sit) has **no convenient body part** for accumulating drain urge by
+hand.
 
-**根因 —— 两边的累积条件宽严差很多**
+**Root cause — the accumulation conditions differ a lot in strictness**
 
-| | 累积条件 | 窗口 | 目标 |
+| | Accumulation condition | Window | Target |
 | --- | --- | --- | --- |
-| **Osiri** `Osiri叩かれる()` | `osiriState == attacking` | **长期稳定**（整个攻击阶段） | 屁股，又大又显眼 |
-| **Sit** `頭叩かれるSit()` | `kissing == 1` | **只有 4~5 秒** | 头部，且只在那个窗口内才认 |
+| **Osiri** `Osiri叩かれる()` | `osiriState == attacking` | **stable for a long time** (the whole attack stage) | the butt, big and obvious |
+| **Sit** `頭叩かれるSit()` | `kissing == 1` | **only 4 to 5 seconds** | the head, and only recognised inside that window |
 
-原码：
+Original code:
 
 ```csharp
 public void 頭叩かれるSit()
@@ -309,70 +309,75 @@ public void 頭叩かれるSit()
 }
 ```
 
-`kissing` 的状态机：
+The `kissing` state machine:
 
-- `0 → 1` 由 `PrepareKissing()` 触发，**窗口长度 = `KissPrepareTime`**（第 1~3 天 5 秒、
-  第 4 天 4.5 秒、第 5 天 4 秒；每次 `KissPrepare解除()` 还会 `*= 0.9` 继续缩短）
-- `1 → 2` 由 `StartKISS()` 在 `拘束キスTimer < 0` 时触发 → 变成技能检定，**这时点击不再累积**
-- 平时自动进入靠 `Random.value < 0.1f`（10%），不可控
+- `0 → 1` is triggered by `PrepareKissing()`, **window length = `KissPrepareTime`** (days 1 to 3: 5 s,
+  day 4: 4.5 s, day 5: 4 s; every `KissPrepare解除()` also does `*= 0.9` to shorten it further)
+- `1 → 2` is triggered by `StartKISS()` when `拘束キスTimer < 0` → it becomes a skill check, and
+  **clicks no longer accumulate at that point**
+- the automatic entry normally relies on `Random.value < 0.1f` (10%), which cannot be controlled
 
-**关键的隐藏入口：游戏有一组开发者快捷键**
+**The key hidden entry point: the game has a set of developer hotkeys**
 
-`TabemiControl.Update()` 里直接绑了：
+They are bound directly inside `TabemiControl.Update()`:
 
-| 键 | 作用 |
+| Key | Effect |
 | --- | --- |
-| **Z** | `Show_CenterGirlSit()` —— 直接进入坐姿 |
-| **X** | **`PrepareKissing()` —— 直接把 `kissing` 置 1，打开累积窗口** |
-| **C** | `StartKISS()` —— 直接进技能检定（另一个 C 分支是 `HPHeal(10)`） |
-| **V** | （待查） |
+| **Z** | `Show_CenterGirlSit()` — enter the seated pose directly |
+| **X** | **`PrepareKissing()` — set `kissing` to 1 directly, opening the accumulation window** |
+| **C** | `StartKISS()` — go straight into the skill check (the other C branch is `HPHeal(10)`) |
+| **V** | (to be checked) |
 
-**所以手动累积 Sit 榨取欲的实际步骤是：先按 X，再在 4~5 秒内点头部。**
-这条路径游戏本身完全没提示，只能从代码里读出来。
+**So the actual way to accumulate seated drain urge by hand is: press X first, then click the head
+within 4 to 5 seconds.** The game gives no hint of this path at all; it can only be read out of the code.
 
-**修法（已实施）**
+**Fix (implemented)**
 
-在 `Postfix_SitHits` 里补了一条：
+One branch was added in `Postfix_SitHits`:
 
-- 计数**真的增加了**（`kissing == 1` 窗口内）→ 走完整逻辑，含脱出惩罚（原行为不变）
-- 计数**没增加** → 只要 `SitClickAlwaysAccumulate` 开着、且 `sitState == "attacking"`，
-  就**只累积榨取欲 + 过一遍叠层判定**，**不动游戏的 `SitGirlKiss叩く量`**
+- the counter **really did increase** (inside the `kissing == 1` window) → run the full logic,
+  including the escape penalty (original behaviour unchanged)
+- the counter **did not increase** → as long as `SitClickAlwaysAccumulate` is on and
+  `sitState == "attacking"`, **only accumulate drain urge and run the stacking check**,
+  **without touching the game's own `SitGirlKiss叩く量`**
 
-**关键**：不动游戏自己的计数，所以**脱出机制与原版完全一致** ——
-只是让榨取欲能靠点击攒起来，等于给了坐姿一个和「打屁股」对等的手动入口。
+**The key point**: the game's own counter is left alone, so **the escape mechanic stays exactly as in
+vanilla** — the change only lets drain urge be built up by clicking, which gives the seated pose a
+manual entry point equivalent to "spank".
 
-开关：`SitClickAlwaysAccumulate`（默认开）。
+Switch: `SitClickAlwaysAccumulate` (on by default).
 
 ---
 
-## 7. Sit 的索取模式会导致绝顶值变化异常
+## 7. Demand mode in Sit makes the ecstasy value jump abnormally
 
-**状态：用户要求先记录、暂不改**
+**Status: the user asked to record it first, not to change anything yet**
 
-**症状**
-坐姿下开着索取模式时，绝顶值会出现异常跳变。
+**Symptom**
+With demand mode active in the seated pose, the ecstasy value jumps abnormally.
 
-**现场证据** —— `watch.csv`（109 个 Sit 样本），抓到的突降：
+**Live evidence** — `watch.csv` (109 seated samples), the sudden drops that were caught:
 
 ```
 t=...947  attacking  绝顶=190.781/199.878  段=10  Syaseing=0
-t=...951  attacking  绝顶=  8.922/199.878  段=10  Syaseing=0   ← 一步掉了 181.9
+t=...951  attacking  绝顶=  8.922/199.878  段=10  Syaseing=0   ← 181.9 lost in one step
 t=...954  attacking  绝顶= 10.960/199.878
 t=...958  attacking  绝顶=  6.541/199.878
-t=...962  attacking  绝顶= 15.543/199.878   ← 之后在低位缓慢爬升
+t=...962  attacking  绝顶= 15.543/199.878   ← then it slowly climbs back from the low range
 ```
 
-几个值得注意的点：
+Several things worth noting:
 
-- **跳变时 `Syaseing=0`** —— 不是榨取造成的
-- 跳变前是 190.781，**没到上限 199.878**，也不是"到顶触发"
-- 跳变后的形态（6~25 之间起伏、缓慢爬升）**很像「清零振荡」在跑** ——
-  而清零振荡的入口正是 `Prefix_EcstasyReset`。所以大概率是
-  **某次 `EcstasyReset` 被触发 → 清零振荡接管 → 值被压在低位**
-- `段=10` —— 索取模式已叠到上限（`DemandMaxStacks`）并停在那里
-- `HP` 在 199.5 ↔ 287.3 之间来回 —— 那是动摇的 HP 加成的施加/还原，正常
+- **`Syaseing=0` at the moment of the jump** — the drain did not cause it
+- before the jump the value was 190.781, **below the cap of 199.878**, so it is not "hitting the cap"
+- the shape after the jump (oscillating between 6 and 25, climbing slowly) **looks very much like
+  the reset oscillation running** — and the entry point of that oscillation is `Prefix_EcstasyReset`.
+  So most likely **some `EcstasyReset` was triggered → the reset oscillation took over → the value
+  was held down**
+- `段=10` — demand mode had stacked up to its cap (`DemandMaxStacks`) and stopped there
+- `HP` bounces between 199.5 and 287.3 — that is the tremor's HP bonus being applied and reverted, normal
 
-**留存证据的完整统计**（`watch-archive/watch-20261007-211819.csv`，167 样本）
+**Full statistics of the retained evidence** (`watch-archive/watch-20261007-211819.csv`, 167 samples)
 
 ```
 姿势分布          {'Osiri': 34, 'Sit': 133}
@@ -383,39 +388,45 @@ Syaseing 分布     {'0': 162, '1': 5}
 段数分布          {0:45, 1:23, 2:50, 5:1, 10:48}
 ```
 
-那个 −195.1 的跌幅**几乎等于把绝顶值整条清零**，比单纯"掉一截"更值得注意 ——
-它更像**一次完整的 `EcstasyReset(≈1.0)`**，而不是损耗。
+That −195.1 drop is **very nearly the whole ecstasy bar being zeroed**, which deserves more attention
+than "it lost a chunk" — it looks more like **a complete `EcstasyReset(≈1.0)`** than like wear.
 
-**待查方向**
+**Directions to investigate**
 
-1. **谁调了 `EcstasyReset`** —— 在 `Prefix_EcstasyReset` / `Prefix_EcstasyResetNoArg`
-   里加日志（打出来源与调用栈），确认是游戏自己调的、还是索取模式逻辑引发的
-2. **清零振荡是否该在索取模式中接管** —— 现在它只挡了 `Syaseing`，没挡 `_demandMode`；
-   索取模式中绝顶值本该由连榨的软上限管，两者可能打架
-3. **`段=10` 长时间不动** —— 与第 1 条同源（只有打屁股能叠），但这里已经满了
+1. **Who called `EcstasyReset`** — add logging inside `Prefix_EcstasyReset` / `Prefix_EcstasyResetNoArg`
+   (printing the source and the call stack) to confirm whether the game called it itself or the demand
+   mode logic triggered it
+2. **Should the reset oscillation take over during demand mode** — right now it only blocks `Syaseing`,
+   not `_demandMode`; during demand mode the ecstasy value is supposed to be governed by the chain-drain
+   soft cap, and the two may be fighting each other
+3. **`段=10` not moving for a long time** — same origin as entry 1 (only spanking stacks), but here it
+   is already full
 
 ---
 
-## 8. Sit 无法触发连榨，因此也无法触发余韵
+## 8. Sit cannot trigger a chain drain, and therefore cannot trigger the afterglow
 
-**状态：已修（2026-10-07）**
+**Status: fixed (2026-10-07)**
 
-**症状**
-坐姿下连榨永远起不来，余韵自然也就永远触发不了。
+**Symptom**
+In the seated pose the chain drain never gets going, so naturally the afterglow can never trigger either.
 
-**现场证据**
+**Live evidence**
 
-`watch.csv` 里 **133 个 Sit 样本的 `Syaseing` 列全部为 0**，而且
-**子状态列全部是 `attacking`** —— 从来没有切到过 `kyusei` 或 `syasei`。
-余韵列也全程为 0。
+In `watch.csv`, **the `Syaseing` column is 0 for all 133 seated samples**, and **the sub-state column
+is always `attacking`** — it never once switched to `kyusei` or `syasei`. The afterglow column is 0
+throughout as well.
 
-对比：同一份数据里 Osiri 有 4 个 `kyusei` 样本、`Syaseing=1` 出现过 5 次。
+For comparison: in the same dataset Osiri has 4 `kyusei` samples and `Syaseing=1` appears 5 times.
 
-**这是决定性的**：Sit 不是"连榨起不来"，而是**连榨之前的那一步（进入榨取）都到不了**。
+**This is decisive**: it is not that "the chain drain will not start" in Sit — it is that **the step
+before it (entering drain) is never even reached**.
 
-**用户补充（与代码一致）**：「sit 的连榨效果貌似只出现于【束缚之吻】状态下」
+**User addition (consistent with the code)**: "the chain-drain effect in sit seems to appear only in
+the [binding kiss] state"
 
-代码层面确实如此 —— Sit 的榨取只有一个入口，而它会**强制把角色置为接吻态**：
+At the code level that is exactly right — seated drain has only one entry point, and it **forces the
+character into the kissing state**:
 
 ```csharp
 public void Play_SitKiss吸精(bool startFrom0)
@@ -428,10 +439,11 @@ public void Play_SitKiss吸精(bool startFrom0)
 }
 ```
 
-所以 **Sit 的连榨 = 束缚之吻专属**，不是"在坐姿里随便就能出"。
+So **seated chain drain is exclusive to the binding kiss**; it is not something you can get "any time
+while seated".
 
-**根因（推测，待验证）**
-进入 Sit 榨取的那条路被 `kissing` 状态机卡住了：
+**Root cause (inferred, to be verified)**
+The path into seated drain is held back by the `kissing` state machine:
 
 ```
 Event_SitKissSyaseiOnEnd()
@@ -442,59 +454,63 @@ Event_SitKissSyaseiOnEnd()
 }
 ```
 
-也就是说 **Sit 的榨取只能从 `Play_SitKiss吸精` 进**，而它的前置是
-**`kissing == 2`（接吻态）** —— 而 `kissing` 要经过
+In other words **seated drain can only be entered through `Play_SitKiss吸精`**, whose prerequisite is
+**`kissing == 2` (the kissing state)** — and `kissing` only gets there through
 
-- `0 → 1`：`PrepareKissing()`，靠 10% 随机 或 **按 X**
-- `1 → 2`：`StartKISS()`，靠 `拘束キスTimer < 0` 或 **按 C**
+- `0 → 1`: `PrepareKissing()`, either the 10% roll or **pressing X**
+- `1 → 2`: `StartKISS()`, either `拘束キスTimer < 0` or **pressing C**
 
-才会到。这与第 6 条是同一个根源：**Sit 的手动入口既要按键又只在窄窗口内有效**，
-玩家实际玩下来几乎到不了接吻态，于是榨取 → 连榨 → 余韵整条链都摸不到。
+This is the same root as entry 6: **the seated manual entry point both requires a key press and only
+works inside a narrow window**, so in real play the character almost never reaches the kissing state,
+and the whole chain of drain → chain drain → afterglow stays out of reach.
 
-**另一个已接管但可能没机会跑的点**
-`Even_SitKiss吸精OnEnd` 原版两个分支都是 `Play_SitKiss吸精(true)`（永远重播），
-我加了前缀接管以套用 `KyuseiMaxChain`。**但既然榨取都进不去，这段接管就从未被触发过。**
+**Another point that is hooked but may never get a chance to run**
+Both branches of the original `Even_SitKiss吸精OnEnd` are `Play_SitKiss吸精(true)` (it replays forever);
+a prefix was added to take it over so `KyuseiMaxChain` applies. **But since drain cannot be entered at
+all, that takeover has never been triggered.**
 
-**待查方向**
+**Directions to investigate**
 
-1. **确认 `kissing` 在实际游玩里的到达率** —— 在 `PrepareKissing` / `StartKISS` 加日志，
-   看一局里能进几次
-2. **若确实到不了**，考虑让 Sit 的榨取也能从非接吻路径进入
-   （例如 `Event_SitSyasei_OnEnd` 现在永远 `Play_Sit()`，可以给它一个小概率进榨取）
-3. 或者按第 6 条的方向放宽手动入口，让玩家能主动把状态推到接吻态
-
----
-
-## 附：证据归档
-
-持续拉取器（`tools/watch.sh`）的产出已从 `BepInEx/l2d_dump/cmd/` 复制到
-`watch-archive/`，避免被游戏或 BepInEx 清掉：
-
-```
-watch-archive/watch-<时间戳>.csv   紧凑时间线，可用 csv 工具直接分析
-watch-archive/watch-<时间戳>.txt   完整状态块，含每轮的原文
-```
-
-**下次要复现或对比，先看这里有没有对应时段的档。**
+1. **Confirm the reach rate of `kissing` in real play** — add logging to `PrepareKissing` / `StartKISS`
+   to see how many times it is entered per session
+2. **If it really is unreachable**, consider letting seated drain also be entered from a non-kissing path
+   (for example `Event_SitSyasei_OnEnd` currently always calls `Play_SitKiss()`; it could get a small
+   chance to enter drain)
+3. Or follow the direction of entry 6 and loosen the manual entry point, so the player can push the
+   state into the kissing state on purpose
 
 ---
 
-## 附：坐姿「攻击行程」的机制（参考知识，非缺陷）
+## Appendix: evidence archive
 
-用户观察：「sit 有一个『攻击行程』的视觉，即骑乘的时候上下活动有一个最大长度，
-但是在这段距离中间又有一些『点』使得每次 sit 下去前的高度可以不同。」
+The output of the continuous poller (`tools/watch.sh`) has been copied out of
+`BepInEx/l2d_dump/cmd/` into `watch-archive/`, so the game or BepInEx cannot wipe it:
 
-**代码完全对得上。** 行程是 2D 混合的一个轴：
+```
+watch-archive/watch-<时间戳>.csv   compact timeline, directly analysable with any csv tool
+watch-archive/watch-<时间戳>.txt   full state blocks, including the raw text of every round
+```
+
+**To reproduce or compare something later, check here first for an archive covering that window.**
+
+---
+
+## Appendix: the mechanism behind the seated "attack travel" (reference knowledge, not a defect)
+
+User observation: "sit has an 'attack travel' visual, i.e. while riding it moves up and down over a maximum length,
+but there are some 'points' in the middle of that distance that make the height before each sit go down different."
+
+**The code matches this exactly.** The travel is one axis of a 2D mix:
 
 ```csharp
 Vector2 parameter = new Vector2(sitSpeed + sitSpeedPlus, sit_HeadZ);
 SitMixerA_HeadZ.State.Parameter = parameter;   // 横轴 = 速度，纵轴 = 行程深度
 ```
 
-`Update_SitMixers()` 每帧把 `SitMixerA/B/KissA/KissB_HeadZ` 四个混合器的
-`NormalizedTime` 与主混合器对齐，参数喂同一个 `(speed, sit_HeadZ)`。
+Every frame, `Update_SitMixers()` aligns the `NormalizedTime` of the four mixers
+`SitMixerA/B/KissA/KissB_HeadZ` with the main mixer and feeds them the same `(speed, sit_HeadZ)`.
 
-**行程怎么变** —— 就是你说的"中间那些点"：
+**How the travel changes** — that is exactly the "points in the middle" you described:
 
 ```csharp
 headZ判定Timer += headZ判定interval;
@@ -505,51 +521,54 @@ if (UnityEngine.Random.value < 0.1f)                     // 10% 概率
 }
 ```
 
-| 项 | 值 |
+| Item | Value |
 | --- | --- |
-| `sit_HeadZ` 的取值 | **{−1, 0, +1}** —— 三个档位 |
-| 换档概率 | 每 `headZ判定interval` 掷一次，**10%** |
-| 过渡时长 | **0.5 秒**，用 `Mathf.Lerp` 平滑 |
-| 类型 | `private float sit_HeadZ`（`Live2D_Animation_SitOsiri`） |
+| Values of `sit_HeadZ` | **{−1, 0, +1}** — three detents |
+| Chance of changing detent | one roll per `headZ判定interval`, **10%** |
+| Transition duration | **0.5 s**, smoothed with `Mathf.Lerp` |
+| Type | `private float sit_HeadZ` (`Live2D_Animation_SitOsiri`) |
 
-**所以"每次坐下去前的高度可以不同"是因为档位换过了** —— 三个离散档 + 随机换档 + 平滑过渡。
+**So "the height before each sit go down can differ" is because the detent changed** — three discrete detents,
+a random switch, and a smooth transition.
 
-**对修改器的含义**：我现在动的「坐姿攻击速度」只碰了**横轴**（`sitSpeed`）。
-**纵轴 `sit_HeadZ` 是另一个维度，目前完全没碰** —— 若日后要做"行程变长/变短/固定某个档"，
-挂点在这里（`Update_SitMixers` 之后改 `sit_HeadZ`，或拦住那个 10% 的换档）。
+**What this means for the mod**: what I touch today as "seated attack speed" only touches the
+**horizontal axis** (`sitSpeed`). **The vertical axis `sit_HeadZ` is a separate dimension and is currently
+untouched** — if we ever want "longer travel / shorter travel / pin it to one detent", the hook point is here
+(change `sit_HeadZ` after `Update_SitMixers`, or intercept that 10% detent change).
 
 ---
 
-## 9. 手动进入余韵功能无效
+## 9. The manual "enter afterglow" feature did nothing
 
-**状态：已修（2026-10-07）**
+**Status: fixed (2026-10-07)**
 
-**症状**
-`demand afterglow` 命令 / 面板「手动进入余韵」按钮点了没反应 ——
-其实发送成功了（还会弹提示条），但**角色不会真的开始连续吸精**。
+**Symptom**
+The `demand afterglow` command / the panel's "enter afterglow manually" button did nothing when clicked —
+the send actually succeeded (the banner even popped up), but **the character never started chain absorbing for real**.
 
-**根因 —— 手动命令设的变量和点火逻辑看的变量不是同一个**
+**Root cause — the manual command sets a different variable from the one the ignition logic reads**
 
-| | 变量 |
+| | Variable |
 | --- | --- |
-| `demand afterglow` 手动命令 | 设 `_afterglowRemaining = N`，并**把 `_afterglowPending` 清零** |
-| `TickAfterglowSettle`（唯一负责"开第一次榨取"的地方） | **第一行就是 `if (_afterglowPending <= 0) return;`** |
+| The `demand afterglow` manual command | sets `_afterglowRemaining = N` **and zeroes `_afterglowPending`** |
+| `TickAfterglowSettle` (the only place that "starts the first drain") | **its very first line is `if (_afterglowPending <= 0) return;`** |
 
-于是手动余韵设了个**没人消费的计数器**：
+So the manual afterglow set a **counter nobody consumed**:
 
 ```
-手动设 _afterglowRemaining = N
-  → 要消费它，得靠榨取收尾事件（Event_Osiri吸精End / Even_SitKiss吸精OnEnd）
-    → 榨取要先有一次，而开第一次榨取只有 TickAfterglowSettle 会做
-      → TickAfterglowSettle 被 _afterglowPending <= 0 挡住
-        → 死循环，计数器就静静躺在那里
+manual sets _afterglowRemaining = N
+  → consuming it requires the drain wrap-up event (Event_Osiri吸精End / Even_SitKiss吸精OnEnd)
+    → that requires a drain to exist first, and only TickAfterglowSettle starts the first drain
+      → TickAfterglowSettle is blocked by _afterglowPending <= 0
+        → dead loop; the counter just sits there
 ```
 
-**这解释了为什么旧版「手动进入余韵」看起来"有效"**（提示条会弹、`status` 里余韵数也对），
-**但角色毫无反应** —— 提示条只反映那个计数器，不代表榨取真的开始了。
+**This explains why the old "enter afterglow manually" looked "effective"** (the banner popped, and the afterglow
+count in `status` was right) **while the character did not react at all** — the banner only reflects that counter,
+it does not mean a drain ever started.
 
-**修法**
-让手动命令走和自动余韵**同一条路径**：
+**Fix**
+Make the manual command take **the same path** as the automatic afterglow:
 
 ```csharp
 _afterglowPending   = UnityEngine.Random.Range(lo, hi + 1);   // 交给点火逻辑
@@ -557,7 +576,7 @@ _afterglowRemaining = 0;
 _afterglowSettleAt  = -999f;                                   // 立即重新计稳定时间
 ```
 
-**验证**
+**Verification**
 
 ```
 已手动进入余韵：待发动 17 次（局面稳定后自动开第一次榨取）
@@ -567,77 +586,77 @@ _afterglowSettleAt  = -999f;                                   // 立即重新�
 
 ---
 
-## 10. 索取模式太久会导致坐姿入口被无限期堵死
+## 10. Demand mode running too long blocks the seated entry indefinitely
 
-**状态：已修（2026-10-07）**
+**Status: fixed (2026-10-07)**
 
-**用户描述**
-「有时候索取的时间太长，到了 sit 可出现的时间段的时候一直进不了 sit，
-就可以手动触发余韵强制结束索取模式并清空索取欲，
-同时余韵过程中足够低的索取欲增长也可以防止余韵结束后继续接着索取」
+**User description**
+"Sometimes demand lasts so long that when the window where sit can appear arrives I can never get into sit,
+so I can manually trigger the afterglow to force demand mode to end and clear demand urge,
+and the low demand-urge growth during the afterglow also prevents demand from continuing right after the afterglow ends"
 
-**根因（比"手动余韵"更深一层）**
+**Root cause (one layer deeper than "manual afterglow")**
 
-两道闸都会挡坐姿入口，其中第二道是真正的问题：
+Two gates block the seated entry, and the second one is the real problem:
 
-| 闸 | 条件 | 评价 |
+| Gate | Condition | Assessment |
 | --- | --- | --- |
-| 「余韵清空前不换姿势」 | `_afterglowRemaining > 0` | 余韵跑完自然解除，没问题 |
-| **「回归累积」的坐姿挂起** | `_sitDeferred && centerGirlState == "Osiri"` 就一直拦 | **索取模式让角色长期停在 Osiri → 放行条件永远不成立 → 无限期堵死** |
+| "No pose change until the afterglow is cleared" | `_afterglowRemaining > 0` | Released naturally when the afterglow finishes; fine |
+| **The "return accumulation" seated hold** | `_sitDeferred && centerGirlState == "Osiri"` blocks the whole time | **Demand mode keeps the character in Osiri for a long time, so the release condition never becomes true, and it is blocked indefinitely** |
 
-`_sitDeferred` 本来只在"骑乘位结束"时清除，而长索取模式下那一刻永远不会到来。
+`_sitDeferred` was only ever cleared on "riding ends", and under a long demand that moment never arrives.
 
-**修法（三件事）**
+**Fix (three things)**
 
-1. **手动余韵 = 强制退出索取模式**（逃生阀）
-   `demand afterglow` 现在把索取状态**全部清干净**：
-   `_demandMode / _demandStacks / _demandUntil / _demandUrge / _chainDemand` 一并归零。
+1. **Manual afterglow = force-exit demand mode** (escape valve)
+   `demand afterglow` now **clears every demand field**:
+   `_demandMode / _demandStacks / _demandUntil / _demandUrge / _chainDemand` are all zeroed together.
 
-2. **坐姿挂起加超时保护**（修根因）
-   新增 `SitDeferTimeout`（默认 45 秒）—— 超过就强制放行，
-   不再依赖"骑乘位结束"这个可能永不到来的条件。
+2. **A timeout guard on the seated hold** (fixes the root cause)
+   New `SitDeferTimeout` (default 45 s) — past that, release unconditionally,
+   no longer depending on "riding ends", which may never come.
 
-3. **余韵期间索取欲低增长 + 结束后清空**
-   - `AfterglowUrgeScale`（默认 20%）：余韵期间所有来源的索取欲增长统一乘这个系数
-     （打屁股 / 坐姿点击 / 攻击 / 射精吸精都走同一个 `UrgeScaleNow()`）。
-     余韵本身会连榨十几次、每次都涨，不压住的话**余韵一结束马上又进索取模式**，
-     逃生阀就白用了。
-   - `AfterglowClearsUrge`（默认开）：余韵烧完时索取欲归零、`_demandEntered` 落闸，
-     之后有一段干净的空档。
+3. **Low demand-urge growth during the afterglow + clearing when it ends**
+   - `AfterglowUrgeScale` (default 20%): during the afterglow, demand-urge growth from every source is
+     multiplied by this factor (spanks / seated taps / attacks / ejaculation-and-absorb all go through the
+     same `UrgeScaleNow()`). The afterglow itself chain-drains a dozen times and grows on every round; without
+     damping it, **demand mode starts again the moment the afterglow ends**, and the escape valve was wasted.
+   - `AfterglowClearsUrge` (default on): when the afterglow burns out, demand urge goes to zero and
+     `_demandEntered` drops its gate, leaving a clean gap afterwards.
 
-**验证**
+**Verification**
 
 ```
 [索取模式中]  索取模式中 1 段 / 共剩余 154.5s   索取欲=2…
 [手动余韵后]  [Osiri·kyusei]  不在索取模式   索取欲=1.4%    ← 强制清干净
-             已手动进入余韵：待发动 43 次（局面稳定后自动开第一次榨取）
+              已手动进入余韵：待发动 43 次（局面稳定后自动开第一次榨取）
 ```
 
 ---
 
-## 11. 连榨上限拆成四套（功能变更，非缺陷）
+## 11. The chain limit split into four sets (feature change, not a defect)
 
-**状态：已实施（2026-10-07）**
+**Status: implemented (2026-10-07)**
 
-**用户要求**
-「『玩家』栏里的『连榨上限』需要做 osiri常规、osiri索取、sit常规、sit榨取四个滑块以区分」
+**User request**
+"The 'chain limit' in the Player tab needs four sliders to separate osiri normal, osiri demand, sit normal and sit drain"
 
-**原来**：只有一个 `KyuseiMaxChain`，两种姿势 × 两种模式**共用同一个上限与同一个计数** ——
-调一个会连带影响另外三个场景。
+**Before**: there was only one `KyuseiMaxChain`, and two poses times two modes **shared one limit and one count** —
+tuning one affected the other three scenarios.
 
-**现在**：四套独立的上限与计数。
+**Now**: four independent limits and counts.
 
-| 配置键 | 场景 | 面板标签 |
+| Config key | Scenario | Panel label |
 | --- | --- | --- |
-| `ChainMaxOsiriNormal` | 骑乘位 · 常规 | 骑乘位·常规 |
-| `ChainMaxOsiriDemand` | 骑乘位 · 索取模式 | 骑乘位·索取模式 |
-| `ChainMaxSitNormal` | 坐姿 · 常规 | 坐姿·常规 |
-| `ChainMaxSitDemand` | 坐姿 · 榨取模式 | 坐姿·榨取模式 |
+| `ChainMaxOsiriNormal` | Riding · normal | 骑乘位·常规 |
+| `ChainMaxOsiriDemand` | Riding · demand mode | 骑乘位·索取模式 |
+| `ChainMaxSitNormal` | Seated · normal | 坐姿·常规 |
+| `ChainMaxSitDemand` | Seated · drain mode | 坐姿·榨取模式 |
 
-面板在「玩家」页的「吸精（榨取）」节，并实时显示当前场景：
+The panel puts them under the "absorb (drain)" section of the Player tab, and shows the current scenario live:
 `当前场景：坐姿·榨取模式，上限 16，已连 3`
 
-**实现**
+**Implementation**
 
 ```csharp
 internal static bool PoseIsSit()      // Sit 与 Osiri 在同一个类里，从 centerGirlState 判
@@ -648,9 +667,9 @@ private static int ChainLimitNow()    // 姿势 × 模式 → 取对应那个上
 internal static string ChainSlotName()  // "坐姿·榨取模式" 这类标签
 ```
 
-`KyuseiMaxChain` **已废弃**（保留在配置里只为兼容旧档，逻辑上不再被读）。
+`KyuseiMaxChain` **is deprecated** (kept in the config only for compatibility with old files; the logic no longer reads it).
 
-**用户实测值**（说明四套确实独立生效）：
+**The user's measured values** (showing the four sets really are independent):
 
 ```
 ChainMaxOsiriNormal = 2
@@ -661,16 +680,16 @@ ChainMaxSitDemand   = 16
 
 ---
 
-## 12. 余韵只能由索取/榨取模式中的活动触发（不变量）
+## 12. The afterglow can only be triggered by activity inside demand / drain mode (invariant)
 
-**状态：已确认成立 + 已写成代码注释（2026-10-07）**
+**Status: confirmed to hold + written into the code comments (2026-10-07)**
 
-**用户要求**
-「所有常规状态下的活动都不会触发余韵」
+**User request**
+"Nothing in the normal state should ever trigger the afterglow"
 
-**现状核查：这条已经成立。**
+**Current-state check: this already holds.**
 
-余韵累积的唯一入口 `NoteDemandSyasei()`，第一行就是闸门：
+The only entry point for afterglow accumulation, `NoteDemandSyasei()`, starts with the gate:
 
 ```csharp
 private static void NoteDemandSyasei(string pose)
@@ -680,47 +699,47 @@ private static void NoteDemandSyasei(string pose)
 }
 ```
 
-`_afterglowPending` 的**全部写入点只有四处**：
+**`_afterglowPending` has exactly four write sites**:
 
-1. `NoteDemandSyasei`（模式中射精，带闸门）
-2. `EnterOrStackDemand` 里"收回上一轮没跑完的余韵"（只在进入/叠加模式时可达）
-3. 手动 `demand afterglow` 命令（**故意**绕过闸门，用于测试与逃生阀）
-4. `defaults` 复位
+1. `NoteDemandSyasei` (ejaculation inside the mode, gated)
+2. `EnterOrStackDemand`'s "take back the previous round's unfinished afterglow" (reachable only when entering or stacking the mode)
+3. the manual `demand afterglow` command (**deliberately** bypasses the gate, for testing and as an escape valve)
+4. `defaults` reset
 
-**没有任何一条能让常规状态的活动触发余韵。**
+**None of them lets activity in the normal state trigger the afterglow.**
 
-**验证**：常规状态下游玩 12 秒，日志里余韵累积次数 = **0**
+**Verification**: twelve seconds of play in the normal state, afterglow accumulation count in the log = **0**
 
-**顺带修了一个缺口**：`NoteDemandSyasei` 原先只挂了**两个**调用点（坐姿、骑乘位），
-**口交的射精漏了**。已补到 `Postfix_FellaSyaseiStart`。
+**A gap fixed along the way**: `NoteDemandSyasei` originally had only **two** call sites hooked (seated, riding),
+**and the fellatio ejaculation was missing**. Added to `Postfix_FellaSyaseiStart`.
 
-**已把这条规则写成 `NoteDemandSyasei` 的文档注释**，并列出那四个写入点，
-提醒"新增第五条之前请三思" —— 防止日后被无意破坏。
+**This rule is now written into the doc comment of `NoteDemandSyasei`**, together with the four write sites,
+with a note saying "think twice before adding a fifth" — so it cannot be broken by accident later.
 
 ---
 
-## 13. 连榨被莫名提前终止（正骑）
+## 13. The chain drain cutting out early for no reason (Riding)
 
-**状态：已修（2026-10-07）**
+**Status: fixed (2026-10-07)**
 
-**症状**：正骑时连榨链会毫无预兆地断掉。
+**Symptom**: while riding, the chain drain stops without warning.
 
-**根因**：连榨档位（常规 / 索取·榨取）原来只按 `_demandMode` 判：
+**Root cause**: the chain detent (normal / demand-drain) used to be decided by `_demandMode` alone:
 
 ```csharp
 if (_demandMode) return sit ? _chainSitDemand : _chainOsiriDemand;
 return sit ? _chainSitNormal : _chainOsiriNormal;
 ```
 
-而**正骑的榨取是从 `Play_SitKiss吸精()` 进的 —— 它把 `kissing` 强制置 2，但不置 `_demandMode`**。
+But **Riding's drain enters through `Play_SitKiss吸精()` — which forces `kissing` to 2 without setting `_demandMode`**.
 
-于是正骑的连榨落到**「常规」档**，被 `ChainMaxSitNormal`（实测值 **2**）提前掐断。
+So a Riding chain fell into the **"normal" detent** and was cut short by `ChainMaxSitNormal` (measured value **2**).
 
-同样的坑我在上一轮（#12 的 `ModeActive()`）刚踩过一次：
-**凡是判"_demandMode 才算模式中"的地方，对正骑都不成立。**
+I had stepped on the same trap one round earlier (#12's `ModeActive()`):
+**anywhere that decides "in the mode" from `_demandMode` alone does not hold for Riding.**
 
-**修法**：新增 `DrainSlotIsDemand()`，并把 `ChainNow()` / `ChainSet()` /
-`ChainLimitNow()` / `ChainSlotName()` 四处取档全部改用它。
+**Fix**: new `DrainSlotIsDemand()`, and all four detent lookups
+(`ChainNow()` / `ChainSet()` / `ChainLimitNow()` / `ChainSlotName()`) now use it.
 
 ```csharp
 private static bool DrainSlotIsDemand()
@@ -733,88 +752,91 @@ private static bool DrainSlotIsDemand()
 }
 ```
 
-**教训（值得单列）**：
-**`_demandMode` 不能当作"机制正在生效"的判据。** 正骑的榨取独立于它。
-凡是要判"现在是不是在跑这套机制"，一律用 `ModeActive()` / `DrainSlotIsDemand()`。
+**Lesson (worth its own line)**:
+**`_demandMode` cannot be used as the test for "this mechanic is currently running".** Riding's drain is
+independent of it. Whenever the question is "is this mechanic running right now", use `ModeActive()` /
+`DrainSlotIsDemand()`.
 
 ---
 
-## 14. 两条调用警告（已修：陈旧 Unity 引用 + 内层异常被吞）
+## 14. Two invocation warnings (fixed: stale Unity reference + swallowed inner exception)
 
-**状态：已修（2026-10-13）**
+**Status: fixed (2026-10-13)**
 
-### 症状
+### Symptom
 
-日志里偶发：
+Occasionally in the log:
 
 ```
 [Warning] 调用 HPGaugeChangePercent 失败：Exception has been thrown by the target of an invocation.
 [Warning] 调用 EcstasyGaugeChangePercent 失败：Exception has been thrown by the target of an invocation.
 ```
 
-插件反射调用游戏方法时抛的，**没观察到实际后果**，所以一直挂着当低优先级。
+Thrown when the plugin reflectively calls a game method, **with no observable consequence**, so it stayed on
+the list as low priority.
 
-### 根因（2026-10-13 定位）
+### Root cause (located 2026-10-13)
 
-`InvokeFloat` 里的第一行是 `if (obj == null) return;`，而 `obj` 的类型是 **`object`** ——
-这走的是**引用相等**，会绕过 `UnityEngine.Object` 重载的 `==`。
+The first line of `InvokeFloat` is `if (obj == null) return;`, and the type of `obj` is **`object`** — which
+uses **reference equality** and bypasses the `==` overload of `UnityEngine.Object`.
 
-Unity 的物体被销毁之后，C# 引用**并不为 null**。所以场景切换后缓存下来的 `player`
-能通过那行检查，然后在 `Invoke` 里炸掉。
+Once a Unity object is destroyed, the C# reference **is not null**. So a `player` cached before a scene change
+passes that check and then blows up inside `Invoke`.
 
-而 `TargetInvocationException` 把真实原因包住，日志只记 `e.Message`（外层那句
-"Exception has been thrown by the target of an invocation."）——
-**等于什么也没说**。这才是这条问题挂了这么久的原因：不是难修，是**看不见**。
+And `TargetInvocationException` wraps the real cause, while the log only recorded `e.Message` (the outer line
+"Exception has been thrown by the target of an invocation.") — **which says nothing**. That is why this issue
+sat for so long: not hard to fix, **invisible**.
 
-当初推测的「在不合适的时机调用（UI 槽位没初始化 / 不在店内场景）」方向是对的，
-但具体机制是**陈旧引用**，不是时机。
+The original guess — "called at the wrong moment (UI slot not initialised / not in the shop scene)" — pointed in
+the right direction, but the actual mechanism is a **stale reference**, not timing.
 
-### 修法
+### Fix
 
-1. 加一道前置判断：`obj is UnityEngine.Object uo && uo == null` —— 用 Unity 的重载去判，
-   销毁过的对象在这里就被挡住了
-2. 把 `TargetInvocationException` 的**内层异常**挖出来记进日志（类型 + 消息 + 栈），
-   并带上调用对象类型与参数 —— 下次再有别的失败，日志会直接说明原因
-3. 每种方法只详记一次，避免这个方法每帧被调到时刷屏
+1. Add a pre-check: `obj is UnityEngine.Object uo && uo == null` — judged with Unity's overload, so destroyed
+   objects are caught right here
+2. Dig the **inner exception** out of `TargetInvocationException` and log it (type + message + stack), together
+   with the target object's type and the arguments — the next failure of any kind will state its own cause
+3. Log each method in detail only once, so a method called every frame cannot flood the log
 
-**旁证**：代码里别处早就在用这个写法（`_gaugeHolderCache` 那处），
-说明这个坑本来就知道，只是 `InvokeFloat` 漏了。
+**Corroboration**: the codebase already used this pattern elsewhere (the `_gaugeHolderCache` spot), which means
+the trap was known — `InvokeFloat` had simply missed it.
 
-### 未能验证的部分
+### What could not be verified
 
-这两条警告是**偶发**的。修完之后跑了一轮没再出现 ——
-**但那不能证明修好了**，一次没有复现不等于不会再复现。
+These two warnings are **intermittent**. One run after the fix produced no occurrence —
+**but that does not prove it is fixed**; one run without a repro is not the same as never again.
 
-可确认的是：前置判断已生效、正常调用路径未被破坏
-（`set TargetHp` / `set TargetEcstasy` 实测仍正常生效）。
+What can be stated: the pre-check is in effect and the normal call path is intact
+(`set TargetHp` / `set TargetEcstasy` still take effect in practice).
 
-要真正判定，需要在场景切换频繁的游玩过程中再观察一段时间。
+Settling it properly needs another stretch of observation during play with frequent scene changes.
 
-## 15. 坐姿到点会把正在进行的索取模式顶掉
+## 15. The seated appearance displaces a demand mode that is already running
 
-**状态：已修（2026-10-07）；同时按要求【删除】了坐姿的超时强制放行**
+**Status: fixed (2026-10-07); the seated timeout force-release was also **removed** on request**
 
-**用户原话**
-「把对 sit 的强制放行功能删掉，并且 osiri 的索取模式在我设定 sit 会出现的 1h 处，会被 sit 顶掉」
+**The user's words**
+"Delete the force-release function for sit, and osiri's demand mode is displaced by sit at the 1h point where I set sit to appear"
 
-**症状**
-索取模式正跑着，到了坐姿的出现时刻（用户设为 1 小时），角色被强行切到坐姿，模式中断。
+**Symptom**
+Demand mode is running; when the seated appearance time arrives (set by the user to 1 hour), the character is
+forced into the seated pose and the mode is interrupted.
 
-**根因**
-`Prefix_ShowCenterGirlSit` 当时只挡两种情况：
+**Root cause**
+`Prefix_ShowCenterGirlSit` only blocked two cases at the time:
 
-| 已有的闸 | 条件 |
+| Existing gate | Condition |
 | --- | --- |
-| 余韵清空前不换姿势 | `_afterglowRemaining > 0` |
-| 回归累积的挂起 | `_sitDeferred` —— **而它只在"进入骑乘位时坐姿正好待进入"那一刻才置位** |
+| No pose change until the afterglow is cleared | `_afterglowRemaining > 0` |
+| The return-accumulation hold | `_sitDeferred` — **and it is only set at the instant "entering riding while the seated pose happens to be pending"** |
 
-**没有"模式进行中就不许换姿势"这一道** —— 所以坐姿一到点就长驱直入。
+**There was no "no pose change while the mode is active" gate** — so the seated appearance walked straight in.
 
-**另一个促成因素**：我之前加的 `SitDeferTimeout`（45 秒超时强制放行）
-本意是防止坐姿入口被无限期堵死，但它会**主动把模式打断**，与"模式期间不被打断"这条设计冲突。
-**用户明确要求删掉，已删。**
+**Another contributing factor**: the `SitDeferTimeout` I had added earlier (45 s timeout, force release) was meant
+to keep the seated entry from being blocked indefinitely, but it **actively interrupts the mode**, which
+contradicts the design goal "the mode is not interrupted". **The user asked for it to be removed; it is removed.**
 
-**修法**
+**Fix**
 
 ```csharp
 if (_demandMode)
@@ -825,33 +847,35 @@ if (_demandMode)
 }
 ```
 
-**不设任何超时。** 要主动退出索取模式 → 用「手动进入余韵」那个逃生阀
-（见第 10 条：它会强制清干净模式状态）。
+**No timeout of any kind.** To leave demand mode voluntarily, use the "enter afterglow manually" escape valve
+(see entry 10: it force-clears the mode state).
 
-`SitDeferTimeout` 配置键保留但**已停用**（只为兼容旧档），说明里标了原因。
+The `SitDeferTimeout` config key is kept but **disabled** (only for compatibility with old files), with the reason
+noted in its description.
 
-**设计定型**：
+**Settled design**:
 
-| 想做的事 | 用什么 |
+| What you want | How to get it |
 | --- | --- |
-| 让坐姿进来 | 等模式自然结束，或「手动进入余韵」强制清空 |
-| 模式期间换姿势 | **不允许** —— 这是设计，不是缺陷 |
+| Let the seated pose in | wait for the mode to end naturally, or force-clear it with "enter afterglow manually" |
+| Change pose while the mode is active | **not allowed** — this is the design, not a defect |
 
 ---
 
-## 16. 坐姿仍然顶掉索取模式（第 15 条修完还不行）
+## 16. The seated pose still displaces demand mode (fix #15 was not enough)
 
-**状态：已加状态级兜底，待实战验证**
+**Status: state-level fallback added, waiting on real-play verification**
 
-> **声明：本问题可能不是固定触发的。**
-> 也就是说它难以稳定复现，排查成本高于一般缺陷 ——
-> **也要考虑一种可能：游戏本身的源码质量不高**，
-> 这个现象是游戏自身在特定状态下产生的，而插件只是恰好经过。
-> 在拿到稳定的复现步骤之前，不建议为它改插件的逻辑。
+> **Disclaimer: this issue may not trigger deterministically.**
+> In other words it is hard to reproduce reliably and costs more to investigate than an ordinary defect —
+> **and one possibility must be kept in mind: the game's own source quality is not high**, so the symptom may be
+> something the game produces in a particular state, with the plugin merely passing through.
+> Until stable reproduction steps exist, changing the plugin logic for it is not advisable.
 
-**症状**：第 15 条修完（入口处 `if (_demandMode) return false;`）之后，**坐姿依然能顶上来**。
+**Symptom**: after fix #15 (an `if (_demandMode) return false;` at the entry point), **the seated pose can still
+take over**.
 
-**为什么入口拦不住 —— 切状态的是延迟协程**
+**Why the entry point cannot stop it — the state change is a delayed coroutine**
 
 ```csharp
 private IEnumerator _CenterGirl(int i)
@@ -867,13 +891,13 @@ private IEnumerator _CenterGirl(int i)
 }
 ```
 
-`Show_CenterGirlSit()` 里是 `StartCoroutine(_CenterGirl(1))`。
-**如果它在我拦下之前就已经被调用过、协程已经排队，那 0.1 秒后它照样把状态切成 Sit** ——
-拦入口（前缀）挡不住已经排进队列的协程。
+`Show_CenterGirlSit()` does `StartCoroutine(_CenterGirl(1))`. **If it was already called and the coroutine already
+queued before we intercepted, then 0.1 s later it switches the state to Sit anyway** — a prefix on the entry point
+cannot stop a coroutine that is already queued.
 
-**修法：状态级兜底**
+**The fix: a state-level fallback**
 
-在 `TickDemand()` 里每帧检查：
+In `TickDemand()`, check every frame:
 
 ```csharp
 if (_demandMode && centerGirlState == "Sit")
@@ -883,38 +907,38 @@ if (_demandMode && centerGirlState == "Sit")
 }
 ```
 
-**为什么这里做"纠正"是恰当的**：
-项目有条规矩是"不要自动纠正，除非异常能与正常瞬态区分开"。
-这里 **`_demandMode && state == Sit` 是绝不合法的组合** —— 可以明确判定，
-不是"猜着纠正"，所以做纠正动作是对的。
+**Why "correcting" is appropriate here**: the project has a rule that says "do not auto-correct unless the abnormal
+state can be told apart from a normal transient". Here **`_demandMode && state == Sit` is a combination that can
+never be legal** — it can be judged with certainty rather than guessed at, so acting on it is right.
 
-**调用路径汇总**（这三处都走 `Show_CenterGirlSit`，入口前缀能拦）：
+**Call paths** (all three go through `Show_CenterGirlSit`, so the entry prefix catches them):
 
-| 行 | 来源 |
+| Line | Source |
 | --- | --- |
-| 2201 | 剧情脚本 |
-| 2245 | 开发者快捷键 **Z** |
-| 10714 | 坐姿出现计时（`SitGirlStartTimer` 到点后的 10% 掷骰） |
+| 2201 | story script |
+| 2245 | developer hotkey **Z** |
+| 10714 | seated-appearance timer (the 10% roll after `SitGirlStartTimer` expires) |
 
-**但真正生效的是那个延迟协程**，所以入口 + 状态两层都要有。
+**But what actually takes effect is that delayed coroutine**, so both layers are needed: the entry point and the
+state check.
 
-**验证说明**：本条的兜底**尚未在真实场景验证** —— 需要玩到坐姿出现时刻。
-日志里若出现「夺回骑乘位」即说明生效。
+**Verification note**: this fallback **has not been verified in a real scenario** — you have to play until the
+seated pose appears. If "夺回骑乘位" appears in the log, the fallback worked.
 
 ---
 
-## 17. 面板改的是"当前姿势"那份，而不是"你正在看的栏"那份
+## 17. The panel was editing the "current pose" copy, not the tab you were looking at
 
-**状态：已修（2026-10-07）**
+**Status: fixed (2026-10-07)**
 
-**症状（我自己发现的）**
-三份参数（`_Fella` / `_Osiri` / `_Sit`）做出来之后，
-**面板里的滑块按"当前实际姿势"读写，而不是按你正在看的那一栏。**
+**Symptom (found by myself)**
+After the three copies (`_Fella` / `_Osiri` / `_Sit`) existed, **the panel's sliders read and wrote by "the actual
+current pose", not by the tab you were looking at.**
 
-于是：**你人在骑乘位，去调「口交」栏的滑块 —— 改的其实是骑乘位那份。**
-这直接破坏了用户明确要求的"每一个栏的相对独立性"。
+So: **you are in the riding pose, you move a slider on the Fellatio tab — and you are actually changing the riding
+copy.** That directly broke the per-tab independence the user had explicitly asked for.
 
-**根因**
+**Root cause**
 
 ```csharp
 private static int PIdx { get { int i = PoseIdx(); ... } }   // ← 只看实际姿势
@@ -922,14 +946,14 @@ private static float P3(ConfigEntry<float>[] a) { return a[PIdx].Value; }
 private static void SetP3(...) { a[PIdx].Value = v; }
 ```
 
-`P3` / `SetP3` 同时被【游戏逻辑】和【面板】使用，但两者需要的索引不同：
+`P3` / `SetP3` are used by both the **game logic** and the **panel**, and the two need different indices:
 
-| 使用者 | 该用哪个索引 |
+| Caller | Which index it needs |
 | --- | --- |
-| 游戏逻辑（每秒跑） | **实际姿势** `PoseIdx()` |
-| 面板滑块 | **正在看的那一栏** |
+| Game logic (runs every second) | **the actual pose** `PoseIdx()` |
+| Panel sliders | **the tab being looked at** |
 
-**修法：加 `_editPose`**
+**Fix: add `_editPose`**
 
 ```csharp
 internal static int _editPose = -1;      // -1 = 不在编辑（走实际姿势）
@@ -948,27 +972,29 @@ private static int PIdx
 - `DrawTabFella` → `_editPose = 0`
 - `DrawTabOsiri` → `_editPose = 1`
 - `DrawTabSit`   → `_editPose = 2`
-- `OnGUI` 开头 → `_editPose = -1`（每帧复位，保证不影响游戏逻辑那边的读取）
+- start of `OnGUI` → `_editPose = -1` (reset every frame, so the game logic's reads are unaffected)
 
-**教训**：一个"按当前上下文取索引"的访问器被两种上下文共用时，
-**必须显式区分**，否则面板看起来在工作、实际改错了对象 —— 而且不会有任何报错。
+**Lesson**: when an accessor that resolves an index from "the current context" is shared by two contexts,
+**the two must be told apart explicitly** — otherwise the panel looks like it works while writing to the wrong
+object, and nothing ever raises an error.
 
 ---
 
-## 18. 叠满段数后刷新持续时间（功能新增）
+## 18. Refresh the duration once all segments are filled (feature addition)
 
-**状态：已实施（2026-10-07）**
+**Status: implemented (2026-10-07)**
 
-**用户要求**
-「叠满对应欲望层数后，虽然无法继续叠层数，但是达成"叠层"的积累条件后，可刷新状态的持续时间」
+**User request**
+"After the urge tier is full, stacking tiers is no longer possible, but when the accumulation condition for
+'stacking' is met, the duration of the state can be refreshed"
 
-**原来**：`EnterOrStackDemand` 在段数满时只打一句日志、什么都不做 ——
-段满之后玩家再怎么攒，模式都只会静静走向结束，**积累全白费**。
+**Before**: when the segment count was full, `EnterOrStackDemand` logged one line and did nothing — after that,
+whatever the player accumulated, the mode just quietly ran down, **and the accumulation was wasted**.
 
-**现在**：段满时不再加层，但**按 `DemandMaxStackRefreshMul`（默认 100%）把一段时长加到总时长上**，
-并把欲望清 0（消耗掉这次积累）。0 = 保持原行为。
+**Now**: when full, no new segment is added, but **one segment's duration, scaled by `DemandMaxStackRefreshMul`
+(default 100%), is added to the total**, and the urge is zeroed (spending that accumulation). 0 = the old behaviour.
 
-**验证**
+**Verification**
 
 ```
 已达 2 段上限 → 不加层，但刷新持续时间 +53.8 秒 → 剩余 257.6 秒
@@ -977,209 +1003,219 @@ private static int PIdx
 已达 2 段上限 → 不加层，但刷新持续时间 +47.8 秒 → 剩余 462 秒
 ```
 
-段数停在 2，时间持续刷新
+The segment count stays at 2 while the time keeps refreshing.
 
 ---
 
-## 19. 【实验性】可点击区域高亮
+## 19. [experimental] clickable-area highlighting
 
-**状态：已实施（2026-10-07）**
+**Status: implemented (2026-10-07)**
 
-**用户要求**
-「各个模式的可点击区域都设置实验性的区域高亮设置按钮」
+**User request**
+"Give each mode a button for an experimental area highlight of its clickable areas"
 
-**做法**：不逐个硬编码，而是**遍历模型里所有以 `HitArea` 开头的 drawable**，
-逐个算出屏幕包围盒并画框 + 标签 —— **三个模式一起覆盖**，游戏加新区也自动跟上。
+**Approach**: no per-area hardcoding — instead **walk every drawable in the model whose name starts with
+`HitArea`**, compute its screen bounding box, and draw a frame plus a label. **All three modes are covered at
+once**, and a new area added by the game is picked up automatically.
 
-- 开关：`HighlightHitAreas`（默认关，实验性）
-- 三个栏（口交 / 背榨 / 正骑）各有一个按钮，**共用同一个开关**
-- 另外会把**插件自建的小穴区**也画出来（标「小穴区(插件自建)」），因为它不是模型里的 drawable
-- 画法与连榨提示条一样，**不受面板显隐影响**
+- Switch: `HighlightHitAreas` (default off, experimental)
+- The three tabs (Fellatio / Rear / Riding) each have a button that **share the same switch**
+- It also draws the **pussy area the plugin builds itself** (labelled "小穴区(插件自建)"), because that one is not
+  a drawable in the model
+- Drawn the same way as the chain-drain banner, **unaffected by the panel being shown or hidden**
 
-**取 drawable 名字的坑**：不同 Cubism 版本字段名不一致，
-所以 `DrawableName()` 依次试 `Name` / `name` / `Id`（属性与字段都试）——
-和之前"动画层成员名各版本不一"是同一种处理方式。
-
----
-
-## 20. Manman 区：Cubism 路线走不通，改为"素材绑定 + 手拖"两条腿
-
-**状态：已实施（2026-10-07）**
-
-**用户提出的方向**
-「这里就涉及到 Live2D 的素材于模型间的绑定功能，然后又可以去用 Cubism 了」
-
-**前提核查（三条，结果决定了做法）**
-
-| 检查 | 结果 |
-| --- | --- |
-| Cubism Editor | **装着**（`D:\Live2D Cubism 5.1`）|
-| 游戏的 `.cmo3` 源工程 | **没有**—— 只有编译后的 `.moc3` |
-| `.moc3` 能否用 Cubism Editor 打开 | **不能** —— Editor 只认 `.cmo3`，这正是"编译"的意义 |
-
-**结论：在模型里加一个真正的 `HitArea_Manman` drawable 这条路走不通。**
-Cubism 的 drawable 集合、顶点数据、绘制顺序全都烘焙在 moc3 里，**运行时加不了**；
-而没有 `.cmo3` 就改不了 moc3。
-
-**顺带确认**：模型里 **`HitArea*` 素材一共 5 个**（高亮功能实测列出来的）：
-`HitArea_Head` / `HitArea_LeftGirl` / `HitArea_RightGirl` / `HitArea_Head_Sit` / `HitArea_Osiri`
-—— **没有 Manman / Manko**（代码里那句 `HitArea_Manman` 是残留，assets 里搜不到）。
-
-**所以改成两条腿**
-
-1. **素材绑定（优先）** —— `ManmanBindDrawable` 填一个 drawable 名，
-   判定区直接用**那个素材的包围盒**。
-   这是真正的"素材与模型绑定"：跟着网格形变走，人物怎么动都贴合。
-   面板里把 5 个 `HitArea*` 列成按钮，点一下即绑。
-
-2. **手拖矩形（兜底）** —— 没绑素材时用 `CX/CY/W/H`（模型相对比例）。
-   新增**拖动模式** `ManmanDragMode`：开着时判定区中心实时跟随鼠标，
-   对准位置后点「绑定到此位置」，中心就定在那里。
-
-**同时修了一个坐标换算 bug**
-
-「把区域中心设为当前鼠标位置」原来写的是**屏幕比例**（`mp.x / Screen.width`），
-而判定区早已改成**模型相对** —— 两者不在同一套坐标里，**按钮能点、位置完全不对**。
-新增 `ScreenToModelRel()` 做换算，拖动与绑定都走它。
+**A trap when reading drawable names**: field names differ across Cubism versions, so `DrawableName()` tries
+`Name` / `name` / `Id` in turn (both properties and fields) — the same handling as the earlier "animation layer
+member names differ per version" problem.
 
 ---
 
-## 21. 素材绑定只列了 HitArea*，实际选不到有用的素材（补充完成）
+## 20. The Manman zone: the Cubism route is a dead end, so two legs instead — asset binding plus hand dragging
 
-**状态：已修（2026-10-07）**
+**Status: implemented (2026-10-07)**
 
-**用户追问**：「素材绑定是不是还没做好」
+**The direction the user proposed**
+"This involves Live2D's asset-to-model binding, and then Cubism becomes usable again"
 
-**确实差一块关键的**：面板里只列了 `HitArea*` 那 5 个素材，
-而那 5 个**本身就是可点区** —— 绑它们等于没绑，毫无意义。
+**Precondition checks (three, and the results decided the approach)**
 
-**真正需要的是绑到「非 HitArea 的美术素材」上**（例えば裆部那块身体/皮肤图），
-而当时**根本选不到**。
-
-**补法**
-
-| 改动 | 说明 |
+| Check | Result |
 | --- | --- |
-| `AllDrawableNames(filter)` | 列出模型里**全部** drawable（可按子串筛选，不区分大小写） |
-| `ManmanDrawableFilter` | 筛选框（面板里可直接输入） |
-| `ManmanDrawablePage` | 页码，每页 40 个（模型 drawable 很多，必须分页） |
-| 快捷按钮 | `HitArea 筛选` / `清空筛选` |
-| 当前项标记 | 已绑定的那个显示 `[记录]`，再点一次取消绑定 |
+| Cubism Editor | **installed** (`D:\Live2D Cubism 5.1`) |
+| The game's `.cmo3` source project | **absent** — only the compiled `.moc3` exists |
+| Can Cubism Editor open a `.moc3` | **no** — the editor only reads `.cmo3`, which is the whole point of "compiled" |
 
-**顺带修了 `set` 的 `ManmanBindDrawable` 分支** ——
-原来写的是 `if (!isNum && name == "ManmanBindDrawable") { ...; break; } break;`，
-那个 `name ==` 判断在 `switch (name)` 里恒真，属于绕圈子的写法，已改直。
+**Conclusion: adding a real `HitArea_Manman` drawable to the model is not possible.** The drawable set, vertex
+data and draw order are all baked into the moc3 and **cannot be added at runtime**; and without a `.cmo3` the moc3
+cannot be modified.
 
-**已验证的部分**：底层机制是通的 —— 因为「可点击区高亮」功能
-（用的是同一套 `DrawableName()` + `TryGetDrawableScreenRect()`）
-实测能把 5 个 HitArea 的框准确画在角色身上（见截图 `HitArea Osiri` 那一条）。
-所以素材绑定缺的只是**列表范围**，不是机制。
+**Confirmed along the way**: the model has **five `HitArea*` assets in total** (listed by the highlight feature in
+practice): `HitArea_Head` / `HitArea_LeftGirl` / `HitArea_RightGirl` / `HitArea_Head_Sit` / `HitArea_Osiri` —
+**there is no Manman / Manko** (the `HitArea_Manman` string in the code is a leftover; it cannot be found in the
+assets).
 
-**尚未验证**：绑定到某个非 HitArea 素材之后，判定区是否真的贴合那个素材。
-需要在「正骑」栏里选一个素材实测。
+**So: two legs instead**
+
+1. **Asset binding (preferred)** — put a drawable name into `ManmanBindDrawable` and the hit zone uses **that
+   asset's bounding box**. This is real asset-to-model binding: it follows the mesh deformation, so it fits
+   however the character moves. The panel lists the five `HitArea*` assets as buttons; one click binds.
+
+2. **Hand-dragged rectangle (fallback)** — with nothing bound, use `CX/CY/W/H` (model-relative proportions).
+   New **drag mode** `ManmanDragMode`: while it is on, the hit-zone centre follows the mouse live; once it is
+   in place, click "bind to this position" and the centre is fixed there.
+
+**A coordinate-conversion bug fixed along the way**
+
+"Set the area centre to the current mouse position" used to write **screen proportions** (`mp.x / Screen.width`),
+while the hit zone had long since become **model-relative** — the two were not in the same coordinate space, so
+**the button worked and the position was completely wrong**. New `ScreenToModelRel()` does the conversion, and
+both dragging and binding go through it.
 
 ---
 
-## 22. 说明书补完（96 项参数 + 六个新概念）
+## 21. Drawable binding listed only HitArea*, so nothing useful could be selected (completed)
 
-**状态：已完成（2026-10-07）**
+**Status: fixed (2026-10-07)**
 
-**补之前的状态**
+**The user asked**: "is the drawable binding still unfinished?"
 
-| 检查 | 结果 |
+**A key piece was indeed missing**: the panel listed only the five `HitArea*` drawables,
+and those five **are themselves the clickable areas** — binding to them is the same as not
+binding at all, which makes no sense.
+
+**What was actually needed was binding to a non-HitArea art asset** (for example the body/skin
+texture over the crotch area), and at that time **it could not be selected at all**.
+
+**What was added**
+
+| Change | Description |
 | --- | --- |
-| 本族参数 | 141 个，**未提及 96 个** |
-| 「背榨」/「正骑」 | **各 0 处** |
-| 「束缚之吻」 | **0 处** |
-| 「Manman」 | **0 处** |
-| 「吸取」 | **0 处** |
-| 「Highlight」 | **0 处** |
+| `AllDrawableNames(filter)` | lists **every** drawable in the model (substring filter, case-insensitive) |
+| `ManmanDrawableFilter` | filter box (type directly in the panel) |
+| `ManmanDrawablePage` | page number, 40 per page (a model has many drawables, so paging is required) |
+| Shortcut buttons | `HitArea 筛选` / `清空筛选` |
+| Current-item marker | the bound one shows `[记录]`; clicking it again unbinds |
 
-说明书停留在"面板只有『对手』一栏"的时代。
+**Also fixed the `ManmanBindDrawable` branch of `set`** — it used to read
+`if (!isNum && name == "ManmanBindDrawable") { ...; break; } break;`. That `name ==` check is
+always true inside `switch (name)`, which is a roundabout way of writing it; it is straight now.
 
-**补了什么**
+**Verified part**: the underlying mechanism works — the "clickable-area highlighting" feature
+(which uses the same `DrawableName()` + `TryGetDrawableScreenRect()`) was measured drawing the
+five HitArea boxes exactly on the character (see the `HitArea Osiri` screenshot entry).
+So what the drawable binding lacked was **the range of the list**, not the mechanism.
 
-| 新增/重写的小节 | 内容 |
+**Not yet verified**: whether, after binding to a non-HitArea asset, the judgement area really
+tracks that asset. That needs an actual test with an asset selected in the Riding tab.
+
+---
+
+## 22. Manual completed (96 parameters + six new concepts)
+
+**Status: done (2026-10-07)**
+
+**The state before**
+
+| Check | Result |
 | --- | --- |
-| **面板的六个栏** | 六栏结构 + 三栏各自的说法（吸取 / 索取 / 榨取） |
-| **按姿势三份** | 三份机制、`_Fella/_Osiri/_Sit` 后缀、`_editPose` 那个坑、拷贝、哪些已独立哪些还没 |
-| **触发链** | 四个步骤、`TryStackNow` 是唯一判定、两种触发模式、四个累积来源、平均值约定、段满刷新 |
-| **模式期间的效果** | 时长/段数/攻击力/倍速/分阶段加速/不回口交/无法打断 |
-| **攻击力随速度** | 小指数曲线的公式与对照表（k=0/2/4） |
-| **绝顶动画倍速** | 为什么必须单独做（含原码）、判据为何用"主混合器是否在播" |
-| **连榨** | 五套上限、按生命值折算、软上限与波动、`_demandMode` 那个反例 |
-| **回口交与回归累积** | 三岔路口原码 + 门槛降低 + 立刻进入 + 坐姿挂起 |
-| **余韵** | 累积/发动/闸门/速度与波动/独立软上限/生存阀 |
-| **束缚之吻** | 为什么正骑的连榨必须经过它、四个参数、滑块绑定 |
-| **Manman 区** | Cubism 为什么走不通、模型相对判定、素材绑定与手拖两条路 |
-| **可点击区域高亮** | 遍历 HitArea* drawable 的做法与用途 |
-| **撞击声** | 动画事件驱动节奏、速度决定音色、四档、防重叠、同音不连播 |
-| **打屁股冲量** | 五个参数 + 为什么施加点是动画速率而不是 `osiriSpeed` |
-| **坐姿专属两项** | `SitClickAlwaysAccumulate` / `SitSyaseiToDrainChance` |
-| **攻击力与速度** | `PowerUnlock` / `TabemiPowerMul` / `FellaSpeedPlus` / `SitSpeedPlus` |
-| **Manman 区六个参数** | 含"CX/CY/W/H 是模型相对比例"的提醒 |
-| **废弃/停用参数** | `KyuseiMaxChain` / `ChainGainCap` / `DemandUrgeCap` / `SitDeferTimeout` / `DemandAfterglowMin·Max` |
-| **日志与提示速查** | 11 个关键词的含义 + 取证工具 |
+| This family's parameters | 141, **96 not mentioned** |
+| "Rear" / "Riding" | **0 occurrences each** |
+| "binding kiss" | **0 occurrences** |
+| "Manman" | **0 occurrences** |
+| "Absorb" | **0 occurrences** |
+| "Highlight" | **0 occurrences** |
 
-**结果**
+The manual was stuck in the era when "the panel only had an 'Opponent' tab".
+
+**What was added**
+
+| Section added / rewritten | Contents |
+| --- | --- |
+| **The panel's six tabs** | the six-tab structure plus the wording of each of the three pose tabs (Absorb / Demand / Drain) |
+| **Three copies, one per pose** | the three-copy mechanism, the `_Fella/_Osiri/_Sit` suffixes, the `_editPose` trap, copying, which are already independent and which are not |
+| **Trigger chain** | the four steps, `TryStackNow` as the sole judgement, the two trigger modes, the four accumulation sources, the mean-value convention, refresh when full |
+| **Effects during the mode** | duration / segments / attack power / animation rate / staged speed-up / no fellatio return / cannot be interrupted |
+| **Attack power scales with speed** | the mild-exponential curve formula and comparison table (k=0/2/4) |
+| **Climax animation rate** | why it has to be handled separately (including the original code), why the criterion is "is the main mixer playing" |
+| **Chain drain** | the five caps, scaling by HP, soft cap and wobble, the `_demandMode` counter-example |
+| **Return to fellatio and return accumulation** | the three-way branch in the original code, threshold reduction, entering immediately, holding the seated request |
+| **Afterglow** | accumulation / firing / gate / speed and wobble / independent soft cap / survival valve |
+| **Binding kiss** | why Riding's chain drain must go through it, the four parameters, slider binding |
+| **Manman zone** | why Cubism does not work, model-relative judgement, drawable binding and manual dragging as the two routes |
+| **Clickable-area highlighting** | how to walk the HitArea* drawables, and what it is for |
+| **Impact sounds** | animation events drive the rhythm, speed picks the timbre, four slots, overlap prevention, no repeat of the same sound |
+| **Spank impulse** | the five parameters, and why the point of application is animation rate rather than `osiriSpeed` |
+| **Two settings specific to seated** | `SitClickAlwaysAccumulate` / `SitSyaseiToDrainChance` |
+| **Attack power and speed** | `PowerUnlock` / `TabemiPowerMul` / `FellaSpeedPlus` / `SitSpeedPlus` |
+| **The six Manman zone settings** | including the reminder that "CX/CY/W/H are model-relative ratios" |
+| **Deprecated / disabled settings** | `KyuseiMaxChain` / `ChainGainCap` / `DemandUrgeCap` / `SitDeferTimeout` / `DemandAfterglowMin·Max` |
+| **Log and message quick reference** | what each of 11 keywords means, plus the forensics tools |
+
+**Result**
 
 ```
-说明书：1032 行 → 1339 行
-本族参数覆盖：141 个里未提及 96 个 → 8 个
+manual: 1032 lines -> 1339 lines
+this family's coverage: 96 of 141 unmentioned -> 8
 ```
 
-剩下那 8 个是**斜杠组合提及**（`AfterglowSpeedWobble` / `Hz`、`AttackUrgeChance` / `Gain` / `Jitter` 这种），
-**功能上已全覆盖**，只是字面匹配看不见。
+Those last 8 are **mentioned as slash combinations** (`AfterglowSpeedWobble` / `Hz`,
+`AttackUrgeChance` / `Gain` / `Jitter` and the like). **Functionally they are fully covered**;
+only literal matching cannot see them.
 
-**方法说明**：用了两段脚本按行号精确替换/插入，
-并且每次都跑一遍"参数覆盖率"检查来确认效果 —— 不是写完就算。
+**Method note**: two script passes replaced and inserted by exact line number, and the
+"parameter coverage" check was run after each one to confirm the effect — writing it was not
+taken as done.
 
 ---
 
-## 23. 剩余 31 个参数也做成了按姿势三份（附带一次用户调参救援）
+## 23. The last 31 parameters also became three copies per pose (plus one user-tuning rescue)
 
-**状态：已完成（2026-10-07）**
+**Status: done (2026-10-07)**
 
-**做了什么**
+**What was done**
 
-把最后 31 个参数（索取欲来源 7 / 打屁股冲量 5 / 连榨 5 / 回归累积 4 / 余韵 10）
-迁到 `BindP3` / `P3` / `SetP3` 体系。
+The last 31 parameters (7 demand-urge sources / 5 spank impulse / 5 chain drain /
+4 return accumulation / 10 afterglow) were migrated onto the `BindP3` / `P3` / `SetP3` system.
 
-**现在一共 51 个参数 × 3 = 153 个键。**
+**That makes 51 parameters across 3 poses, 153 keys.**
 
-**迁移过程中的四个坑（脚本三轮才跑通）**
+**Four traps in the migration (it took three script passes to get through)**
 
-| # | 坑 | 修法 |
+| # | Trap | Fix |
 | --- | --- | --- |
-| 1 | 描述被 `new ConfigDescription(...)` 包着，当成 `string` 传给 `BindP3` → 类型不匹配 | 只取其中**第一段字符串字面量** |
-| 2 | `ChainSoftCap`（默认 `60f`）被"有没有小数点"的启发式误判成整数 | **类型只认 `Config.Bind<T>` 的泛型参数** |
-| 3 | 布尔参数的 `Config.Bind` **没写 `<bool>`**，被当成浮点 | 按默认值是 `true`/`false` 兜底判定 |
-| 4 | 读取点替换会把面板的 `X.Value = SliderF(...)` 变成 `P3(X3) = ...`（给方法调用赋值） | 再统一跑一遍 `P3(x) = v;` → `SetP3(x, v);`（**77 处**） |
+| 1 | the description is wrapped in `new ConfigDescription(...)` and was passed to `BindP3` as a `string` → type mismatch | take only its **first string literal** |
+| 2 | `ChainSoftCap` (default `60f`) was misjudged as an integer by a "has a decimal point" heuristic | **type comes only from the generic argument of `Config.Bind<T>`** |
+| 3 | the boolean parameters' `Config.Bind` **had no `<bool>`**, so they were treated as floats | fall back on whether the default value is `true`/`false` |
+| 4 | read-site replacement turned the panel's `X.Value = SliderF(...)` into `P3(X3) = ...` (assigning to a method call) | run one more sweep `P3(x) = v;` → `SetP3(x, v);` (**77 sites**) |
 
-第 4 条和之前 batch 1 遇到的是同一个问题 —— **先做读取替换再做面板替换，顺序上必然产生 `P3(x) = v` 这种中间态**，
-所以"读替换 + 写修正"应该是一个固定动作，不能漏。
+Trap 4 is the same problem batch 1 hit — **doing read replacement before panel replacement
+necessarily produces the intermediate form `P3(x) = v`**, so "read replacement + write fixup"
+should be one fixed action and never skipped.
 
-**注意：️ 澄清（避免误读）**
+**Note: clarification (to avoid misreading)**
 
-这次迁移是**手工做的** —— 我关掉游戏、直接改配置文件，把旧键的值复制到三份。
-**代码里没有自动迁移系统。**
+This migration was **done by hand** — the game was closed, the config file edited directly, and
+the old key values copied into the three copies. **There is no automatic migration system in the
+code.**
 
-所以 `使用说明.md` 里"老的单份键值**不会被自动搬过去**"那句话是**正确的**，
-两者不矛盾但确实容易读岔，故在此说明。
+So the sentence in `使用说明.md` that says "old single-key values **are not moved over
+automatically**" is **correct**. The two are not contradictory, but they are easy to misread,
+hence this note.
 
-**这也正是待办项**：正式做法应该是一个带版本号的迁移系统
-（`ConfigVersion` → 检测旧版本 → 迁移 → 自动备份 → 写日志告诉用户搬了什么）。
-**目前尚未实现。**
+**Which is also the todo item**: the proper approach is a versioned migration system
+(`ConfigVersion` → detect an old version → migrate → back up automatically → write a log telling
+the user what was moved). **Not implemented yet.**
 
 ---
 
-**顺带救回一次用户调参**
+**And one user-tuning rescue on the side**
 
-新键生成后值都是**代码默认值**，而用户调过的值留在**旧的单份键**里。
-关掉游戏直接改配置文件，把旧值复制到三份：
+New keys are created with **the code's default values**, while the values the user tuned live in
+**the old single keys**. With the game closed, the config file was edited directly and the old
+values copied into the three copies:
 
 ```
-迁移 93 个键，其中【48 个值确实被调过】：
+migrated 93 keys, of which 【48 values had actually been tuned】:
   AttackUrgeChance      8 → 20
   AttackUrgeGain        3 → 4
   SpankSpeedGain       12 → 20
@@ -1189,39 +1225,41 @@ Cubism 的 drawable 集合、顶点数据、绘制顺序全都烘焙在 moc3 里
   …
 ```
 
-**不做这一步的话，这 48 个值会静默丢回默认** —— 而用户是边玩边调的，
-丢了也不会有任何报错。（这正是"后续记得把用户设定的值进行保留"那条要求的实战场景。）
+**Without this step those 48 values would have fallen back to defaults silently** — and the user
+tunes while playing, so nothing would have reported an error. (This is exactly the practical
+scene behind "remember to keep the values the user set".)
 
-**验证**
+**Verification**
 
 ```
-挂载 35 条，无异常
-set AttackUrgeChance 33（人在口交）
-  AttackUrgeChance_Fella = 33   ← 只动这份
+35 hooks mounted, no exceptions
+set AttackUrgeChance 33 (character in fellatio)
+  AttackUrgeChance_Fella = 33   <- only this copy moves
   AttackUrgeChance_Osiri = 20
   AttackUrgeChance_Sit   = 20
-三份键总计 153 个
+153 keys across the three copies
 ```
 
-**已知副作用**：迁移时**跨行拼接的描述串被截断**了（只保留了第一段字面量）。
-配置里那些参数的说明会短一些，**功能不受影响**。
+**Known side effect**: during the migration **multi-line concatenated description strings were
+truncated** (only the first literal was kept). Those parameters' descriptions read shorter in the
+config file; **functionality is unaffected**.
 
 ---
 
-## 24.  HitArea_Manman 只接了「触摸」那条路，鼠标点击根本没经过它
+## 24.  HitArea_Manman only hooked the touch path; mouse clicks never went through it
 
-**状态：已修（2026-10-07）—— 用户提醒"记得确认 manman 和榨取欲的交互成立"**
+**Status: fixed (2026-10-07) — the user reminded me to "confirm the Manman and drain-urge interaction actually holds"**
 
-**这是我做这个功能以来最严重的一个疏漏。**
+**This was the worst oversight I have made on this feature.**
 
-**游戏里鼠标和触摸是两条完全不同的路**
+**In the game, mouse and touch are two completely different paths**
 
-| 输入 | 取值来源 | 当时挂的方法 |
+| Input | Source | What was hooked at the time |
 | --- | --- | --- |
-| **触摸** | `Live2D_HitAreaCheck.GetTouchTargetName(pos)` —— 返回值直接派发 |已挂 |
-| **鼠标** | `Live2D_HitAreaCheck.mousePointing` —— **静态字段** |**没挂** |
+| **Touch** | `Live2D_HitAreaCheck.GetTouchTargetName(pos)` — the return value is dispatched directly | hooked |
+| **Mouse** | `Live2D_HitAreaCheck.mousePointing` — a **static field** | **not hooked** |
 
-鼠标那条是这样的：
+The mouse path looks like this:
 
 ```csharp
 // 每帧由 Update() 算出静态字段
@@ -1234,10 +1272,10 @@ public void Mouse0_Hold() { hitAreaPointing = Live2D_HitAreaCheck.mousePointing;
 public void Mouse0_Up()   { hitAreaUp = Live2D_HitAreaCheck.mousePointing; ... }
 ```
 
-**所以只挂 `GetTouchTargetName` 的话，鼠标点击根本不会经过它** ——
-而玩家（用户）是用鼠标玩的，**Manman 区等于完全没接上**。
+**So hooking only `GetTouchTargetName` means a mouse click never passes through it** — and the
+player (the user) plays with the mouse, so **the Manman zone was not wired up at all**.
 
-**修法：补挂 `HitAreaCheckWindows` 的后缀**
+**The fix: hook a postfix on `HitAreaCheckWindows`**
 
 ```csharp
 private static void Postfix_HitAreaCheckWindows()
@@ -1252,9 +1290,10 @@ private static void Postfix_HitAreaCheckWindows()
 }
 ```
 
-**关键设计：只在真实命中为空时才抢** —— 不跟模型里真正的点按区争。
+**Key design: only take over when the real hit is empty** — do not fight the model's genuine hit
+areas.
 
-**验证**
+**Verification**
 
 ```
 点按区补丁已挂载（HitAreaCheckWindows 后缀：HitArea_Manman 鼠标路径）
@@ -1262,35 +1301,38 @@ private static void Postfix_HitAreaCheckWindows()
 挂载总数 36 条
 ```
 
-**面板里加了实时诊断**（正骑栏 · Manman 区那一块）：
+**A live diagnostic was added to the panel** (Riding tab, Manman zone block):
 
 ```
 屏幕矩形：820~980 × 430~610
 鼠标在区内：是游戏当前命中：HitArea_Head_Sit
 ```
 
-**「游戏当前命中」显示 `HitArea_Head_Sit` 才说明交互成立。**
-显示「(空)」= 没接上；显示别的 = 鼠标其实在另一个真点按区上。
+**"游戏当前命中" showing `HitArea_Head_Sit` is what proves the interaction holds.**
+Showing "(空)" means it is not wired up; showing anything else means the mouse is actually over a
+different real hit area.
 
-**教训**
+**Lesson**
 
-**"我改的这个函数的返回值"  !=  "游戏实际用的那个值"。**
-游戏里同一个语义常常有【静态字段】和【方法返回值】两套，
-**鼠标 / 触摸 / 键盘可能各走一套**。
-挂之前必须找到**真正被派发读取**的那一处，而不是看起来最像的那一处。
+**"the return value of the function I patched" != "the value the game actually uses".**
+The same meaning in this game often has two forms — **a static field and a method return value** —
+and **mouse / touch / keyboard may each take a different one**. Before hooking, the place that is
+**actually read at dispatch time** has to be found, not the place that looks most like it.
 
 ---
 
-## 25.  HitArea_Manman 不能冒充 HitArea_Head_Sit（功能会串）
+## 25.  HitArea_Manman must not impersonate HitArea_Head_Sit (the features get crossed)
 
-**状态：已修（2026-10-07）—— 用户指出**
+**Status: fixed (2026-10-07) — the user pointed it out**
 
-**用户原话**：「sit 的 manman 和 head 不能同一功能，head 是为了解除束缚之吻」
+**The user's words**: "sit's manman and head cannot be the same function, head is for releasing
+the binding kiss"
 
-**我原先做错了什么**
+**What I had done wrong**
 
-Manman 区命中时返回 `HitArea_Head_Sit`，也就是**冒充头部**。
-但坐姿的头部点击**根本不是"攒榨取欲"**，它是**解除束缚之吻**：
+The Manman zone returned `HitArea_Head_Sit` on a hit, that is, **it impersonated the head**.
+But the seated pose's head click **is not "accumulate drain urge" at all**; it is
+**releasing the binding kiss**:
 
 ```csharp
 public void 頭叩かれるSit()
@@ -1309,27 +1351,28 @@ public void 頭叩かれるSit()
 }
 ```
 
-**所以那个做法等于「点小穴会去解吻」** —— 两个功能串在一起了。
+**So that approach meant "clicking the pussy goes and releases the kiss"** — the two features were
+crossed.
 
-**正确做法：Manman 独立成一条**
+**The right approach: Manman as its own branch**
 
 ```
-静态 mousePointing 被我们改成 "HitArea_Manman"
-  → 游戏 Mouse_Down_0 的 switch 里【没有】这一档   ← 它什么都不做
-  → 由我们自己的前缀接住：
-        · 累积榨取欲 + 叠层判定
-        · 放点击特效（复用 clickEffect.頭叩くエフェクト，手感一致）
-        · return false 跳过游戏那个 switch
+static mousePointing is rewritten to "HitArea_Manman" by us
+  -> the game's Mouse_Down_0 switch has NO such case   <- it does nothing
+  -> our own prefix catches it:
+        · accumulate drain urge + stack judgement
+        · play the click effect (reusing clickEffect.頭叩くエフェクト so the feel matches)
+        · return false to skip the game's switch
 ```
 
-**最终分工**
+**The final division of labour**
 
-| 部位 | 功能 |
+| Part | Function |
 | --- | --- |
-| **头部（HitArea_Head_Sit）** | **解除束缚之吻**（游戏原逻辑，未改动） |
-| **HitArea_Manman** | **累积榨取欲**（插件独立处理） |
+| **Head (HitArea_Head_Sit)** | **releases the binding kiss** (the game's logic, untouched) |
+| **HitArea_Manman** | **accumulates drain urge** (handled by the plugin itself) |
 
-**三条补丁各司其职**
+**Three patches, each with its own job**
 
 ```
 HitAreaCheckWindows 后缀   → 鼠标路径：把静态 mousePointing 改成 HitArea_Manman
@@ -1337,76 +1380,79 @@ GetTouchTargetName 后缀    → 触摸路径：同样改成 HitArea_Manman
 Mouse_Down_0 前缀          → 接住 HitArea_Manman，自己处理，不让它进游戏 switch
 ```
 
-**面板诊断的读法变了**：
-「游戏当前命中」显示 **`HitArea_Manman`** 才说明鼠标路径接通了（原来显示 `HitArea_Head_Sit` 是错的）。
+**How to read the panel diagnostic changed**: "游戏当前命中" showing **`HitArea_Manman`** is what
+proves the mouse path is connected (it used to show `HitArea_Head_Sit`, which was wrong).
 
-**教训**
+**Lesson**
 
-**"冒充一个已有的 HitArea"这种做法要极其小心** ——
-你以为你在借用"能点"这个属性，实际上你连它的**全部语义**一起借来了。
-这里头部点击的语义是"解吻"，不是"攒欲望"。
-**动手前必须把那个 HitArea 的处理函数从头读完**，而不是只看它"能被点到"。
+**"Impersonating an existing HitArea" needs extreme care** — you think you are borrowing the
+"can be clicked" property, but you borrow **its whole semantics** along with it. Here the head
+click's semantics are "release the kiss", not "accumulate urge". **The handler of that HitArea has
+to be read from beginning to end before acting**, not just checked for "being clickable".
 
 ---
 
-## 26. HitArea_Manman 应与「打屁股」对称：涨榨取欲 + 给坐姿动作速度冲量
+## 26. HitArea_Manman should mirror "spanking": raise drain urge + give the seated animation a speed impulse
 
-**状态：已实施（2026-10-07）—— 用户指明**
+**Status: implemented (2026-10-07) — the user specified it**
 
-**用户原话**：「manman 的功能应该是和 osiri 在修改器里新增的设定类似，
-点击可以增长 sit 模式下的榨取欲和 sit 模式动作的速度」
+**The user's words**: "manman's function should be similar to what osiri gained in the trainer —
+clicking raises the drain urge in sit mode and the speed of the sit-mode animation"
 
-**当时缺的是什么**
+**What was missing at the time**
 
-只做了"涨榨取欲"，**没有速度冲量** —— 而背榨那边的打屁股是两样都给。
+Only "raise drain urge" was done; there was **no speed impulse** — whereas spanking on the Rear
+side gives both.
 
-**修的时候又挖出一个更深的 bug**
+**Fixing it dug out a deeper bug**
 
-冲量的施加点原来只找 **`OsiriMixer`**：
+The impulse's point of application only ever looked for **`OsiriMixer`**:
 
 ```csharp
 object mixer = FieldQuiet(sot, "OsiriMixer")?.GetValue(objs[0]);
 ```
 
-**而坐姿用的是 `SitMixerA` / `SitMixerB`** —— 坐姿根本没有 `OsiriMixer` 在播，
-所以就算给了冲量也**作用不到坐姿的动画上**。
+**But the seated pose uses `SitMixerA` / `SitMixerB`** — there is no `OsiriMixer` playing in the
+seated pose at all, so even with an impulse it would **not reach the seated animation**.
 
-改成按姿势依次找：
+Changed to search pose by pose:
 
 ```csharp
 string[] mixerNames = { "OsiriMixer", "SitMixerA", "SitMixerB", "SitKissMixerA", "SitKissMixerB" };
 foreach (string mn in mixerNames) { ... if (IsPlaying) { SetValue(EffectiveSpeed, _spankMul); break; } }
 ```
 
-**注意 `SpankSpeed*` 那组参数已经按姿势三份了**，所以坐姿读到的就是 `_Sit` 那份 ——
-用户当前的值：`Gain 20 / Stack 80 / Rise 10 / Decay 0.05`。
+**Note that the `SpankSpeed*` group is already three copies per pose**, so the seated pose reads
+the `_Sit` copy — the user's current values are `Gain 20 / Stack 80 / Rise 10 / Decay 0.05`.
 
-**最终功能对照**
+**Final feature comparison**
 
-| | 背榨（Osiri） | 正骑（Sit） |
+| | Rear (Osiri) | Riding (Sit) |
 | --- | --- | --- |
-| 触发 | 打屁股 | 点 **HitArea_Manman** |
-| 涨欲望 | 索取欲 | 榨取欲 |
-| 速度冲量 |（OsiriMixer） |（**SitMixerA/B**，本次修好） |
-| 参数 | `SpankSpeed*_Osiri` | `SpankSpeed*_Sit` |
+| Trigger | spank | click **HitArea_Manman** |
+| Urge raised | demand urge | drain urge |
+| Speed impulse | (OsiriMixer) | (**SitMixerA/B**, fixed this time) |
+| Parameters | `SpankSpeed*_Osiri` | `SpankSpeed*_Sit` |
 
-**与头部的关系**：头部 = 解除束缚之吻，两者互不干扰（见第 25 条）。
+**Relation to the head**: the head releases the binding kiss; the two do not interfere (see
+entry 25).
 
-**教训**：**"同一个类"不等于"同一套东西"**。
-`Live2D_Animation_SitOsiri` 一个类管着 Osiri 和 Sit 两种姿势，
-**里面每一种姿势各有一套混合器字段** ——
-只找其中一个的话，另一种姿势会静默地什么都不发生。
+**Lesson**: **"the same class" does not mean "the same set of things"**.
+`Live2D_Animation_SitOsiri` is one class managing both the Osiri and Sit poses, and
+**inside it each pose has its own mixer field** — looking for only one of them means the other
+pose silently does nothing.
 
 ---
 
-## 27.  坐姿榨取欲一满就跳到 Osiri（三个症状一个根因）
+## 27.  The seated drain urge filling up jumps to Osiri (three symptoms, one root cause)
 
-**状态：已修（2026-10-07）—— 用户报告**
+**Status: fixed (2026-10-07) — the user reported it**
 
-**用户原话**
-「sit 的榨取欲满了不但显示的是"索取模式"，还会直接跳到 osiri，并且诸多功能无效」
+**The user's words**
+"sit's drain urge filling up not only shows 'demand mode', it also jumps straight to osiri, and a
+lot of features stop working"
 
-**根因：是我自己在第 16 条加的那个"夺回骑乘位"兜底**
+**Root cause: the "take back the riding position" fallback I added myself in entry 16**
 
 ```csharp
 if (_demandMode && centerGirlState == "Sit")
@@ -1416,28 +1462,28 @@ if (_demandMode && centerGirlState == "Sit")
 }
 ```
 
-它的假设是 **"模式 = 一定在 Osiri"**。
-于是坐姿自己的榨取欲一攒满、`_demandMode` 一置位，
-这个兜底立刻把人物从 **Sit 拽到 Osiri**。
+Its assumption was **"mode = definitely in Osiri"**. So as soon as the seated pose's own drain urge
+fills up and `_demandMode` is set, this fallback immediately drags the character from **Sit to
+Osiri**.
 
-**三个症状全部由它一个引起**
+**All three symptoms come from that one line**
 
-| 症状 | 解释 |
+| Symptom | Explanation |
 | --- | --- |
-| 显示"索取模式" | 被拽到 Osiri 后 `PoseIdx()` 变成 1 → `ModeWord()` 给"索取" |
-| 跳到 osiri | 就是这一行干的 |
-| 诸多功能无效 | 人物不在 Sit 了，Manman / 坐姿榨取 / 束缚之吻那一整套自然全落空 |
+| shows "demand mode" | after being dragged to Osiri, `PoseIdx()` becomes 1 → `ModeWord()` gives "Demand" |
+| jumps to osiri | this line does exactly that |
+| many features stop working | the character is no longer in Sit, so Manman / seated drain / binding kiss all fall through naturally |
 
-**又是 `_demandMode`** —— 这个坑在这个项目里已经踩了**第四次**：
+**`_demandMode` again** — this trap has now been hit **four times** in this project:
 
-| 次 | 症状 |
+| # | Symptom |
 | --- | --- |
-| 1 | 正骑的滑块在束缚之吻里不生效 |
-| 2 | 正骑连榨被 `ChainMaxSitNormal` 掐断 |
-| 3 | 坐姿入口被无限期堵死（第 10 条） |
-| **4** | **坐姿模式被强行拽去 Osiri（本条）** |
+| 1 | Riding's sliders had no effect inside the binding kiss |
+| 2 | Riding's chain drain was cut off by `ChainMaxSitNormal` |
+| 3 | the seated entry point was blocked indefinitely (entry 10) |
+| **4** | **the seated mode was forcibly dragged to Osiri (this entry)** |
 
-**修法：记住"模式是在哪个姿势进入的"**
+**The fix: remember which pose the mode was entered in**
 
 ```csharp
 private static int _demandModePose = -1;   // 0=口交 1=背榨 2=正骑；-1=无模式
@@ -1451,37 +1497,40 @@ _demandMode = false; _demandModePose = -1;
 if (_demandMode && _demandModePose == 1) { ...夺回骑乘位... }
 ```
 
-**为什么这样对**：
-兜底要解决的原始问题是「坐姿协程抢在背榨索取模式前面把人物切走」——
-那个场景里 `_demandModePose == 1`。
-而坐姿自己的模式（`_demandModePose == 2`）本来就该待在 Sit，**不该被夺回**。
+**Why this is right**: the fallback exists to solve "the seated coroutine steals the character away
+before the Rear demand mode starts". In that scene `_demandModePose == 1`. The seated pose's own
+mode (`_demandModePose == 2`) is supposed to stay in Sit and **must not be taken back**.
 
-**顺带排查**：把所有仍在只看 `_demandMode` 的地方过了一遍（16 处），
-其余都用于"模式特定效果是否生效""余韵 vs 模式"，语义正确，未改动。
+**A sweep on the side**: every remaining place that still looked only at `_demandMode` was walked
+(16 of them); the rest are used for "whether a mode-specific effect applies" and "afterglow versus
+mode", which are semantically correct, and were left alone.
 
-**教训（这次要写死）**
+**Lesson (to be nailed down this time)**
 
-> **`_demandMode` 只表示"模式在跑"，完全不表示"在哪个姿势跑"。**
-> 任何要按姿势分支的逻辑，都必须用 `PoseIdx()` 或 `_demandModePose`，
-> **绝不能用 `_demandMode` 代替**。
+> **`_demandMode` means only "a mode is running"; it says nothing about which pose it runs in.**
+> Any logic that branches by pose must use `PoseIdx()` or `_demandModePose`, and
+> **must never substitute `_demandMode` for them**.
 >
-> 而且反过来说：**修一个 bug 时加的兜底，很可能变成下一个 bug 的根因** ——
-> 第 16 条那个兜底当时确实解决了问题，但它把一个错误假设（模式必在 Osiri）固化进了代码。
+> And the other way round: **a fallback added to fix one bug may well become the root cause of the
+> next one** — the fallback in entry 16 really did solve the problem at the time, but it froze a
+> wrong assumption (a mode is always in Osiri) into the code.
 
 ---
 
-## 28. 看起来有"两个 Manman 区"（一个是自建、一个像是依据模型）
+## 28. It looked like there were "two Manman zones" (one built by the plugin, one apparently from the model)
 
-**状态：已修（2026-10-07）—— 用户指出**
+**Status: fixed (2026-10-07) — the user pointed it out**
 
-**用户原话**：「貌似有两个 manman 区，一个是插件自建，一个是依据模型，解决一下这个问题」
+**The user's words**: "there seem to be two manman zones, one built by the plugin and one based on
+the model, sort this out"
 
-**先确认事实**
+**Establishing the facts first**
 
-查了 `sharedassets0.assets`：**`HitArea_Manman` 出现 0 次** —— 模型里仍然没有这块。
-`ManmanBindDrawable` 也是**空的**（没做素材绑定）。
+`sharedassets0.assets` was checked: **`HitArea_Manman` occurs 0 times** — the model still has no
+such area. `ManmanBindDrawable` was **also empty** (no drawable bound).
 
-**所以"两个框"的真实来源是：我把模型里 5 个 HitArea 全都画了，不管当前是哪个姿势。**
+**So the real source of "two boxes" was: I drew all five HitAreas in the model regardless of the
+current pose.**
 
 ```csharp
 foreach (string nm in HitAreaDrawableNames())   // ← 全部，无过滤
@@ -1491,304 +1540,319 @@ if (SitPussyAreaEnabled.Value)                  // ← 再加一个 Manman
     DrawOutline(..., "HitArea_Manman (插件自建)");
 ```
 
-于是**站在口交姿势时**，`HitArea_Head_Sit` / `HitArea_Osiri` 这些
-**当前根本不生效**的框也照样画出来，恰好和 Manman 区叠在一起 ——
-看起来就像"有两个 Manman 区，一个来自模型"。
+So **while standing in the fellatio pose**, boxes such as `HitArea_Head_Sit` / `HitArea_Osiri`
+that **do not apply at all right now** were drawn as well, and they happened to overlap the Manman
+zone — looking exactly like "two Manman zones, one of them from the model".
 
-**修法：按姿势过滤**
+**The fix: filter by pose**
 
-| 当前姿势 | 只画这些 |
+| Current pose | Draw only these |
 | --- | --- |
-| 口交（Fella） | `HitArea_Head` / `HitArea_LeftGirl` / `HitArea_RightGirl` |
-| 背榨（Osiri） | `HitArea_Head` / `HitArea_Osiri` |
-| 正骑（Sit） | `HitArea_Head_Sit` |
+| Fellatio | `HitArea_Head` / `HitArea_LeftGirl` / `HitArea_RightGirl` |
+| Rear (Osiri) | `HitArea_Head` / `HitArea_Osiri` |
+| Riding (Sit) | `HitArea_Head_Sit` |
 
-**另外两处防重**
+**Two more anti-duplication measures**
 
-1. **判定优先级**：若模型里**将来**真的有了 `HitArea_Manman`，
-   `PussyAreaScreenRect` 会**优先用它**，不再用自建矩形 —— 避免真的出现两块
-2. **绘制去重**：画过的名字记进 `drawn`，Manman 区若是同一块就不再画第二遍
-   （覆盖"绑定了某个 HitArea* 素材"那种情况）
+1. **Judgement priority**: if the model **later** really gains a `HitArea_Manman`,
+   `PussyAreaScreenRect` **uses it in preference**, and stops using the built rectangle — so two
+   boxes never actually appear
+2. **Draw deduplication**: drawn names go into `drawn`, and if the Manman zone is the same box it
+   is not drawn a second time (this covers "a HitArea* asset has been bound")
 
-**面板里加了「当前来源」**
+**"Current source" was added to the panel**
 
 ```
 当前来源：模型里的 HitArea_Manman   /   素材绑定：xxx   /   插件自建矩形
 ```
 
-一眼就能看出现在用的是哪一套，不用再猜。
+Which one is in use is visible at a glance now, no more guessing.
 
-**用户确认**：「出现了，粉色的 manman 区」—— 去重后只剩一个
+**User confirmation**: "it appeared, the pink manman zone" — after deduplication only one is left
 
-**教训**
+**Lesson**
 
-> **"调试用的可视化"必须跟着实际生效范围走。**
-> 把不生效的东西也画出来，会让人误判成"有两个重叠的区域"，
-> 然后花时间去查一个根本不存在的重复。
+> **"Debug visualisation must follow the actual effective range."**
+> Drawing things that do not apply makes people misjudge it as "two overlapping regions", and then
+> spend time hunting a duplication that does not exist.
 
 ---
 
-## 29. 束缚之吻需要【自己的】调速（进入吻  !=  触发连榨）
+## 29. The binding kiss needs its **own** speed control (entering the kiss != triggering chain drain)
 
-**状态：已实施（2026-10-07）—— 用户提出**
+**Status: implemented (2026-10-07) — the user proposed it**
 
-**用户原话**
-「既然进入了束缚之吻也不一定出发连榨等，那么束缚之吻就需要单独设置调速等滑块」
+**The user's words**
+"since entering the binding kiss does not necessarily trigger chain drain and so on, the binding
+kiss needs its own speed sliders"
 
-**为什么需要单独一套**
+**Why it needs a separate set**
 
-| 状态 | 用的混合器 | 原来归谁管 |
+| State | Mixer used | Who managed it before |
 | --- | --- | --- |
-| **束缚之吻中但没进榨取** | `SitKissMixerA/B` | **没人管** ← 空档 |
-| 榨取 / 绝顶中 | `SitMixer*` / 吸精片段 | 榨取与绝顶那套倍速 |
+| **In the binding kiss but not yet in drain** | `SitKissMixerA/B` | **nobody** <- the gap |
+| Drain / climax | `SitMixer*` / absorb clips | the drain and climax speed-up |
 
-`PrepareKissing()` 让 `kissing` 变 1 之后，**可能一直不进榨取** ——
-那段时间用的是 `SitKissMixer*`，而 `DemandAnimSpeed` 只在
-`ModeActive()` 成立时才施加（`kyusei` 或 `kissing > 0.5`）…
-**但那是"榨取/绝顶"的倍速，不该拿来当接吻的调速**，两者语义不同。
+After `PrepareKissing()` sets `kissing` to 1, **the game may never enter drain** — during that
+stretch `SitKissMixer*` is in use, while `DemandAnimSpeed` is only applied when `ModeActive()`
+holds (`kyusei` or `kissing > 0.5`)… **but that is the drain/climax speed-up and should not be used
+as the kissing speed**, since the two have different meanings.
 
-**新增四个参数（正骑栏 · 束缚之吻）**
+**Four new parameters (Riding tab · binding kiss)**
 
-| 参数 | 默认 | 说明 |
+| Parameter | Default | Description |
 | --- | --- | --- |
-| `KissSpeedEnabled` | 开 | 总开关 |
-| `KissSpeedMul` | 100% | 接吻动画速度 |
-| `KissSpeedWobble` | 0% | 速度波动幅度 |
-| `KissSpeedHz` | 0.5 | 波动频率 |
+| `KissSpeedEnabled` | on | master switch |
+| `KissSpeedMul` | 100% | kissing animation speed |
+| `KissSpeedWobble` | 0% | speed wobble amplitude |
+| `KissSpeedHz` | 0.5 | wobble frequency |
 
-**互斥处理**
+**Mutual exclusion**
 
 ```csharp
 if (GetStringField(tab, "sitState") == "kyusei") return;   // 进了榨取 → 交给那套
 if (GetFloat(tab, "kissing") <= 0.5f) return;              // 不在吻里 → 不管
 ```
 
-**两边都设会互相打架**，所以按 `sitState` 严格互斥
+**Setting both would fight each other**, so they are strictly mutually exclusive on `sitState`.
 
 ---
 
-## 30. HitArea_Manman 终于有了实证（顺带修好诊断命令）
+## 30. HitArea_Manman finally has evidence (plus a fixed diagnostic command)
 
-**状态：已确认可用（2026-10-07）**
+**Status: confirmed working (2026-10-07)**
 
-**背景**：用户问「那这个粉色的 manman 区有作用么？」——
-那时我**没有任何证据**，只看到"补丁挂上了"。
+**Background**: the user asked "does this pink manman zone actually do anything?" — and at that
+point I had **no evidence at all**, only "the patch is mounted".
 
-**查日志的结论是"没用过"**：
+**The log said "never used"**:
 
 ```
 [屁股]（NoteSpank 的日志）   0 次   ← 从没被调用
 HitArea_Manman 出现 2 次           ← 但那 2 次是【挂载日志】本身
 ```
 
-**加了两个东西让它可以被验证**
+**Two things were added so it could be verified**
 
-1. **命中就留痕**：`Prefix_Mouse_Down_0` 里加日志；鼠标**首次进入判定区**也打一条
-2. **`manman` 诊断命令**
+1. **Leave a trace on a hit**: a log line in `Prefix_Mouse_Down_0`; the mouse's **first entry into
+   the judgement area** logs a line too
+2. **A `manman` diagnostic command**
 
-**命令插错过一次**：我以为命令表在主文件里，插进了「配置项 switch」的 default 前面，
-结果执行 `manman` 报 `ERR 未知命令`——
-**命令表其实在 `GameCommandServer.cs`**（文件式命令通道那个文件）。
-主文件里那个 switch 是 `set` 用的配置项表，两者长得很像。
+**The command was inserted in the wrong place once**: I assumed the command table was in the main
+file and put it before the `default` of the "config item switch", so running `manman` reported
+`ERR 未知命令` — **the command table is actually in `GameCommandServer.cs`** (the file-based command
+channel file). The switch in the main file is the config item table used by `set`, and the two look
+very much alike.
 
-**实测结果**
+**Measured result**
 
 ```
 [HitArea_Manman] pose=2  enabled=True  src=plugin-rect
   mousePointing=HitArea_Manman   mouse=970,157  inside=YES
 ```
 
-`mousePointing` 被成功改写为 `HitArea_Manman`，鼠标也在区内
-**——鼠标那条路确实接通了。**
+`mousePointing` was successfully rewritten to `HitArea_Manman`, and the mouse was inside the area —
+**the mouse path really is connected.**
 
-**教训**
+**Lesson**
 
-> **"补丁挂上了"  !=  "功能能用了"。**
-> 挂载日志只能证明 Harmony 接上了，证明不了它在真实输入下被走到。
-> **要证明，就得让它一旦触发就留痕**，然后去日志里找那条痕。
+> **"the patch is mounted" != "the feature works".**
+> A mount log only proves Harmony connected it; it does not prove it is reached under real input.
+> **To prove that, make it leave a trace the moment it triggers**, then go find that trace in the
+> log.
 
 ---
 
-## 31. HitArea_Manman_By_Plugins：改名 + 可视化与其他 HitArea 统一
+## 31. HitArea_Manman_By_Plugins: renamed, and its visualisation unified with the other HitAreas
 
-**状态：已实施（2026-10-07）—— 用户提出**
+**Status: implemented (2026-10-07) — requested by the user**
 
-**用户原话**
-「manman 区接通了就可以和其他 HitArea 同级了，命名为 HitArea_Manman_By_Plugins」
-「可以用粉色显示，但是要和其他 hitarea 用同一个可视化逻辑」
-「最后那个（模型相对）可以去掉么」
+**The user's own words**
 
-**(1) 改名**
+"Once the manman zone is wired up it should be the same level as the other HitAreas; call it HitArea_Manman_By_Plugins."
+"It can be shown in pink, but it has to use the same visualisation logic as the other hitareas."
+"Can that last one (model-relative) go away?"
+
+**(1) Rename**
 
 ```csharp
 internal const string ManmanAreaName = "HitArea_Manman_By_Plugins";
 ```
 
-现在和游戏原生的那批**同级**：
+It now sits at the **same level** as the game's native set:
 
 ```
 HitArea_Head / HitArea_Head_Sit / HitArea_Osiri
 HitArea_LeftGirl / HitArea_RightGirl
-HitArea_Manman_By_Plugins          ← 本插件提供
+HitArea_Manman_By_Plugins          ← provided by this plugin
 ```
 
-用**常量**统一，不再散落字符串字面量（运行时写入的 4 处全部改用 `ManmanAreaName`）。
+A **constant** unifies it; the string literal no longer appears scattered around
+(all 4 runtime write sites now use `ManmanAreaName`).
 
-**注意保留的区分**：
-`PussyAreaScreenRect` 里检查模型是否**真的有** `HitArea_Manman`（用户自建）时，
-查的仍然是**不带后缀**的名字—— 二者不会撞车。
+**A distinction deliberately kept**:
+when `PussyAreaScreenRect` checks whether the model **actually has** a `HitArea_Manman`
+(one the user built by hand), it still looks for the name **without the suffix** — so the two
+cannot collide.
 
-**(2) 可视化统一**
+**(2) Visualisation unified**
 
-原来 Manman 区走的是**另一套独立绘制**：
-自己的 `_rectFill` / `_rectLine` 粉色纹理、自己的 `_pussyHintStyle`、
-自己的 `SitPussyAreaShowRect` 开关、自己的 `DrawPussyAreaRect()`
+The Manman zone used to go through **its own separate drawing path**: its own `_rectFill` /
+`_rectLine` pink textures, its own `_pussyHintStyle`, its own `SitPussyAreaShowRect` switch,
+its own `DrawPussyAreaRect()`.
 
-现在**并进 `DrawOutline()`**，只多一个颜色参数：
+Now it is **folded into `DrawOutline()`**, with one extra colour parameter:
 
 ```csharp
 private void DrawOutline(float x0, float y0, float x1, float y1, string label, bool pink = false)
 ```
 
-- 绿色 = 游戏原生的 HitArea
-- **粉色 = 插件的 Manman 区**
-- **同一个函数、同一套逻辑、同一个总开关 `HighlightHitAreas`**
+- green = the game's native HitArea
+- **pink = the plugin's Manman zone**
+- **same function, same logic, same master switch `HighlightHitAreas`**
 
-旧的独立那套**整段删除**（54 行：`DrawPussyAreaRect` + `_pussyHintStyle` + `_rectFill` + `_rectLine`），
-残留 0。
+The old separate path was **deleted wholesale** (54 lines: `DrawPussyAreaRect` + `_pussyHintStyle`
++ `_rectFill` + `_rectLine`); nothing is left.
 
-**(3) 「（模型相对）」标签消失**
+**(3) The "(model-relative)" label is gone**
 
-那个后缀是旧 `DrawPussyAreaRect` 硬编码在标签里的。
-整段删掉后，标签来自 `DrawOutline(..., "HitArea_Manman_By_Plugins", true)` —— **就只有名字**
+That suffix was hard-coded inside the old `DrawPussyAreaRect`.
+With that deleted, the label comes from `DrawOutline(..., "HitArea_Manman_By_Plugins", true)` —
+**just the name**
 
-**实测**
+**Measured**
 
 ```
-HitArea_Manman_By_Plugins     ← 粉色框，标签干净
+HitArea_Manman_By_Plugins     ← pink box, clean label
 ```
 
-**教训**
+**Lesson**
 
-> **同一个东西有两套绘制代码 = 迟早会不一致。**
-> 之前那套独立的粉色绘制让"Manman 区"看起来像个特例，
-> 而它其实就该是"又一个 HitArea，只是颜色不同"。
-> **颜色是参数，不是另一条代码路径。**
+> **Two drawing paths for the same thing means they will drift apart.**
+> The separate pink path made the "Manman zone" look like a special case,
+> when it really should be "one more HitArea, only a different colour".
+> **Colour is a parameter, not another code path.**
 
 ---
 
-## 32. 最后三个参数补进三份体系 + 第 18 条验证通过
+## 32. The last three parameters folded into the three-copy scheme + entry 18 verified
 
-**状态：已完成（2026-10-07）**
+**Status: done (2026-10-07)**
 
-**用户**：「1 我测过了，没什么问题」——即**第 18 条（叠满段数后刷新持续时间）实战验证通过**
+**User**: "1 I tested it, no problems" — that is, **entry 18 (refresh the duration after the stack limit is reached) passed real-play verification**
 
-**补的三份参数**
+**The three parameters added**
 
-| 参数 | 旧值 | 新值（三份） | 说明 |
+| Parameter | Old value | New value (three copies) | Note |
 | --- | --- | --- | --- |
-| `ChainGainPerDrain` | 8 | 8 / 8 / 8 | 连榨固定增量模式 |
-| `DemandFellaDecay` | **59.78** | **59.78 × 3** | **用户调过，已迁移** |
-| `DemandMaxStackRefreshMul` | 100 | 100 / 100 / 100 | 段满后的刷新比例 |
+| `ChainGainPerDrain` | 8 | 8 / 8 / 8 | fixed-increment mode for chain drains |
+| `DemandFellaDecay` | **59.78** | **59.78 × 3** | **the user had tuned it; migrated** |
+| `DemandMaxStackRefreshMul` | 100 | 100 / 100 / 100 | refresh ratio once the stack limit is reached |
 
-**又一次差点丢调参**：`DemandFellaDecay` 旧值是 `59.78261`，而新三份键生成时是**默认 25**
-关掉游戏直接改配置文件把旧值搬过去 —— 这已经是**第二次**遇到同一件事
-（第一次是 31 个参数那批，48 个值）。
+**Nearly lost tuned values again**: the old value of `DemandFellaDecay` was `59.78261`, while
+the freshly generated three keys defaulted to **25**. The game was closed and the old value was
+carried over by editing the config file directly — this is the **second** time the same thing
+has happened (the first was the batch of 31 parameters, 48 values).
 
-> **规律：任何"生成新键"的动作，都会让用户调过的值留在旧键里。**
-> 所以**每次加三份参数，必须跟一次"旧值 → 三份"的迁移**，这不是可选步骤。
+> **Rule: any action that generates new keys leaves the user's tuned values behind in the old keys.**
+> So **every time three-copy parameters are added, a "old value → three copies" migration must
+> follow**; it is not an optional step.
 
-**结果**：说明书未提及项从 12 降到 4（都是斜杠组合提及），三份键 162 个（54 × 3）。
+**Result**: parameters missing from the manual went from 12 down to 4 (all of them mentioned
+only as part of a slash-separated combination); the three-copy keys number 162 (54 × 3).
 
 ---
 
-## 33. 第 7 条（Sit 绝顶值异常）改为「疑似已修」+ 加了复发警报
+## 33. Entry 7 (seated ecstasy anomaly) changed to "probably fixed" + a relapse alarm added
 
-> **后续（用户实测确认）**：这一条现在是好的，已从 `KNOWN-ISSUES.md` 移除。
-> 当初标的「疑似」可以去掉 —— 复发警报保留，不必撤。
+> **Follow-up (confirmed by the user in real play)**: this one is fine now and has been removed
+> from `KNOWN-ISSUES.md`. The "probably" label can go — the relapse alarm stays; there is no
+> need to pull it.
 
-**状态：🟡 疑似已修（2026-10-07）—— 用户判断 + 已加自动侦测**
+**Status: probably fixed (2026-10-07) — user judgement + automatic detection added**
 
-**用户**：「7 不一定存在，可能被修好了」
+**User**: "7 may not exist at all, it may have been fixed"
 
-**支持这个判断的理由** —— #7 记录的症状是「Sit 模式下绝顶值单步掉 −195.1」，
-而之后这几条修复**正好都命中它的可能成因**：
+**Why that judgement holds up** — the symptom recorded under #7 was "in seated mode the ecstasy
+value drops −195.1 in a single step", and the fixes made since then **all land on possible causes**:
 
-| 修的东西 | 为什么可能治到 #7 |
+| What was fixed | Why it could cure #7 |
 | --- | --- |
-| `DrainSlotIsDemand()`（#13） | 连榨档位选错 → 会走错的软上限 |
-| `_demandModePose`（#27） | 模式中途被拽去 Osiri → 状态机错乱 |
-| `ModeActive()`（#12） | 正骑滑块在束缚之吻里不生效 → 设定的值与实际不符 |
-| Sit 混合器修正（#26） | 速度冲量之前根本没作用到坐姿 |
-| `ChainSoftCap` / `AfterglowSoftCap` | 直接就是"绝顶值该压在哪"的老师 |
+| `DrainSlotIsDemand()` (#13) | the wrong chain-drain slot means the wrong soft cap is applied |
+| `_demandModePose` (#27) | being dragged to Osiri mid-mode scrambled the state machine |
+| `ModeActive()` (#12) | Riding sliders not taking effect inside the binding kiss meant the set value was not the actual value |
+| Seated mixer fix (#26) | the speed impulse had never reached the seated pose at all |
+| `ChainSoftCap` / `AfterglowSoftCap` | these literally decide "where the ecstasy value should be held down" |
 
-**但"可能修好了"不算结论** —— 所以加了自动侦测（`EcstasyDropWarn`，默认 50）：
+**But "it might be fixed" is not a conclusion** — so automatic detection was added
+(`EcstasyDropWarn`, default 50):
 
-每帧比对 `PlayerControl.CurrentEcstasy`，掉幅超阈值就记一条**带完整上下文**的警告：
+every frame `PlayerControl.CurrentEcstasy` is compared; when the drop exceeds the threshold it
+writes a warning **with full context**:
 
 ```
 [绝顶骤降 #1] 262.8 → 131.4（Δ-131.4）  姿势=2  模式=False(入于-1)  段=0
   sitState=attacking  kissing=0  osiriState=none  Syaseing=1  余韵剩=0  连榨=0
 ```
 
-**第一次运行就抓到了两次 —— 但那是误报**
+**The first run caught two — and both were false positives**
 
 ```
 [绝顶骤降 #1] 262.8 → 131.4（Δ-131.4）  Syaseing=1
 [绝顶骤降 #2] 131.4 → 0（Δ-131.4）      Syaseing=1
 ```
 
-`Syaseing=1`（玩家正在射精）时绝顶值被**正常消费**掉，而且正好**两次减半** ——
-这是设计行为，不是异常
+When `Syaseing=1` (the player is ejaculating) the ecstasy value is **consumed normally**, and it
+happened to **halve twice** — that is design behaviour, not an anomaly.
 
-**已排除**：
+**Now excluded**:
 
 ```csharp
-if (GetFloat(pl, "Syaseing") > 0.5f) { _lastEc = cur; return; }   // 射精期间的消费不算异常
+if (GetFloat(pl, "Syaseing") > 0.5f) { _lastEc = cur; return; }   // consumption during ejaculation is not an anomaly
 ```
 
-**于是判据变精确了**：要抓的是**"没在射精却骤降"**。
+**So the criterion got sharper**: what is being caught is **"a sudden drop while not ejaculating"**.
 
-**怎么用它判 #7 到底还在不在**
+**How to use it to decide whether #7 is still there**
 
-玩一段 Sit 榨取（含连榨与余韵），然后搜日志：
+Play a stretch of seated drain (chain drains and afterglow included), then search the log:
 
 ```bash
 grep "绝顶骤降" BepInEx/LogOutput.log
 ```
 
-- **搜到（且当时不在射精）** → #7 还在，日志里带着完整上下文，可以直接定位
-- **搜不到** → 可以认定已修
+- **Found (and not ejaculating at the time)** → #7 is still there, and the log carries full context, so it can be located directly
+- **Not found** → it can be considered fixed
 
-**教训**
+**Lesson**
 
-> **"可能已经修好了"是个合理假设，但必须配一个能被证伪的检查手段**，
-> 否则它只会在下一次复发时以"咦怎么又出问题了"的形式重新出现。
-> 这次的检查手段做对了：**它会自己去抓，而不是等人去盯。**
+> **"It may already be fixed" is a reasonable hypothesis, but it needs a check that can falsify it**,
+> otherwise it only reappears on the next relapse as "huh, why is this broken again".
+> This time the check was built the right way: **it catches by itself instead of waiting for a human to watch.**
 
 ---
 
-## 34. xcheck 不变量扩到新状态（#4）
+## 34. xcheck invariants extended to the new state (#4)
 
-**状态：已完成（2026-10-07）**
+**Status: done (2026-10-07)**
 
-原来检查到 (16)；新增 **(17)~(23)**：
+It used to check up to (16); **(17) to (23)** were added:
 
-| # | 不变量 | 硬/软 |
+| # | Invariant | Hard / soft |
 | --- | --- | --- |
-| (17) | **`_demandMode` 与 `_demandModePose` 自洽** | 硬 |
-| (18) | 段数在 `0 ~ DemandMaxStacks` 内 | 硬 |
-| (19) | 索取欲非负 | 硬 |
-| (20) | 背榨模式未被坐姿顶替 | 软 |
-| (21) | 连榨计数不超本档上限 | 软 |
-| (22) | 余韵计数非负 | 硬 |
-| (23) | Manman 区在坐姿 + 启用时应当拿得到矩形 | 软 |
+| (17) | **`_demandMode` and `_demandModePose` agree with each other** | hard |
+| (18) | the stack count stays within `0 ~ DemandMaxStacks` | hard |
+| (19) | demand urge is non-negative | hard |
+| (20) | Rear mode has not been displaced by the seated pose | soft |
+| (21) | the chain-drain counter does not exceed this slot's limit | soft |
+| (22) | the afterglow counter is non-negative | hard |
+| (23) | the Manman zone should have a rectangle while seated and enabled | soft |
 
-**(17) 是这组里最有价值的一条**：`_demandMode = false` 有**四处**赋值点，
-每处都要同时把 `_demandModePose` 复位。漏掉任何一处，(17) 就会 FAIL ——
-这正是当初那个 bug（#27）能藏那么久的原因。
+**(17) is the most valuable one in the group**: `_demandMode = false` has **four** assignment
+sites, and each one must reset `_demandModePose` at the same time. Miss any one of them and (17)
+reports FAIL — which is exactly why the original bug (#27) could hide for so long.
 
-**实测全过**
+**Measured, all passing**
 
 ```
 [通过] (17) _demandMode=False _demandModePose=-1
@@ -1801,177 +1865,191 @@ grep "绝顶骤降" BepInEx/LogOutput.log
 结论：无硬性矛盾，无提醒
 ```
 
-**顺带**：(23) 的输出**再次暴露矩形跑到屏幕下方外**（y 是 `-164~33`）——
-这就是待修的 Manman 区位置问题，现在它会一直在 xcheck 里提醒，直到被修好。
+**Side effect**: the output of (23) **exposes once more that the rectangle falls below the
+bottom of the screen** (y is `-164~33`) — that is the pending Manman-zone position problem, and
+now it will keep reminding through xcheck until it is fixed.
 
 ---
 
-## 35. 坐姿锁定 + 正骑栏删除口交相关项 + 日志标签按姿势取名
+## 35. Seated lock + fellatio items removed from the Riding tab + log tags named after the pose
 
-**状态：已实施（2026-10-07）—— 用户提出**
+**Status: implemented (2026-10-07) — requested by the user**
 
-**用户原话**
-「索取是 osiri 的叫法，sit 都要叫榨取」
-「而且要注意进入 sit 后必须不能切到 fella 和 osiri」
-「所以正骑里那些和口交有关的都可以删掉了」
+**The user's own words**
 
-**(1) 日志标签**
+"Demand is the osiri name; sit must always be called Drain."
+"And note that after entering sit it must not be possible to switch to fella and osiri."
+"So everything about fellatio in the Riding tab can be deleted."
 
-原来有 **27 处**硬编码的 `"[索取] "` 前缀 —— 在坐姿里打日志也写"索取"
-全部改成 `"[" + ModeWord() + "] "`，按当时姿势取名
+**(1) Log tags**
 
-**(2) 坐姿锁定（`SitLockEnabled`，默认开）**
+There were **27** hard-coded `"[索取] "` prefixes — logging while seated also said "Demand".
+All changed to `"[" + ModeWord() + "] "`, naming the tag after the current pose.
 
-游戏里离开坐姿只有**两个出口**：
+**(2) Seated lock (`SitLockEnabled`, on by default)**
 
-| 出口 | 说明 |
+There are only **two exits** out of the seated pose in the game:
+
+| Exit | Note |
 | --- | --- |
-| `ShowCenterGirlFella()` | **`Osiri解除()` 也是调它** |
+| `ShowCenterGirlFella()` | **`Osiri解除()` calls it as well** |
 | `ShowCenterGirlOsiri()` | |
 
-两个都加前缀拦掉，坐姿就成了「进得去出不来」的状态
-理由：正骑的榨取链（连榨 / 余韵）全建立在「人在坐姿」上，中途被切走会断链。
+A prefix on both blocks them, which makes the seated pose a state you can enter and not leave.
+The reason: the Riding drain chain (chain drain / afterglow) is built entirely on "the character
+is seated", so being switched away mid-chain breaks it.
 
-**踩了个坑**：`Prefix_ShowCenterGirlFella` **早就存在**（余韵那道闸），
-我又定义了一个同名的 → `CS0111 重复定义`
-正确做法是**给已有的那个加一道**，而不是新增：
+**A trap hit here**: `Prefix_ShowCenterGirlFella` **already existed** (the afterglow gate), and a
+second definition with the same name was added → `CS0111 duplicate definition`.
+The right move is to **add a check to the existing one**, not to add a new one:
 
 ```csharp
 private static bool Prefix_ShowCenterGirlFella()
 {
-    if (_afterglowRemaining > 0) { ...不进口交...; return false; }   // 原有：余韵闸
-    if (SitLockActive())         { ...坐姿锁定...; return false; }   // 新加
+    if (_afterglowRemaining > 0) { ...不进口交...; return false; }   // existing: afterglow gate
+    if (SitLockActive())         { ...坐姿锁定...; return false; }   // added
     return true;
 }
 ```
 
-**而且删除重复块时把 `SitLockActive()` 的定义一起删掉了**→ `CS0103`
-—— **"删一段"时要确认那段里有没有别人依赖的定义**。
+**And deleting the duplicate block took the definition of `SitLockActive()` with it** → `CS0103`
+— **when deleting a block, check whether anything else depends on a definition inside it**.
 
-**(3) 正骑栏删掉口交相关项**
+**(3) Fellatio-related items removed from the Riding tab**
 
-用 `if (!sitSide)` 包起来（**只影响正骑栏的显示，背榨那份照旧**）：
+Wrapped in `if (!sitSide)` (**this only affects what the Riding tab shows; the Rear copy is untouched**):
 
-| 项 | 为什么正骑里没意义 |
+| Item | Why it means nothing in Riding |
 | --- | --- |
-| `DemandBlockFella`（模式期间不回口交） | 坐姿已锁死，回不去 |
-| `DemandFellaDecay`（每次回口交衰减） | 同上 |
-| `DemandOsiriBoost`（回口交后骑乘位门槛降低） | 同上 |
-| `OsiriReturn*`（回归累积 4 项） | 那是「背榨 → 口交 → 再回骑乘位」的机制 |
+| `DemandBlockFella` (no return to fellatio during the mode) | the seated pose is locked; there is no way back |
+| `DemandFellaDecay` (decay per fellatio return) | same |
+| `DemandOsiriBoost` (riding threshold drops after a fellatio return) | same |
+| `OsiriReturn*` (the 4 return-accumulation parameters) | that is the "Rear → fellatio → back to Riding" mechanic |
 
-**(4) 顺带：软上限的跳变改成平滑**
+**(4) While at it: the soft-cap jump was made smooth**
 
-实测抓到的 38 次「绝顶骤降」（Δ 最大 −267.8）全部来自**我自己的软上限逻辑**：
-值高于波动带时被**一次设过去**
+The 38 "ecstasy sudden drops" caught in measurement (largest Δ −267.8) all came from **my own
+soft-cap logic**: when the value rises above the wobble band it was **set in one step**.
 
-新增 `EaseToward(cur, target, maxRef)` —— 按速率逼近（`CapSmoothRate`，默认 60%/秒），
-施加到三处：连榨/余韵软上限、`KeepMaxCaps` 的 `currentHP` 与 `CurrentEcstasy`。
+Added `EaseToward(cur, target, maxRef)` — approaches at a rate (`CapSmoothRate`, default
+60%/second) — applied in three places: the chain-drain / afterglow soft caps, and
+`KeepMaxCaps`'s `currentHP` and `CurrentEcstasy`.
 
-**挂载 39 条**（+2）
+**39 hooks** (+2)
 
 ---
 
-## 36. 坐姿锁定：出口路径已核实「全覆盖」
+## 36. Seated lock: the exit paths are verified to be fully covered
 
-**状态：已核实（2026-10-07）—— 用户确认「就是要进入坐姿后不会切到其他模式」**
+**Status: verified (2026-10-07) — the user confirmed "what I want is that after entering the seated pose it never switches to another mode"**
 
-**这是设计，不是缺陷** —— 不是"出不来是个 bug"，而是**要的就是出不来**。
+**This is design, not a defect** — not "being unable to leave is a bug" but **being unable to
+leave is exactly what was asked for**.
 
-**核实过程**：把游戏里所有会改 `centerGirlState` 的地方列了出来。
+**How it was verified**: every place in the game that writes `centerGirlState` was listed.
 
-| 行 | 所在方法 | 是不是"离开坐姿"的出口 | 拦到了吗 |
+| Line | Method | Is it an exit from the seated pose | Blocked |
 | --- | --- | --- | --- |
-| 10413 | **`Start()`** |这只是入场初始化 | — |
-| 10442 | `ShowCenterGirlFella()` | 是 | 已拦 |
-| **10992** | `ShowCenterGirlOsiri()` —— **方法体内直接赋值** | 是 | 已拦 |
-| 10445 / 10448 | `_CenterGirl()` 协程 | 只被上面两个方法启动 | 间接拦住 |
-| 10619 / 10623 | `Show_CenterGirlSit()` | 那是**进入**坐姿 | 不拦（正确） |
+| 10413 | **`Start()`** | this is only the initial scene set-up | — |
+| 10442 | `ShowCenterGirlFella()` | yes | blocked |
+| **10992** | `ShowCenterGirlOsiri()` — **assigns directly inside the method body** | yes | blocked |
+| 10445 / 10448 | the `_CenterGirl()` coroutine | only started by the two methods above | indirectly blocked |
+| 10619 / 10623 | `Show_CenterGirlSit()` | that is **entering** the seated pose | not blocked (correct) |
 
-**关键点**：`ShowCenterGirlOsiri()` 是在**方法体内直接写** `centerGirlState = Osiri`，
-不是在协程里 —— 但**前缀 `return false` 会跳过整个方法体**，所以那一行也一起被拦住了
+**The key point**: `ShowCenterGirlOsiri()` writes `centerGirlState = Osiri` **directly in the
+method body**, not inside a coroutine — but **a prefix returning `false` skips the whole method
+body**, so that line is blocked along with it.
 
-**并且**：`Osiri解除()` 内部是调 `ShowCenterGirlFella()`走的是同一条被拦的路径。
+**Also**: `Osiri解除()` calls `ShowCenterGirlFella()` internally, which walks the same blocked path.
 
-**结论：两个前缀 = 堵住全部出口。** 坐姿是「进得去、出不来」的状态。
+**Conclusion: the two prefixes plug every exit.** The seated pose is a state you can enter and
+not leave.
 
-**离开坐姿的途径**（如果将来需要）：只能由插件提供（比如加一个命令/按钮主动清 `SitLockEnabled` 再触发切换）。
-目前**没有做**这个逃生口 —— 用户明确要的就是"不会切走"。
+**How to leave it** (if it is ever needed): only the plugin could provide it (say a command or
+button that clears `SitLockEnabled` and then triggers the switch).
+At present **that escape hatch is not built** — what the user explicitly asked for is "it never
+switches away".
 
-**唯一的注意点**：`Start()` 里那次赋值为 `Fella`，发生在场景加载时 ——
-**如果在那之前人物已经在坐姿，这次赋值不会被拦**
-但 `Start()` 只在场景初始化跑一次，那时还没进坐姿，所以实际不成问题。
+**The one thing to watch**: the assignment inside `Start()` sets `Fella` and happens when the
+scene loads — **if the character were already seated before that, this assignment would not be
+blocked**. But `Start()` runs once during scene set-up, before the seated pose exists, so in
+practice it is not a problem.
 
 ---
 
-## 37. 游戏变卡：每帧的反射与顶点扫描（已缓存）
+## 37. The game felt laggy: per-frame reflection and vertex scanning (now cached)
 
-**状态：已优化（2026-10-07）—— 用户报告「游戏变卡了」**
+**Status: optimised (2026-10-07) — the user reported "the game has become laggy"**
 
-**先排除一个假象**
+**First rule out a false appearance**
 
-`rendercheck` 显示 `Time.timeScale = 0.05`—— 那是之前调试命令留下的**游戏被钳住**，
-表现出来就像"卡"。用 `timescale 1` 恢复**这一条先排掉**，再看真性能。
+`rendercheck` showed `Time.timeScale = 0.05` — a leftover from an earlier debugging command that
+had **clamped the game**, which looks exactly like lag. `timescale 1` restored it, **so that was
+ruled out first** before looking at real performance.
 
-**真正的性能问题**
+**The real performance problem**
 
-加的这些功能里有几处**每帧**在做很贵的事：
+Several of the added features were doing expensive work **every frame**:
 
-| 位置 | 频率 | 代价 |
+| Site | Frequency | Cost |
 | --- | --- | --- |
-| `PussyAreaScreenRect` ← `Postfix_HitAreaCheckWindows` | **每帧** | `Resources.FindObjectsOfTypeAll` + 遍历 CubismModel **全部 drawable 的全部顶点**做两次坐标变换 |
-| `TryGetDrawableScreenRect` ← `DrawHitAreaHighlight` | **OnGUI 每帧 2~3 次** | 同上 |
-| `HitAreaDrawableNames()` | OnGUI 每帧 | `FindObjectsOfTypeAll` + 遍历 |
-| `TickKissSpeed` / `TickSpankSpeed` / `TickDemand` | 每帧 | `FindObjectsOfTypeAll(Live2D_Animation_SitOsiri)` |
+| `PussyAreaScreenRect` ← `Postfix_HitAreaCheckWindows` | **every frame** | `Resources.FindObjectsOfTypeAll` + walking **every vertex of every drawable** of the CubismModel through two coordinate transforms |
+| `TryGetDrawableScreenRect` ← `DrawHitAreaHighlight` | **2 to 3 times per frame in OnGUI** | same as above |
+| `HitAreaDrawableNames()` | every frame in OnGUI | `FindObjectsOfTypeAll` + walking |
+| `TickKissSpeed` / `TickSpankSpeed` / `TickDemand` | every frame | `FindObjectsOfTypeAll(Live2D_Animation_SitOsiri)` |
 
-**关键点**：`FindType` **本身有字典缓存**，但 **`Resources.FindObjectsOfTypeAll` 没有**——
-而它每次都要**扫一遍所有已加载对象**，是这里最贵的一环。
+**The key point**: `FindType` **has a dictionary cache of its own**, but
+**`Resources.FindObjectsOfTypeAll` does not** — and it has to **scan every loaded object** each
+time, which is the most expensive link in the chain.
 
-**修法：短 TTL 缓存**
+**Fix: short TTL caches**
 
-| 缓存 | TTL | 理由 |
+| Cache | TTL | Reason |
 | --- | --- | --- |
-| `HitAreaCompCached()` | 1 秒 | 组件实例不会每帧换 |
-| `ModelRectCached()` | **0.1 秒** | 包围盒随人物动作变，但 10Hz 足够判定用 |
-| `HitAreaDrawableNamesCached()` | 0.5 秒 | 名单几乎不变 |
+| `HitAreaCompCached()` | 1 second | component instances do not change every frame |
+| `ModelRectCached()` | **0.1 second** | the bounding box moves with the character's motion, but 10 Hz is enough for judging |
+| `HitAreaDrawableNamesCached()` | 0.5 second | the list barely changes |
 
-**效果**：每帧的 `FindObjectsOfTypeAll` 从「几次」降到「大约 10 秒一次」，
-顶点扫描从「每帧 2~4 次」降到「每秒 10 次」。
+**Effect**: per-frame `FindObjectsOfTypeAll` went from "several times" to "about once every 10
+seconds", and vertex scanning from "2 to 4 times per frame" to "10 times per second".
 
-**教训**
+**Lesson**
 
-> **"每帧调用一次"和"每帧调用一次反射"是两件完全不同的事。**
-> `FindType` 有缓存所以看起来没事，但它后面跟着的
-> `Resources.FindObjectsOfTypeAll` 才是真正贵的 —— **缓存要加在最贵的那一层**，
-> 而不是"给函数加个缓存"就完事。
+> **"Called once per frame" and "calling reflection once per frame" are two very different things.**
+> `FindType` has a cache so it looks harmless, but the `Resources.FindObjectsOfTypeAll` that follows
+> it is what actually costs — **the cache belongs on the most expensive layer**,
+> not "add a cache to the function" and call it done.
 >
-> 另外：**先确认 timeScale 是不是被钳住了**，再谈性能。这个假象差点让我去改一堆没必要改的代码。
+> Also: **first confirm whether timeScale has been clamped**, then talk about performance. That
+> false appearance nearly had me changing a pile of code that needed no changes.
 
 ---
 
-## 38. 束缚之吻的桥接审计 + 三个缺口 + 「层上直接播」的动画加不上速
+## 38. Binding kiss bridging audit + three gaps + animations "played directly on the layer" cannot be sped up
 
-**状态：已补（2026-10-07）—— 用户要求「看一下束缚之吻是不是所有动作都桥接了」**
+**Status: filled in (2026-10-07) — the user asked "check whether every binding-kiss action is bridged"**
 
-### 审计结果
+### Audit result
 
-游戏侧束缚之吻相关方法 22 个，原来只桥接了 **4 个**（全是「吸精」那一半）：
+The game has 22 binding-kiss related methods; only **4** had been bridged (all of them on the
+"absorb" half):
 
-| 已桥接 | |
+| Bridged | |
 | --- | --- |
-| `PrepareKissing()` | 后缀：拉长窗口 |
-| `KissPrepare解除()` | 前缀+后缀：阻止衰减 |
-| `Event_SitKiss吸精1()` | 后缀：连榨绝顶值按伤害折算 |
-| `Even_SitKiss吸精OnEnd()` | 前缀：接管连榨上限 |
+| `PrepareKissing()` | postfix: lengthen the window |
+| `KissPrepare解除()` | prefix + postfix: stop the decay |
+| `Event_SitKiss吸精1()` | postfix: chain-drain ecstasy scaled by damage |
+| `Even_SitKiss吸精OnEnd()` | prefix: take over the chain limit |
 
-**缺口（「射精」那一半基本没接）**：
+**The gaps (the "ejaculation" half was essentially unbridged)**:
 
-| 方法 | 后果 |
+| Method | Consequence |
 | --- | --- |
-| `Event_SitKissSyaseiOnEnd()` | **连榨上限管不到这条路** |
-| `Play_SitKissSyasei()` | 绝顶动画拿不到倍速 |
-| `DealDamage_SitKiss()` | 这次伤害不计入回归累积 |
+| `Event_SitKissSyaseiOnEnd()` | **the chain limit could not reach this path** |
+| `Play_SitKissSyasei()` | the climax animation got no speed multiplier |
+| `DealDamage_SitKiss()` | this damage was not counted toward return accumulation |
 
-**已补三处**（照着同款抄）：
+**All three added** (copied from the same pattern):
 
 ```
 束缚之吻补丁已挂载（Event_SitKissSyaseiOnEnd 前缀：射精也受连榨上限管制）
@@ -1979,20 +2057,21 @@ private static bool Prefix_ShowCenterGirlFella()
 束缚之吻补丁已挂载（DealDamage_SitKiss 后缀：伤害计入回归累积）
 ```
 
-### 又踩「挂错类」
+### The "wrong class" trap again
 
-第一次把 `Event_SitKissSyaseiOnEnd` 和 `Play_SitKissSyasei` 挂在 `TabemiControl` 上
+The first attempt hooked `Event_SitKissSyaseiOnEnd` and `Play_SitKissSyasei` on `TabemiControl`
 → `找不到 Event_SitKissSyaseiOnEnd`
 
-它们其实在 **`Live2D_Animation_SitOsiri`**（跟吸精那条同一个类）
-而 `DealDamage_SitKiss` 确实在 `TabemiControl`
+They are actually in **`Live2D_Animation_SitOsiri`** (the same class as the absorb one).
+And `DealDamage_SitKiss` really is in `TabemiControl`.
 
-**——「挂完核对日志条数」这条规矩不能省。**
-这次是靠日志里那句「找不到…」发现的，不是靠猜。
+**— the rule "count the log lines after hooking" cannot be skipped.**
+This time it was found from that "not found" line in the log, not by guessing.
 
-### 用户后续反馈：「还是有一些动作没能加速」
+### Follow-up feedback from the user: "some actions still are not sped up"
 
-**根因**：束缚之吻里有一部分动作**不经过混合器**，而是直接在层上 Play：
+**Root cause**: part of the binding-kiss animation **does not go through a mixer**; it is played
+directly on the layer:
 
 ```csharp
 // Play_SitKissSyasei()
@@ -2001,10 +2080,10 @@ _CenterGirlLayer.Play(SitKissSyaseis[num]);
 _CenterGirlLayer.Play(SitKiss吸精s[num]);
 ```
 
-而 `TickKissSpeed` 只找 `SitKissMixerA/B` 和 `SitMixerA/B`
-→ **这类动画永远命中不了，所以加不上速。**
+But `TickKissSpeed` only looked for `SitKissMixerA/B` and `SitMixerA/B`
+→ **this kind of animation can never be hit, so it cannot be sped up.**
 
-**修法：混合器都没命中时，退一步改「当前层正在播的那个状态」**
+**Fix: when no mixer is hit, fall back to "the state the current layer is playing"**
 
 ```csharp
 if (!applied)
@@ -2019,44 +2098,48 @@ if (!applied)
 }
 ```
 
-**这条规律值得记下来**：
-> 这个游戏的动画有**两种播法** —— 经过混合器（`*.State`）和直接在层上 `Play`（`*.CurrentState`）。
-> **任何"给正在播的动画调速"的逻辑，两种都要覆盖**，否则总有一部分动作静默地不受控。
-> 之前 Osiri 绝顶那次也是栽在同一个地方（`_CenterGirlLayer.Play(OsiriSyaseis[num])`）。
+**This rule is worth writing down**:
+> The game's animations have **two playback paths** — through a mixer (`*.State`) and played
+> directly on a layer (`*.CurrentState`).
+> **Any logic that "sets the speed of the animation currently playing" must cover both**,
+> otherwise some actions are always silently out of control.
+> The Osiri climax hit exactly the same wall earlier (`_CenterGirlLayer.Play(OsiriSyaseis[num])`).
 
-**挂载 42 条。**
+**42 hooks.**
 
 ---
 
-## 39. 三栏用词统一：描述模板按栏位自动换词
+## 39. Three tabs' wording unified: description templates swap the word per tab
 
-**状态：已修（2026-10-07）—— 用户指出「正骑页面里还是有很多"索取"描述」，随后要求「口交那边都用吸取」**
+**Status: fixed (2026-10-07) — the user pointed out "the Riding page still has a lot of 'Demand' descriptions", then asked "use Absorb on the fellatio side"**
 
-**问题**
+**The problem**
 
-配置描述是**一个模板三栏共用**的，而模板里有 **15 条硬编码了"索取"**
-（"叠第 1 层索取状态所需的索取欲"这种）
+Config descriptions are **one template shared by three tabs**, and **15 of the templates had
+"索取" hard-coded** ("the urge needed for the first layer of Demand state" and the like).
 
-`PoseDesc(i, desc)` 原来只替换 `{模式}` 占位符 ——
-**没有占位符的硬编码词就原样漏到另外两栏**
+`PoseDesc(i, desc)` only replaced the `{模式}` placeholder — **hard-coded words with no
+placeholder leaked unchanged into the other two tabs**.
 
-第一次修只动了坐姿，理由是"口交描述里没混进这个词，乱替换可能改坏"。
-用户随后明确要求口交也用吸取 —— 于是补上，并**核对替换后的实际文本**（这次没有想当然）。
+The first fix only touched the seated tab, on the reasoning that "the word never got mixed into
+the fellatio descriptions and a careless replace could break something". The user then explicitly
+asked for Absorb on the fellatio side as well — so that was added, and **the actual text after
+replacement was checked** (no assumptions this time).
 
-**修法（一处修全部）**
+**Fix (one place fixes everything)**
 
 ```csharp
 private static string PoseDesc(int i, string desc)
 {
     string d = desc.Replace("{模式}", ModeWordAt(i));
-    if (i == 2) d = d.Replace("索取", "榨取");        // 正骑
-    else if (i == 0) d = d.Replace("索取", "吸取");   // 口交
-    // 背榨保持"索取" —— 那是它本来的叫法
+    if (i == 2) d = d.Replace("索取", "榨取");        // Riding
+    else if (i == 0) d = d.Replace("索取", "吸取");   // Fellatio
+    // Rear keeps "索取" — that is its own name
     return "【" + PoseLabel[i] + "·" + ModeWordAt(i) + "】" + d;
 }
 ```
 
-**验证（按栏位统计，不是抽查印象）**
+**Verification (counted per tab, not sampled by impression)**
 
 ```
 口交   54 条描述，含「索取」0 条
@@ -2068,216 +2151,207 @@ private static string PoseDesc(int i, string desc)
 【正骑·榨取】每次累积榨取欲的下限（%）
 ```
 
-**面板标签那边本来就对** —— 5 处含"索取"的标签，
-要么在 `if (!sitSide)` 里（只在背榨显示），要么是各栏自己的标题未改动。
+**The panel labels were already right** — the 5 labels containing "索取" are either inside
+`if (!sitSide)` (shown only in Rear) or are each tab's own untouched title.
 
-**教训**
+**Lesson**
 
-> **"共用一份模板" + "模板里有硬编码的专属词" = 迟早串味。**
-> 占位符（`{模式}`）只能覆盖到写得规范的那部分；
-> 剩下的硬编码词，要么在生成时按栏位统一替换，要么把词也做成占位符。
-> **不能靠"写模板的人记得用占位符"。**
-
----
-
-## 40. 骤降溯源日志 + 说明书补三节
-
-**状态：已实施（2026-10-07）**
-
-### (1) 骤降溯源
-
-第 39 条推断"骤降来自软上限"，但**平滑明明挂着却没拦住** —— 所以那个推断不完整。
-与其继续猜，不如**让每个可能的地方都留痕**：
-
-| 留痕点 | 记什么 |
-| --- | --- |
-| `Prefix_EcstasyReset`（两个重载） | 清前值 + 姿势/模式/段数/sitState/kissing/osiriState/Syaseing/连榨 |
-| 连榨软上限写入处 | cur / target / soft / wob / maxE（仅当掉幅 > 50 时记） |
-
-**下次骤降，日志会直接说"是谁干的"**，不用再靠吻合度猜。
-
-### (2) 说明书补三节
-
-| 新节 | 内容 |
-| --- | --- |
-| **被上限拉回来时的平滑** | `CapSmoothEnabled` / `CapSmoothRate`，以及为什么做它（38 次 Δ-240 那种跳变） |
-| **绝顶值骤降侦测** | `EcstasyDropWarn` + 溯源日志的读法 + "射精期间的消费已排除" |
-| **坐姿锁定** | `SitLockEnabled`、两个出口、逃生口（`situnlock` / `sitlock` + 面板按钮） |
-
-**说明书未提及项：12 → 8**（剩 8 项全是斜杠组合提及，功能上已覆盖）。
-
-### (3) #4 状态更正
-
-`xcheck` 的不变量**其实早已扩到 (17)~(23)**（第 34 条），但 #4 一直挂着"技术债"没更新—— 已改。
-
-> **教训**：**"做完了但状态没更新"和"没做"在账面上是一样的。**
-> 盘点时会把它当成待办，浪费一次排查。
+> **"One shared template" + "hard-coded tab-specific words in the template" = the wording will
+> leak eventually.**
+> A placeholder (`{模式}`) only covers the part that was written properly;
+> the remaining hard-coded words either have to be replaced per tab when the description is
+> generated, or turned into placeholders as well.
+> **You cannot rely on "whoever writes the template remembering to use the placeholder".**
 
 ---
 
-## 41. 界面英文化：回落机制，以及它带来的两个静默失效
+## 40. The sudden-drop trace log, plus three new manual sections
 
-**状态：框架完成，翻译按栏推进中**（框架在 `plugin/Localization.cs`）
+**Status: implemented (2026-10-07)**
 
-### 为什么先做机制、不先翻
+### (1) Tracing the sudden drop
 
-面板上用户能看到的文案约 200 处（按钮 53、开关 30、Label 10、栏名 8、Hint 提示行 58 处调用），
-加上 102 条配置描述。一次翻完再上，中间态没法验证，改错一处整个面板都可能崩。
+Entry 39 inferred that "the drop comes from the soft cap", but **the smoothing was mounted and still did not catch it** — so that inference is incomplete. Rather than keep guessing, **leave a trace at every place that could possibly be responsible**:
 
-所以先定一条规则：**缺英文就显示中文**。
+| Trace point | What it records |
+| --- | --- |
+| `Prefix_EcstasyReset` (both overloads) | value before the reset + pose / mode / segment count / sitState / kissing / osiriState / Syaseing / chain |
+| Where the chain soft cap is written | cur / target / soft / wob / maxE (only when the drop exceeds 50) |
 
-`L.T("中文原文")` 查对照表，查到用英文，查不到把中文原样还回去。
-于是「翻了一半」是一个能发布、能用的正常状态，而不是一个不能碰的中间态。
+**On the next sudden drop, the log will say who did it**, instead of relying on how well the numbers match.
 
-### 为什么拿中文原文当 key
+### (2) Three sections added to the manual
 
-不另编一套 key 名，改动只是外面套一层：
+| New section | Content |
+| --- | --- |
+| **Smoothing when a cap pulls the value back** | `CapSmoothEnabled` / `CapSmoothRate`, and why it exists (that 38-times-in-a-row Δ-240 jump) |
+| **Ecstasy sudden-drop detection** | `EcstasyDropWarn` + how to read the trace log + "consumption during ejaculation is excluded" |
+| **Seated-pose lock** | `SitLockEnabled`, the two exits, and the escape hatch (`situnlock` / `sitlock` + the panel button) |
+
+**Items the manual did not mention: 12 to 8** (the remaining 8 are all mentioned as slash combinations, so they are covered functionally).
+
+### (3) Correcting the status of #4
+
+`xcheck`'s invariants **had actually been extended to (17) to (23)** long ago (entry 34), but #4 kept carrying a "technical debt" note that was never updated — now fixed.
+
+> **Lesson**: **"done but the status was not updated" looks exactly like "not done" on the books.**
+> A census treats it as a to-do and wastes one investigation.
+
+---
+
+## 41. English UI: the fallback mechanism, and the two silent failures it brings
+
+**Status: framework done, translation advancing tab by tab** (the framework is in `plugin/Localization.cs`)
+
+### Why build the mechanism before translating
+
+The panel has roughly 200 strings a user can see (53 buttons, 30 toggles, 10 labels, 8 tab names, 58 calls producing hint lines), plus 102 config descriptions. Translating all of it in one go and then shipping it leaves no way to verify the intermediate state, and one wrong edit can take down the whole panel.
+
+So one rule was settled first: **when English is missing, show Chinese**.
+
+`L.T("中文原文")` looks the string up in the table; found means English, missing means the Chinese string is returned unchanged. "Half translated" therefore becomes a shippable, usable state instead of an untouchable intermediate one.
+
+### Why the Chinese original is the key
+
+No separate set of key names; the change is just wrapping a layer around the outside:
 
 ```
 GUILayout.Button("开")  →  GUILayout.Button(L.T("开"))
 ```
 
-对照表就是「中文 TAB 英文」两列，不懂代码的人也能填、能校对。
-代价是同一句中文在不同语境需要不同译法时区分不了 —— 真到了那一步再加 `中文|后缀` 的写法。
+The table is two columns, "Chinese TAB English", so someone who does not read code can fill it in and proofread it. The cost is that the same Chinese string cannot have two translations in different contexts — when that day comes, add a `Chinese|suffix` form.
 
-### 静默失效一：写死宽度
+### Silent failure one: hard-coded width
 
-预设栏的「存为预设」按钮写死 `GUILayout.Width(90f)`。中文四个字绰绰有余，
-换成 `Save as preset` 直接被截成 `Save as prese`。
+The "Save as preset" button in the presets tab had a hard-coded `GUILayout.Width(90f)`. Four Chinese characters fit easily; `Save as preset` got clipped to `Save as prese`.
 
-**这类问题在只有一种语言时看不出来** —— 宽度是按最长中文字的宽度定的，
-英文一旦更长就超出去，而且不报错，只是显示不全。
-修法是按译文实际排版宽度算（`BtnW()`）。
+**This kind of problem is invisible when there is only one language** — the width was sized for the widest Chinese label, and English that is longer simply overflows, without an error, just a partial display. The fix is to compute the width from the actual laid-out translation (`BtnW()`).
 
-### 静默失效二：对照表与源码失配
+### Silent failure two: the table and the source drift apart
 
-拿中文当 key 的代价：源码里那句中文改了字（哪怕多一个「的」），表里那行就永远匹配不上。
-而回落机制会让它**安静地显示中文** —— 不报错、不崩溃、只是那句永远翻不成英文。
+The cost of using Chinese as the key: if the Chinese string in the source changes by a character (even one extra 「的」), that row in the table can never match again. And the fallback mechanism makes it **quietly display Chinese** — no error, no crash, just that sentence never becoming English.
 
-静态检查因此加了第 13 条：表里每一行的中文，必须能在源码里找到对应的 `L.T` 调用。
-反方向（源码有、表里没有）是正常的，那是还没翻，只报个进度。
+The static check therefore gained rule 13: every Chinese row in the table must have a corresponding `L.T` call in the source. The reverse direction (source has it, table does not) is normal — that is simply untranslated, and only reported as progress.
 
-### 语言控件放在哪，也是设计的一部分
+### Where the language control sits is part of the design too
 
-第一版放在系统栏「上限」区块之后。截图一看，要滚动才能找到 ——
-而切到英文的人想切回来，恰恰是在找不到的时候。
-移到系统栏最前面，进栏就能看到。
+The first version put it after the "Caps" block in the system tab. One screenshot showed it needed scrolling to find — and someone who switched to English and wants to switch back is exactly in the situation of not finding it. Moved to the very top of the system tab, visible the moment the tab opens.
 
-一个「切回来」的入口藏起来，等于把人锁在英文里。
+Hiding the way back is the same as locking someone in English.
 
-### 同步方向：第三次栽在同一个地方
+### Sync direction: the third time falling in the same place
 
-第一次改代码改在了发布副本里，跑 `sync.sh code`（工作 → 发布）时被工作副本的旧版整片覆盖，
-只有 `Localization.cs` 与 `en.txt` 因为是新文件才幸存。
+The first time, code was edited in the release copy, and running `sync.sh code` (work to release) overwrote the whole thing with the older work copy. Only `Localization.cs` and `en.txt` survived, because they were new files.
 
-**代码的权威在工作副本** —— 附录里写了两遍，实操时还是踩了。
-判据很简单：`sync.sh code` 的方向是「工作 → 发布」，在发布副本里改代码，就是在等着被覆盖。
+**Code's authority is the work copy** — that is written twice in the appendix, and it was still stepped on in practice. The test is simple: `sync.sh code` goes "work to release", so editing code in the release copy is waiting to be overwritten.
 
 ---
 
-## 42. 英文化第二轮的盲区：检查器看得见调用点，看不见变量
+## 42. The blind spot of the second English round: the checker sees call sites, not variables
 
-第一轮之后面板基本是英文了，用户又指了两次「还有地方没翻」。原因不是漏翻，而是
-**检查器和翻译用了同一个视角**：两边都在找 `L.T(` 的调用点。
+After the first round the panel was basically English, and the user pointed at "still something untranslated" twice more. The cause was not missed translations but that **the checker and the translator used the same angle**: both looked for `L.T(` call sites.
 
-于是任何「字符串不在那个调用里」的形状全部隐形：
+So every shape where "the string is not inside that call" went invisible:
 
-| 形状 | 例子 | 为什么隐形 |
+| Shape | Example | Why it is invisible |
 | --- | --- | --- |
-| helper 内部没套 T | `Sub(string title)` | 调用点看着正常，译文在 helper 里丢 |
-| 先存变量再绘制 | `_snapHint = "已导出…"` | 赋值处没有 GUI 调用，绘制处只有变量 |
-| 格式化参数 | `L.T("{0} 项{1}", n, " ← 生效中")` | 参数不是 key，查表时原样进模板 |
-| 归一后的 key | `desc.Replace("榨取", "{模式}")` | 表里的 key 是归一版，源码里没有这个串 |
+| T not applied inside a helper | `Sub(string title)` | the call site looks fine, the translation is lost inside the helper |
+| stored in a variable, drawn later | `_snapHint = "已导出…"` | no GUI call at the assignment, only a variable at the draw site |
+| format arguments | `L.T("{0} 项{1}", n, " ← 生效中")` | the argument is not a key, it enters the template verbatim on lookup |
+| the normalised key | `desc.Replace("榨取", "{模式}")` | the table's key is the normalised form, and that string does not exist in the source |
 
-修法的方向是**换视角**，不是把规则写得更细：`tools/zh-scan.py` 不再问「哪些调用被翻译了」，
-而是问「所有中文字面量里，哪些没落进翻译区间」。前者需要先猜对形状，后者只需要一份完整的
-字面量表。
+The direction of the fix is **to change the angle**, not to write finer rules: `tools/zh-scan.py` no longer asks "which calls have been translated" but "of all Chinese literals, which ones did not fall inside a translation region". The former requires guessing the shape correctly first; the latter only needs one complete list of literals.
 
-顺便说清另一件事：第 (14) 条原来用 `GUILayout\.(Button|Label|Toggle)\([^;]*?\)` 取调用段。
-非贪婪遇到 `Button(L.T("打开"), GUILayout.Width(BtnW("打开", 52f)))` 这种嵌套只匹配到
-内层右括号，`L.T(` 落在截断点之外 —— 已翻译的按钮被报成裸中文。**检查器误报的代价和漏报
-一样高**：报错了，下一个人会开始怀疑检查器，然后连真的那一处也一起忽略。
+One more thing worth stating: rule (14) used to grab call segments with `GUILayout\.(Button|Label|Toggle)\([^;]*?\)`. The non-greedy match against a nested call like `Button(L.T("打开"), GUILayout.Width(BtnW("打开", 52f)))` stopped at the inner closing parenthesis, so `L.T(` fell outside the cut — an already-translated button was reported as bare Chinese. **A false report from the checker costs as much as a missed one**: once it cries wolf, the next person starts distrusting the checker and then ignores the real one too.
 
-教训：检查器的盲区会和实现者的盲区重合，因为它们用的是同一个心智模型。真正把盲区找出来
-的是**换一个方向数**（总数减已覆盖），不是把规则写得更细。
+Lesson: a checker's blind spot coincides with the implementer's, because they share one mental model. What actually finds the blind spot is **counting from a different direction** (the total minus what is covered), not writing the rule more finely.
 
-## 43. 英文化的三类盲区：拼接、初始化顺序、正则的盲点
+## 43. Three blind spots of the translation: concatenation, init order, the regex
 
-**症状**：v1.0.94 之后，`static-check` 报「对照表 997 条全对上」，但英文模式启动游戏，
-日志里仍有中文；命令回执里也有。
+**Symptom**: after v1.0.94, `static-check` reported "all 997 table entries match", yet the
+English-mode log still contained Chinese, and so did command replies.
 
-### 第一类：`L.T` 的实参里套了 `L.T`
+### One: `L.T` nested inside its own argument
 
 ```csharp
-Log.LogWarning(L.T("A" + "B" + L.T("C"), args));   // 外层拿到的是拼接后的整串
+Log.LogWarning(L.T("A" + "B" + L.T("C"), args));   // the outer call sees the concatenated string
 ```
 
-外层 `L.T` 查表的 key 是「A + B + C」，而表里存的是分段 key，永远匹配不上。
-`[绝顶骤降]` 与 `[骤降溯源]` 两条长日志就是这样静默失效的 —— v1.0.93 明明把译文写进了表。
+The outer `L.T` looks up "A + B + C" while the table stores the segment keys — it can never match.
+`[绝顶骤降]` and `[骤降溯源]` failed silently that way, even though v1.0.93 had written their
+translations into the table.
 
-**修法**：`L.T("A" + "B" + "C", args)`，一条 key 覆盖整句。
-**教训**：`L.T(拼接)` 里再出现 `L.T`，就说明有人把「分段翻译」和「整句翻译」混在了一起。
+**Fix**: `L.T("A" + "B" + "C", args)` — one key for the whole line.
+**Lesson**: an `L.T` inside `L.T(...)` means someone mixed per-segment translation with
+per-sentence translation.
 
-### 第二类：日志打在 `L.Init` 之前
+### Two: the log fires before `L.Init`
 
-`GameBuild.ReportOnce(Log)` 原本在 `Awake` 开头，而语言表在它之后才载入。
-包了 `L.T` 也没用 —— 那时 `_on` 还是 false，`L.T` 原样返回中文。
+`GameBuild.ReportOnce(Log)` used to sit at the top of `Awake`, before the language table loads.
+Wrapping it in `L.T` would not have helped — `_on` is still false there, so `L.T` returns Chinese.
 
-**修法**：把 `ReportOnce` 挪到 `L.Init` 之后。
-**教训**：日志英文化不只是「包 `L.T`」，还要问「这一句执行的时候，表载入了没有」。
+**Fix**: move `ReportOnce` after `L.Init`.
+**Lesson**: translating a log line is not only "wrap it in `L.T`" — it also asks whether the
+table has been loaded by the time that line runs.
 
-### 第三类：正则只认大写 `Log.`
+### Three: the regex only knew the capitalised `Log.`
 
-v1.0.94 批量包装时用的正则是 `Log\.Log(Info|Warning|Error)`。
-而 `GameBuild.cs` 里的写法是 `log.LogInfo(...)` —— `log` 是方法参数（`ILogger`），小写。
-三条程序集核对日志从来没被匹配过，检查器与对照表都看不见它们。
+The bulk wrapping in v1.0.94 used `Log\.Log(Info|Warning|Error)`.
+`GameBuild.cs` writes `log.LogInfo(...)` — `log` is the `ILogger` parameter, lowercase.
+Those three assembly-check lines were never matched, and neither the checker nor the table
+could see them.
 
-**修法**：补上 `log.Log*` 三处，并给 `(13)` 的范围加 `ProbeWhy(...)`。
-**教训**：批量替换的覆盖面取决于正则写得多宽 —— 写窄了不会报错，只会安静地漏。
+**Fix**: cover `log.Log*`, and widen rule (13) to accept `ProbeWhy(...)`.
+**Lesson**: a bulk replace is only as wide as its regex — a narrow one does not fail, it
+silently misses.
 
-同类还有一处：`Say(...)` 的直接实参包了，但 `StateLine()` 这类**先拼字符串再 Say** 的
-内部拼接没包。命令回执因此中英混杂（`scene=TabemiTitle （无 TabemiControl） 强制=OFF`）。
+One more of the same family: `Say(...)` arguments were wrapped, but strings built first and
+`Say`-ed later (`StateLine()`) were not, so command replies came out half English and half
+Chinese (`scene=TabemiTitle （无 TabemiControl） 强制=OFF`).
 
-### 附带的两个转义坑
+### Two escape bugs along the way
 
-`cmd\anim.csv` 与 `cmd\tremor.csv` 写成字面量时，C# 把 `\a` 与 `\t` 解释成响铃与制表符，
-日志里那两个路径中间一直藏着不可见字符。改成 `\\a` / `\\t` 才是真反斜杠。
-
----
-
-## 44. 排版：按钮铺满整行，以及「看不出来的形状」怎么盯
-
-**症状**：面板里每个按钮都占满整行 —— 一个「删除」也是 540px 宽。
-
-**根因**：`GUILayout.Button(text)` 不带宽度时会 expand width。这在单语言、
-按钮数少的时候不显眼，八栏之后整块面板显得又宽又笨。
-
-**修法**：`Btn(zh)` 与 `BtnText(text)` 两个 helper，按 `GUILayout.Button` 的
-`CalcSize` 给宽度（不低于 88px）。46 个按钮 + 8 个动态文案的按钮全部换掉。
-
-**为什么光修不够**：这种写法在代码里**看不出来** —— 它跟一个正常按钮长得一模一样，
-没有警告，没有报错，下次谁顺手写一个，毛病就回来了。
-所以加了第 (16) 条检查：扫 `GUILayout.Button(` 的整段调用，没有
-`GUILayout.Width(` / `Btn(` / `BtnText(` 就报。
-
-它上线时抓到 9 个 —— 8 个是真的（文案是变量或三元），1 个是注释里的示例。
-**注释里的示例也会被扫到**，所以规则要先剥掉注释区间再扫，否则 `// GUILayout.Button(text)`
-这种说明文字会成为假阳性。
-
-### 顺带发现的两处：栏标签与换行
-
-- 栏标签写死 62px，英文 `Fellatio` / `Presets` 被截成 `Fellati…`；
-  改用 `TabW()`（padding 收到 4px）之后，八个标签刚好挤进 540 —— **再多 10px 就会被挤出面板**
-- `Hint()` 的 `wordWrap` 早就开着，但 **Label 没有宽度约束就不会换行**，超长的英文句子
-  直接被裁在右边界。加 `GUILayout.ExpandWidth(true)` 之后才真的折行
+Writing `cmd\anim.csv` and `cmd\tremor.csv` as literals made C# read `\a` and `\t` as bell and
+tab — those log paths had carried an invisible character all along. `\\a` / `\\t` is the real
+backslash.
 
 ---
 
-## 附：视角拖动（游戏机制，非缺陷）
+## 44. Layout: buttons that stretch across the row, and how to watch a shape you cannot see
 
-**用户提示**：「鼠标上下移动到一定的区域可以移动视角」
+**Symptom**: every button in the panel filled the whole row — a two-character "Delete" was 540 px wide.
 
-游戏里 `GetMoveVector()` 只看**鼠标 Y 坐标**：
+**Cause**: `GUILayout.Button(text)` without a width expands to fill. Invisible with one language
+and few buttons; with eight tabs the panel looked wide and clumsy.
+
+**Fix**: two helpers, `Btn(zh)` and `BtnText(text)`, giving a width from
+`GUILayout.Button`'s `CalcSize` (never below 88 px). 46 buttons plus 8 dynamic-label ones converted.
+
+**Why fixing it was not enough**: the shape **does not show up in the code** — it looks exactly
+like a normal button, with no warning and no error, so the next person writes one and the problem
+is back. Hence rule (16): take each whole `GUILayout.Button(...)` call and fail it if the span
+contains no `GUILayout.Width(`, `Btn(` or `BtnText(`.
+
+It caught 9 on its first run — 8 real (the label was a variable or a ternary), 1 an example
+inside a comment. **Comments get scanned too**, so the rule blanks comment spans out first —
+otherwise `// GUILayout.Button(text)` becomes a false positive.
+
+### Two more found along the way: tab widths and wrapping
+
+- Tab labels were hard-coded at 62 px, so English `Fellatio` / `Presets` were clipped to
+  `Fellati…`. With `TabW()` (4 px padding instead of 14) all eight just fit inside 540 —
+  **ten more pixels and the last one falls off the panel**
+- `Hint()` had `wordWrap` on all along, but **a Label without a width constraint does not wrap**;
+  long English sentences were simply cut at the right edge. `GUILayout.ExpandWidth(true)` made
+  them actually wrap
+
+---
+
+## Appendix: view dragging (a game mechanic, not a defect)
+
+**User report**: "moving the mouse up and down into a certain region moves the view"
+
+In the game, `GetMoveVector()` looks only at the **mouse Y coordinate**:
 
 ```csharp
 private float edgeRatio = 0.05f;
@@ -2285,200 +2359,158 @@ private float edgeRatio = 0.05f;
 private float GetMoveVector()
 {
     float num = Input.mousePosition.y;
-    if (num >= screenHeight * (1f - edgeRatio))    // 顶部 5%
+    if (num >= screenHeight * (1f - edgeRatio))    // top 5%
         return -1f * (num - screenHeight * (1f - edgeRatio)) / (screenHeight * edgeRatio);
-    if (num <= screenHeight * edgeRatio)           // 底部 5%
+    if (num <= screenHeight * edgeRatio)           // bottom 5%
         return  1f * ((screenHeight * edgeRatio - num) / (screenHeight * edgeRatio));
     ...
 }
 ```
 
-1080 高的话：
+At a height of 1080:
 
 ```
-顶部拖动带：y 1026 ~ 1080
-底部拖动带：y    0 ~   54
+top drag band:    y 1026 ~ 1080
+bottom drag band: y    0 ~   54
 ```
 
-**这对判定区的影响**：`HitArea_Manman_By_Plugins` 的矩形如果落进这两条带，
-点它就会变成拖视角，而不是点击。
+**What this means for hit areas**: if the rectangle of `HitArea_Manman_By_Plugins` falls into either band, clicking it drags the view instead of clicking.
 
-**实测当时的判定区**：`742~1208 × 187~394` —— 离两条带都远，**不冲突**。
+**The hit area measured at the time**: `742~1208 x 187~394` — far from both bands, **no conflict**.
 
-**但 CY 滑块可以把它拉进去**。这不是缺陷，是机制约束 ——
-以后如果有人报告「Manman 区时灵时不灵」，先看它的 y 是不是进了 0~54 或 1026~1080。
+**But the CY slider can drag it in.** This is not a defect, it is a mechanic constraint — if someone later reports "the Manman zone works only sometimes", first check whether its y has entered 0~54 or 1026~1080.
 
-**教训**：写覆盖层判定时，要确认游戏自己没有占用同一块屏幕区域。
-这块区域不是从代码结构里看得出来的，得从「游戏怎么读鼠标」反推。
+**Lesson**: when writing an overlay's hit area, confirm the game itself is not using the same screen region. That region is not visible from the code structure; it has to be deduced from how the game reads the mouse.
 
 ---
 
-## 附：两棵树的同步规则（踩了很多次才理清）
+## Appendix: the two-tree sync rules (took several falls to sort out)
 
-**项目有两棵树**：
+**The project has two trees**:
 
 ```
-<仓库上级>\build\burger-shop          工作副本（编译在这里）
-<仓库上级>\build\burger-shop-publish  发布副本（git 仓库在这里）
+<parent>build/burger-shop           work copy (compilation happens here)
+<parent>build/burger-shop-publish   release copy (the git repository is here)
 ```
 
-**流向不是单向的，按文件类别分**：
+**The flow is not one-directional; it depends on the file category**:
 
-| 类别 | 权威在 | 方向 |
+| Category | Authority lives in | Direction |
 | --- | --- | --- |
-| 代码 / 工具（plugin、trainer、tools） | 工作副本 | 工作 → 发布 |
-| 文档（README、使用说明、KNOWN-ISSUES、CHANGELOG、ENGINEERING-NOTES） | 发布副本 | 发布 → 工作 |
-| dist 里的文档副本 | 发布副本 | 发布 → 工作（它是安装包的输入） |
-| installer/ | 工作副本 | 工作 → 发布 |
+| code / tools (plugin, trainer, tools) | work copy | work to release |
+| docs (README, manual, KNOWN-ISSUES, CHANGELOG, ENGINEERING-NOTES) | release copy | release to work |
+| doc copies inside dist | release copy | release to work (that is what the installer consumes) |
+| installer/ | work copy | work to release |
 
-**installer/ 曾经需要人工看 diff**：发布副本里是我清理时加的说明注释，
-工作副本里是后来的改动 —— 两边都有对方没有的东西。当"代码"同步过去过一次，
-结果把清理过的版本又弄脏了：本机路径和装饰符都回来了。
-后来两边收敛到只差版本号这类机械差异，就并进自动同步了。
+**installer/ used to need a manual diff**: the release copy carried explanatory comments added during a cleanup, the work copy carried later changes — each side had something the other did not. It was synced over once as "code", and the cleaned version got dirty again: local paths and decoration glyphs both came back. Later the two converged to mechanical differences like the version number, so it was folded into automatic sync.
 
-并入的代价是「再也没人看那份 diff」，而看 diff 这件事一旦交给人，
-就迟早会不做：v1.0.9 那轮发布副本里的 `make_payload.ps1` 还指着
-早就删掉的 `dist/使用说明.md`，在那边打包必然断。自动同步至少能让这种漂移
-在提交之前就浮出来。
+The price of folding it in is "nobody looks at that diff any more", and once diff-reading is handed to a human, it eventually does not happen: in the v1.0.9 round the release copy's `make_payload.ps1` still pointed at a `dist/使用说明.md` that had been deleted long before, so packaging on that side was bound to break. Automatic sync at least makes that kind of drift surface before the commit.
 
-**因为一直用「一个方向」处理「两类文件」，反复出事**：
+**Because "one direction" was applied to "two kinds of files", it kept going wrong**:
 
-- 拿发布副本覆盖工作副本 → 抽出来的方法丢了、拆分过的文档回退了
-- 拿工作副本覆盖发布副本 → 本机路径又混进说明书
+- release copy over work copy → extracted methods lost, split documents rolled back
+- work copy over release copy → local paths mixed into the manual again
 
-**规矩**：不要手工 `cp`。走 `tools/sync.sh`：
+**The rule**: do not `cp` by hand. Go through `tools/sync.sh`:
 
 ```
-bash tools/sync.sh check    只看差异
-bash tools/sync.sh code     工作 → 发布
-bash tools/sync.sh docs     发布 → 工作
-bash tools/sync.sh all      先 docs 再 code
+bash tools/sync.sh check    show differences only
+bash tools/sync.sh code     work to release
+bash tools/sync.sh docs     release to work
+bash tools/sync.sh all      docs first, then code
 ```
 
-脚本里有一道闸：同步代码前先检查**那个文件里有没有本机路径**，
-有就拒绝。因为发布副本里一个都不能有。
+The script has a gate: before syncing code it checks **whether that file contains a local path**, and refuses if it does. The release copy may contain none.
 
-**闸门自己踩过一个坑**：第一版写成 `LEAKPAT='E:\+DSH|...'`，
-而 ERE 里 `\+` 是「一个反斜杠重复一次以上」——
-但写进文件时少转义了一层，变成 `\+` = 字面加号，永远匹配不到。
-所以第一次跑它没拦住，污染物照样过去了。**加闸门之后一定要试一次它到底拦不拦得住。**
+**The gate itself has been bitten once**: the first version was written as `LEAKPAT='E:\+DSH|...'`, and in ERE `\+` means "a backslash repeated one or more times" — but one level of escaping was lost when writing the file, so it became `\+` = a literal plus sign, which never matches. The first run therefore caught nothing and the offending content went through. **After adding a gate, always test once that it actually blocks.**
 
-### 同步脚本自己跟自己比过一次（v1.0.9 重发的原因）
+### The sync script once compared itself with itself (why v1.0.9 was re-released)
 
-脚本原来这样推路径：
+The script originally derived its paths like this:
 
 ```
-WORK=<脚本所在目录>/..
+WORK=<directory the script sits in>/..
 PUB=$WORK/../burger-shop-publish
 ```
 
-按这个公式，脚本只应该在工作副本里跑。可它两棵树里各放一份 —— 在发布副本里跑时，
-`WORK` 算成发布副本自己，`PUB` 又算成「发布副本/../burger-shop-publish」，
-还是发布副本自己。**两个变量指向同一个目录**，于是每条 diff 都相等，
-脚本打印一片「同」、最后「共 0 个文件」，看起来像同步成功了。
+By that formula the script should only run in the work copy. But a copy sits in each tree — run from the release copy, `WORK` resolves to the release copy itself and `PUB` resolves to "release copy/../burger-shop-publish", which is the release copy again. **Both variables point at the same directory**, so every diff is equal, the script prints a wall of "same" and finally "0 files in total", looking like a successful sync.
 
-代价是整棵树停在上一版：源码五处版本号、`dist/` 三个产物、README 三个校验和，一起旧。
-而第 (10) 条问的是「README 与 dist 是否互洽」—— 两边一起旧，它只能报通过。
-用户从 release 下载 v1.0.9、照 README 核对，三条全不符。
+The cost was that the whole tree stayed on the previous version: five version numbers in the source, three artifacts in `dist/`, three checksums in the README, all stale together. And rule (10) asks whether "the README and dist agree with each other" — both stale together, it could only report pass. A user downloaded v1.0.9 from the release, checked against the README, and all three lines disagreed.
 
-现在按目录名认出自己在哪一棵树，算不出两棵不同的树就直接报错退出。
-另外补了第 (11)(12) 两条：源码里六处版本号必须一致，`dist/` 里三个产物必须带同一个版本。
+Now it recognises which tree it is in from the directory names, and exits with an error if it cannot compute two different trees. Two rules were added as well: (11) the six version numbers in the source must agree, (12) the three artifacts in `dist/` must carry the same version.
 
-**这类「两个变量都该不同却算成相同」的错，症状是整齐地全过。**
-全过的时候更该怀疑工具，而不是庆幸。
+**The symptom of "two variables that should differ compute to the same value" is everything passing neatly.** When everything passes, suspect the tool rather than feel relieved.
 
 ---
 
-## 附：仓库在 GitHub 那一侧的设置
+## Appendix: the repository settings on the GitHub side
 
-仓库里原来有一份 `GITHUB发布文案.md` 当草稿，Description、Topics、Release 正文、
-Social preview 都先写进去再粘到 GitHub。删掉了 —— 粘出去之后真值就在 GitHub 那边，
-仓库里这份只会漂移，而它的自述正好是「过期不代表发布内容过期」，于是没有人会去维护它。
+The repository used to hold a `GITHUB发布文案.md` as a draft — Description, Topics, Release body and Social preview were written there first and then pasted into GitHub. It was deleted: once pasted, the truth lives on the GitHub side, and this copy could only drift — and its own note literally said "being out of date does not mean the release content is out of date", so nobody would maintain it.
 
-删的时候五个部分全错了一圈：Description 还写着「六栏」（实际八栏）、
-Topics 少了五个还多一个、Release 文案停在 v1.0.0、「Website 留空也行」而它早就填好了、
-Social preview 那句里的文件名是空的。留着比没有更危险 —— 照着它填就会填错。
+By the time it was deleted, all five parts were wrong in some way: the Description still said "six tabs" (it is eight), Topics was missing five and had one extra, the Release copy was stuck at v1.0.0, "Website can be left empty" while it had long been filled in, and the file name in the Social preview line was blank. Keeping it was more dangerous than not having it — filling the form from it would fill it wrong.
 
-要改就直接改 GitHub 那一侧。下面这几行是当前值，改完记得顺手更新：
+To change something, change it on the GitHub side. The lines below are the current values; update them here as well when you change them:
 
-- **Description**：`汉堡店的四个夜晚 / Four Nights at the Burger Shop 数值修改器。18+ · BepInEx 插件，八栏面板（三种姿势各一份参数 + 预设 + 关于），自带安装程序与完整说明书。不含任何游戏素材。`
-- **Topics**：`bepinex-plugin` `csharp` `game-mod` `harmony` `live2d` `modding` `trainer` `unity-mod` `four-nights-at-the-burger-shop` `18-plus` `adult` `nsfw` `burger-shop` `four-nights`
-- **Website**：`https://space.bilibili.com/11247581`
-- **Social preview**：仓库根目录的 `social-preview.png`（1280×640），在 Settings 里上传
+- **Description**: `汉堡店的四个夜晚 / Four Nights at the Burger Shop 数值修改器。18+ · BepInEx 插件，八栏面板（三种姿势各一份参数 + 预设 + 关于），自带安装程序与完整说明书。不含任何游戏素材。`
+- **Topics**: `bepinex-plugin` `csharp` `game-mod` `harmony` `live2d` `modding` `trainer` `unity-mod` `four-nights-at-the-burger-shop` `18-plus` `adult` `nsfw` `burger-shop` `four-nights`
+- **Website**: `https://space.bilibili.com/11247581`
+- **Social preview**: `social-preview.png` in the repository root (1280×640), uploaded from Settings
 
 ---
 
-## S6. 面板布局整理与装饰符清理
+## S6. Panel layout tidy-up and decoration glyph removal
 
-**状态：分两部分，一部分已完成，一部分待做**
+**Status: two parts, one done, one outstanding**
 
-### 已完成
+### Done
 
-**排版 helper 与格式统一**
+**Layout helpers and a single format**
 
-新增 `Section` / `Sub` / `Hint` / `Rule` 四个 helper，间距与格式只有一处定义。
-原来是三四种标题写法加四个间距值（4/6/8/10），全靠手写，所以看起来乱。
+Four helpers were added — `Section` / `Sub` / `Hint` / `Rule` — so spacing and formatting have exactly one definition. There used to be three or four heading styles plus four spacing values (4/6/8/10), all written by hand, which is why it looked messy.
 
-转换：标题 7 处、分隔线 2 处、缩进说明 10 处。
-面板宽度从 452 加到 540，标签不再被挤到贴边。
+Converted: 7 headings, 2 separators, 10 indented notes. The panel width went from 452 to 540 so labels are no longer squeezed against the edge.
 
-**抽出一个 297 行方法里的坐姿专属块**
+**Pulling the seated-only block out of a 297-line method**
 
-`DrawDemandSection` 原来同时承担背榨与正骑两栏，正骑专属内容
-（束缚之吻、坐姿锁定、Manman 区，约 150 行）夹在共享逻辑里。
+`DrawDemandSection` covered both the Rear and the Riding tabs, with Riding-only content (binding kiss, seated lock, Manman zone, roughly 150 lines) wedged into shared logic.
 
-现在抽成 `DrawSitExtras()`，并把调用点**移到共享内容之后** ——
-这一步才是真正解决"读起来是跳的"的关键：原来它在叠层门槛之前就被调用。
+It is now `DrawSitExtras()`, and the call site was **moved after the shared content** — that step is what actually fixed "reading it feels like a jump": it used to be called before the stacking threshold.
 
-抽取时踩了一个坑：第一次用简单的花括号计数，而代码里有
-`string.Format("...{0}...")` 这种带花括号的字符串，计数就偏了。
-第二次改成**逐字符扫描并跳过字符串与注释**的匹配器，一次成功。
+One trap during the extraction: the first attempt counted braces naively, but the code contains strings like `string.Format("...{0}...")`, so the count drifted. The second attempt used a **character-by-character scan that skips strings and comments**, and it worked first time.
 
-**装饰符与判定符清理，并做成 CI 强制规则**
+**Decoration and judgement glyphs removed, and made a CI rule**
 
-对照 mega-index-map 的三条不变量（输出与词汇保持 ASCII），
-清掉了全部装饰符与判定符：圆圈对勾、叉号、警告三角、星号、根号、
-实心空心圆、方块、不等号、块元素、双线边框，以及圈码序号。
+Following mega-index-map's three invariants (output and vocabulary stay ASCII), every decoration and judgement glyph was removed: circled ticks, crosses, warning triangles, stars, radical signs, filled and hollow circles, squares, inequality signs, block elements, double-line borders, and circled numerals.
 
-共 273 处在用户可见字符串里、108 处在文档里、其余散在源码与安装程序。
+273 of them were in user-visible strings, 108 in documents, the rest scattered through the source and the installer.
 
-**允许保留的例外**（写进了检查规则的注释）：
-中文排版符号（破折号、间隔号）、数学符号（乘号、正负号、减号、Delta）、
-以及全部面向用户的中文文案。理由和 mega 给 README 开例外一样 ——
-这是中文面向的项目，全 ASCII 会把正常排版也砍掉。
+**The exceptions kept** (written into the rule's comment): Chinese typographic marks (em dash, middle dot), mathematical signs (multiplication, plus-minus, minus, Delta), and all user-facing Chinese copy. The reasoning matches mega's exception for the README — this is a Chinese-facing project, and all-ASCII would cut out normal typesetting as well.
 
-新增检查规则 (9)，每次推送强制。表用**码点构造**而不是字面量，
-因为清理过程中发生过一次"清理脚本把检查器自己的符号表也替换掉了"的事故。
+Rule (9) was added and is enforced on every push. The table is built from **code points** rather than literals, because during the cleanup a script once replaced the checker's own glyph table.
 
-### 待做
+### Outstanding
 
-**面板布局只整理了一半**。格式统一了、最大的一个块抽出来了，
-但 `DrawDemandSection` 仍有 146 行，而且各栏的小节顺序还没有系统梳理过。
+**The panel layout is only half tidied.** The format is unified and the largest block is out, but `DrawDemandSection` is still 146 lines, and the section order within each tab has not been systematically reviewed.
 
-**建议**：一次处理一个栏，改完立刻编译并截图对比，
-不要一次动多个栏 —— 这次的经验是布局改动很容易在括号层面出错。
+**Recommendation**: do one tab at a time, compile and compare screenshots immediately after each change, and do not touch several tabs at once — the experience here is that layout changes go wrong easily at the parenthesis level.
 
-### 顺带发现
+### Found along the way
 
-跑 xcheck 时，(16) 生命当前值未越上限 报了一次硬性矛盾：
-`currentHP=692.09 maxHP=691.08`，超出约 1.01。
+Running xcheck, (16) "current HP does not exceed the cap" reported one hard contradiction: `currentHP=692.09 maxHP=691.08`, about 1.01 over.
 
-这条不是本次改动引起的，但不变量自己写着成因：
-锁上限每帧把上限钉回基线，而榨取的上限削减与它互相拉扯。
+This was not caused by the change in hand, but the invariant states its own cause: the cap lock pins the cap back to the baseline every frame, and the drain's cap reduction pulls against it.
 
-**但本次新加的平滑（EaseToward）会让这个现象持续更久** ——
-原来是一次拉到位，现在是按速率逼近，所以当前值留在上限之上的时间变长。
+**But the smoothing added here (EaseToward) makes the phenomenon last longer** — it used to snap into place, now it approaches at a rate, so the current value stays above the cap for longer.
 
-1.01 点在 691 上是 0.15%，不影响功能，但可以让这条不变量更准：
-要么把容差从 0.5 放宽，要么给上限也加同样的平滑。**留待决定。**
+1.01 points on 691 is 0.15%, which does not affect function, but the invariant could be made more accurate: either relax the tolerance from 0.5, or apply the same smoothing to the cap. **Left to decide.**
 
 ---
 
-## S7. 汉堡制作倒计时：已实现，行为未实测
+## S7. Burger countdown: implemented, behaviour not measured
 
-**状态：待实测**
+**Status: awaiting a real test**
 
-功能已加好，补丁确认挂载：
+The feature is in and the patch is confirmed mounted:
 
 ```
 倒计时补丁已挂载（MenuControl.Timing 前缀：每单时长 / 速度）
@@ -2488,35 +2520,30 @@ set BurgerTimeAll 25   已设置并落盘
 set BurgerTimeSpeed 40 已设置并落盘
 ```
 
-**但没有真的看过倒计时变慢或冻结。**
+**But the countdown has never actually been seen slowing down or freezing.**
 
-原因：要验证它，游戏必须处在「下单之后、做汉堡途中」那个状态。
-实施时游戏停在背榨的战斗状态里，进不去那个场合。
+Why: verifying it requires the game to be in the state "after an order was placed, while the burger is being made". At implementation time the game was sitting in the Rear combat state and could not enter that situation.
 
-**验证方法**（下次进游戏时）：
-1. 面板调到「宽松（30 秒 / 半速）」
-2. 正常玩到下单，看角上的秒数是不是从 30 开始、而且走得慢
-3. 调到「冻结」，确认秒数不再下降、也不会判超时
+**How to verify** (next time in the game):
+1. Set the panel to "loose (30 seconds / half speed)"
+2. Play normally until an order is placed, and see whether the seconds in the corner start at 30 and tick slowly
+3. Switch to "frozen" and confirm the seconds stop decreasing and no timeout is judged
 
-**注意一处理论风险**：`BurgerTimeAll` 是在每帧的前缀里写 `timeAll` 的，
-而游戏的 `BuildMenu` 里是 `if (resetTime) timeLeft = timeAll;`。
-如果某次下单 `resetTime` 为假，那一单就不会用新时长。
-这一点没法从静态代码确认，要实测。
+**One theoretical risk to watch**: `BurgerTimeAll` writes `timeAll` in a per-frame prefix, while the game's `BuildMenu` does `if (resetTime) timeLeft = timeAll;`. If `resetTime` is false for some order, that order will not use the new duration. This cannot be settled from static code; it needs a real test.
 
 ---
 
-## S8. 屏幕中间的模式名一律显示「索取」（已修）
+## S8. The mode name in the middle of the screen always said "Demand" (fixed)
 
-**状态：已修复并实测**
+**Status: fixed and verified in play**
 
-### 症状
+### Symptom
 
-屏幕中间的横幅、以及命令回执，不管当前是哪一栏，一律说「索取模式」。
-口交应该显示吸取、正骑应该显示榨取。
+The banner in the middle of the screen, and the command replies, all said "索取模式" regardless of which tab was active. Fellatio should show Absorb, Riding should show Drain.
 
-### 根因
+### Root cause
 
-`DemandCmd()` 里有四处**写死**的「索取模式」：
+`DemandCmd()` had four **hard-coded** "索取模式" strings:
 
 ```
 return "索取模式 = 开";
@@ -2525,26 +2552,22 @@ ShowChainBanner("索取模式", 3f);
 return "已手动进入索取模式，持续 " ...
 ```
 
-`ModeWord()` 本身是对的（按姿势返回 吸取/榨取/索取），
-但这四处根本没调它。是个纯粹的遗漏。
+`ModeWord()` itself was correct (it returns 吸取/榨取/索取 by pose), but these four never called it. A plain omission.
 
-### 修法
+### Fix
 
-新增 `ModeWordForBanner()`，并且**不用当前姿势，而用 `_demandModePose`**：
+Added `ModeWordForBanner()`, and it uses **`_demandModePose` rather than the current pose**:
 
 ```csharp
 int p = _demandModePose >= 0 ? _demandModePose : PoseIdx();
 return ModeWordAt(p);
 ```
 
-理由：模式可能**跨姿势持续**（`_demandModePose` 记的是进入时的姿势），
-而 `ModeWord()` 用当前姿势 —— 模式中途换了姿势，横幅就会显示成另一个词。
+The reason: a mode can **persist across poses** (`_demandModePose` records the pose at entry), while `ModeWord()` uses the current pose — if the pose changes mid-mode, the banner would show a different word. All four call sites were switched to it.
 
-四处全部改成调它。
+### Measured
 
-### 实测
-
-游戏当时正好在口交姿势：
+The game happened to be in the Fellatio pose:
 
 ```
 [Fella·none] 吸取模式中 1 段 / 共剩余 73.6s
@@ -2552,158 +2575,138 @@ return ModeWordAt(p);
 吸取模式 = 关
 ```
 
-修之前这三行都会是「索取」。
+Before the fix all three lines said 「索取」.
 
-### 顺带修的
+### Fixed along the way
 
-`defaults` 命令的文案里也写死了「索取模式」，而那三栏共用一份，改成「模式参数（三栏共用一份）」。
+The `defaults` command's text also hard-coded 「索取模式」, and that text is shared by the three tabs; changed to 「模式参数（三栏共用一份）」.
 
-### 核查过但没问题的
+### Checked and found fine
 
-- `DrawDemandSection(bool sitSide)` 只被背榨和正骑调用，口交不走它 ——
-  所以里面 `sitSide ? "榨取" : "索取"` 的两分支是对的，不是缺口交
-- 连榨上限那两个标签（骑乘位·索取模式 / 坐姿·榨取模式）写死了也没错，
-  它们本来就各指一栏
+- `DrawDemandSection(bool sitSide)` is called only by Rear and Riding; Fellatio does not go through it — so its `sitSide ? "榨取" : "索取"` two branches are correct, not a missing case
+- The two chain-limit labels (riding · Demand mode / seated · Drain mode) are hard-coded too and that is fine, since each refers to one tab
 
 ---
 
-## S9. Manman 判定区可能整块跑到屏幕外（已解决）
+## S9. The Manman hit area could move entirely off-screen (resolved)
 
-**状态：已解决 —— 用户确认已无问题（两道闸保留，作为兜底）**
+**Status: resolved — the user confirmed it is fine now (both gates kept as a fallback)**
 
-### 症状
+### Symptom
 
-xcheck 第 (23) 条曾报出：
+xcheck rule (23) once reported:
 
 ```
 矩形 754~1194 x -114~82
 ```
 
-x 正常，但 **y 是负的** —— 整块判定区在屏幕外，一个像素都点不到。
-而这个区存在的唯一意义就是被点。
+x was normal but **y was negative** — the whole hit area was off-screen, not one pixel of it clickable. And the only reason that zone exists is to be clicked.
 
-### 为什么自检没拦住
+### Why the self-test did not catch it
 
-(23) 只检查「矩形可取」—— 它确实取得出来，只是位置是废的。
-**"能取到"和"能用"是两件事**，不变量只覆盖了前者。
+(23) only checks that "the rectangle can be obtained" — it could indeed be obtained, it was just useless in position. **"Can be obtained" and "can be used" are two different things**, and the invariant covered only the former.
 
-### 根因（推测）
+### Root cause (inferred)
 
-判定区由模型包围盒推出：
+The hit area is derived from the model's bounding box:
 
 ```csharp
-float cy = my0 + SitPussyAreaCY.Value * mh;   // CY 默认 0.62
+float cy = my0 + SitPussyAreaCY.Value * mh;   // CY defaults to 0.62
 float hh = SitPussyAreaH.Value * mh * 0.5f;
 y0 = cy - hh;  y1 = cy + hh;
 ```
 
-模型不在场时 `ModelRectCached` 可能给出 0 或负的宽高，
-这样推出来的矩形自然是垃圾值。面板里那句
-「拿不到模型包围盒（人物不在场？）」就是这个状态的提示。
+When the model is absent, `ModelRectCached` may return 0 or a negative width/height, so the derived rectangle is naturally garbage. The panel line "拿不到模型包围盒（人物不在场？）" is the hint for exactly this state.
 
-### 修法
+### Fix
 
-加两道闸：
+Two gates:
 
-1. **退化检测**：`mw < 1f || mh < 1f` 直接判不可用
-2. **与屏幕求交**：求出屏幕内的部分，不足 4px 判不可用；
-   有交集就返回交集（部分在屏幕内仍然可点）
+1. **degenerate detection**: `mw < 1f || mh < 1f` is immediately unusable
+2. **intersect with the screen**: compute the on-screen part; less than 4px is unusable; if there is an intersection, return it (partly on-screen is still clickable)
 
-用求交而不是直接判否，是因为判定区部分出界时仍然可点，
-只有完全没交集才该判"用不了"。
+Intersecting rather than rejecting outright because a partly off-screen hit area is still clickable; only a complete absence of intersection should be judged "unusable".
 
-### 未验证的部分
+### What was not verified
 
-**目标情形没复现出来。** 部署后游戏停在非坐姿状态，
-(23) 报的是「不需要（不在坐姿或未启用）」。
+**The target situation was not reproduced.** After deployment the game stayed out of the seated pose, and (23) reported "not needed (not seated or not enabled)".
 
-要复现得让角色进入坐姿、且模型包围盒拿不到值。
-**下次在坐姿里跑一次 xcheck，看 (23) 是否还报负数。**
+Reproducing it needs the character in the seated pose with the model bounding box unavailable. **Next time, run xcheck while seated and see whether (23) still reports a negative number.**
 
 ---
 
 ---
 
-## S10. 告警分级配色 + (16) 的幅度其实会很大
+## S10. Severity colouring, and (16)'s magnitude is actually large
 
-**状态：分级已实施 / (16) 的定性需要重新判断**
+**Status: the grading is implemented / (16)'s classification needs rethinking**
 
-### 分级配色（已实施）
+### Grading (implemented)
 
-提示与告警按五级走，从小到大：
-
-```
-白   无问题
-蓝   提示（最低）
-绿   注意
-黄   异常
-红   严重（最高）
-```
-
-实现：`Sev` 枚举 + `SevColor()` + `SetHint(text, sev)`，
-接到面板底部那行状态文字的绘制上（单独一个样式，不复用 `Hint()` 的 ——
-复用会把所有 Hint 的颜色一起改掉）。
-
-`CrossCheck()` 结束时按结果自己定级：
+Hints and warnings run through five levels, smallest to largest:
 
 ```
-有硬性矛盾    → 红
-1~2 条提醒    → 黄
-3~5 条提醒    → 绿
-6 条以上提醒  → 蓝（提醒太多说明该整理检查项了）
-全过          → 白
+white   no problem
+blue    hint (lowest)
+green   note
+yellow  anomaly
+red     severe (highest)
 ```
 
-文本输出里也带上标签（`[黄·异常]`），这样落盘的 txt 里也看得出等级。
+Implementation: a `Sev` enum + `SevColor()` + `SetHint(text, sev)`, wired into the status line at the bottom of the panel (a separate style, not reusing `Hint()`'s — reusing it would recolor every hint at once).
 
-### 顺带修掉两个自己造的 bug
+`CrossCheck()` grades itself by result when it finishes:
 
-**(1) 格式串被写成了字面量**
+```
+hard contradiction   → red
+1 to 2 notes         → yellow
+3 to 5 notes         → green
+6 or more notes      → blue (too many notes means the checks need tidying)
+all pass             → white
+```
 
-`(16)` 的详情原来显示成：
+The text output carries the tag too (`[黄·异常]`), so the txt written to disk shows the level as well.
+
+### Two self-inflicted bugs fixed along the way
+
+**(1) A format string became a literal**
+
+(16)'s detail used to display as:
 
 ```
 currentHP={0:0.##} maxHP={1:0.##}{2}
 ```
 
-原因：写 `string.Format` 时把花括号转义成了 `{{0}}`，
-但那段代码不是 f-string，`{{` 原样进了 C# —— 于是它成了字面量。
+Cause: while writing `string.Format` the braces were escaped as `{{0}}`, but that code was not an f-string, so `{{` went into C# as-is — and it became a literal.
 
-**改法：干脆不用 `string.Format`，改成字符串拼接。** 没有转义层就不会再错。
+**The fix: drop `string.Format` and use plain concatenation.** Without an escaping layer it cannot go wrong again.
 
-**(2) `_hintStyle` 重名**
+**(2) `_hintStyle` name collision**
 
-分级配色本来想复用一个样式字段，而那个名字已经被 `Hint()` 用了。
-更关键的是：**复用会把所有 `Hint()` 的颜色一起改掉**。
-改成单独的 `_statusStyle`。
+The grading wanted to reuse a style field, and that name was already taken by `Hint()`. More importantly: **reusing it would recolor every `Hint()`**. Changed to a separate `_statusStyle`.
 
-### (16) 的幅度需要重新判断
+### (16)'s magnitude needs a fresh judgement
 
-之前我看到的是超出 **0.91**，据此认为"0.2%，可以忽略"，按用户的意思降级成了提醒。
+What was seen earlier was **0.91** over, and on that basis it was called "0.2%, ignorable" and downgraded to a note at the user's request.
 
-**但分级做好之后再跑，看到的是：**
+**But after the grading was in place, another run showed:**
 
 ```
-currentHP=394.09 maxHP=328.41 ← 超出 65.68（占上限 20.0%）
+currentHP=394.09 maxHP=328.41 ← 65.68 over (20.0% of the cap)
 ```
 
-**20%，不是 0.2%。** 差了 100 倍。
+**20%, not 0.2%.** A factor of 100.
 
-所以那个"已知会报、不用管"的定性**可能是错的** ——
-上限被削到 328 而当前值停在 394，血条会明显超格。
+So that "known to report, ignore it" classification **may be wrong** — with the cap cut to 328 while the current value sits at 394, the health bar visibly overflows.
 
-**超出量是变化的**（0.9 ~ 65 都见过），说明它取决于上限削减的速率与平滑的博弈，
-不是一个固定的小偏移。
+**The overrun varies** (0.9 to 65 have all been seen), which means it depends on the race between the cap reduction rate and the smoothing, not a fixed small offset.
 
-**待用户重新判断**：如果 20% 那种情况常见，这条就不该按"无害"处理，
-而应该去修根因（每帧把 `curHp` 钳到 `maxHp`，让这个状态根本不存在）。
+**Needs the user's fresh judgement**: if the 20% case is common, this should not be treated as "harmless" but fixed at the root (clamp `curHp` to `maxHp` every frame so the state cannot exist at all).
 
-### 另一处观察：Manman 区贴到了屏幕下缘
+### Another observation: the Manman zone hugged the bottom edge of the screen
 
-这一跑的矩形是 `754~1194 x 0~86`，**y 从 0 开始**。
+The rectangle in this run was `754~1194 x 0~86`, **y starting at 0**.
 
-屏幕下方 0~54 是游戏的**视角拖动带**（`edgeRatio = 0.05`），
-也就是说这个矩形有一半压在拖动带上 —— 点它的下半部分会变成拖视角。
+The bottom 0~54 of the screen is the game's **view-drag band** (`edgeRatio = 0.05`), so half of that rectangle lay on the drag band — clicking its lower half drags the view instead.
 
-这不一定是缺陷（人物位置不同，矩形就会不同），但值得记：
-**判定区贴边时要留意和拖动带的重叠**。
+This is not necessarily a defect (a different character position gives a different rectangle), but it is worth recording: **when a hit area hugs an edge, watch for overlap with the drag band**.

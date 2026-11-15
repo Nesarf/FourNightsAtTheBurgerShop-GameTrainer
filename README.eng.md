@@ -12,7 +12,7 @@
 
 ---
 
-[**中文**](README.md) | **English**
+[**中文**](README.chs.md) | **English**
 
 ---
 
@@ -384,9 +384,9 @@ The script needs `tools/gamepath.txt` pointing at your game folder (**that file 
 | Looking for | Where to go |
 | --- | --- |
 | how to use it, what each parameter is | [`MANUAL.md`](MANUAL.md) (Chinese original: [`使用说明.md`](使用说明.md)) |
-| **what is still unfixed right now** | [`KNOWN-ISSUES.en.md`](KNOWN-ISSUES.en.md) |
-| **why a feature looks the way it does** (reverse-engineering findings, pitfalls) | [`ENGINEERING-NOTES.en.md`](ENGINEERING-NOTES.en.md) (Chinese original: [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md)) |
-| what changed in each version | [`CHANGELOG.en.md`](CHANGELOG.en.md) |
+| **what is still unfixed right now** | [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md) |
+| **why a feature looks the way it does** (reverse-engineering findings, pitfalls) | [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) (Chinese original: [`工程笔记.md`](工程笔记.md)) |
+| what changed in each version | [`CHANGELOG.md`](CHANGELOG.md) |
 
 `ENGINEERING-NOTES.md` holds **44** historical entries + **5** appendices + **5** S-series entries,
 each written as **symptom / root cause / fix / lesson**. It opens with a **table of contents**,

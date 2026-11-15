@@ -1,171 +1,189 @@
-# 已知问题（当前未解决）
+# Known issues (still open)
 
-> **这里只放"现在还没解决"的问题。**
-> 每条的历史（症状 / 根因 / 修法 / 教训）在
-> [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) 里，按条目号对应；
-> 版本级变更看 [`CHANGELOG.md`](CHANGELOG.md)。
+> **Only unsolved problems live here.**
+> Each one's history (symptom / root cause / fix / lesson) is in
+> [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) under the same entry number;
+> version-level changes are in [`CHANGELOG.md`](CHANGELOG.md).
 
-**维护规矩**：一条问题修好之后，**从这里删掉**（正文进工程笔记），
-只留一行摘要进 `CHANGELOG.md`。
+**Maintenance rule**: once an issue is fixed, **delete it from here** (the write-up
+moves into the engineering notes) and leave only a one-line summary in `CHANGELOG.md`.
 
-> 曾经因为从工作副本反向覆盖，这份文件退回成 47 条全量版**两次** ——
-> 新增内容请只改**发布副本**，同步走 `tools/sync.sh docs`。
+> This file was once rolled back to the old 47-entry full list **twice**, because the
+> working copy was copied over the release copy. New content goes into the
+> **release copy** only; sync with `tools/sync.sh docs`.
 
 ---
 
-## 一览
+## At a glance
 
-| # | 问题 | 状态 |
+| # | Issue | Status |
 | --- | --- | --- |
-| 3 | `EffectiveSpeed` 的语义未确认 | 待用户手感判断 |
-| 5 | 零实战验证的功能 | 待反馈 —— 功能已可用，但使用量不够，需要更多用户反馈才能进一步优化 |
-| 16 | 坐姿仍然顶掉索取模式（第 15 条修完还不行） | 已加状态级兜底，待实战验证 |
+| 3 | The semantics of `EffectiveSpeed` are unconfirmed | Waiting on hands-on judgement |
+| 5 | Features with zero real-play verification | Waiting on feedback — they work, but there is not enough use yet to tune them |
+| 16 | The seated pose still displaces demand mode (fix #15 was not enough) | A state-level fallback is in place; waiting on real-play verification |
 
-编号与 [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) 一致。
+The numbers match [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md).
 
-> **第 3 与第 16 条都带一条声明**：这两个问题可能**不是固定触发**的，
-> 难以稳定复现；**也要考虑游戏自身源码质量不高**这一可能 ——
-> 现象可能是游戏在特定状态下的产物，插件只是恰好经过。
-> 拿到稳定复现步骤之前，不建议为它们改插件逻辑。
-
----
-## 3. `EffectiveSpeed` 的语义未确认
-
-**状态：待用户手感判断**
-
-> **声明：本问题可能不是固定触发的。**
-> 也就是说它难以稳定复现，排查成本高于一般缺陷 ——
-> **也要考虑一种可能：游戏本身的源码质量不高**，
-> 这个现象是游戏自身在特定状态下产生的，而插件只是恰好经过。
-> 在拿到稳定的复现步骤之前，不建议为它改插件的逻辑。
-
-绝顶动画倍速走的是 Animancer 的 `EffectiveSpeed`。设 800% 时实测读到 **3.38**，
-不是 8。
-
-可能是这个属性的正常语义（按片段长度归一化），也可能被别处限了。
-**只能靠手感判断**：倍速拉到 800% 够快就不用管；偏慢则改用 `Speed`（更直接），或两层都设。
+> **Entries 3 and 16 both carry a disclaimer**: neither problem may trigger
+> deterministically, so they are hard to reproduce reliably; **the game's own
+> source quality is also a possibility worth weighing** — the symptom may be
+> something the game does in a particular state, with the plugin merely passing
+> through. Until there are stable reproduction steps, changing the plugin logic
+> for them is not advisable.
 
 ---
+## 3. The semantics of `EffectiveSpeed` are unconfirmed
 
-## 5. 零实战验证的功能
+**Status: waiting on hands-on judgement**
 
-**状态：待反馈 —— 功能已可用，但使用量不够，需要更多用户反馈才能进一步优化**
+> **Disclaimer: this issue may not trigger deterministically.**
+> In other words it is hard to reproduce reliably and costs more to investigate than
+> an ordinary defect — **and one possibility must be kept in mind: the game's own
+> source quality is not high**, so the symptom may be something the game produces in
+> a particular state, with the plugin merely passing through. Until stable
+> reproduction steps exist, changing the plugin logic for it is not advisable.
 
-> 这一条不是「还没做」，而是「做了但样本太少」。哪些数值合适、哪些手感不对，
-> 要有人在真实游玩里用出来才算数。用的时候觉得哪里别扭，直接反馈。
+The climax animation speed goes through Animancer's `EffectiveSpeed`. Setting 800%
+was measured as **3.38**, not 8.
 
-以下路径**挂了补丁但日志里一次都没出现过**（截至最后一次盘点）：
+That may be the property's normal semantics (normalised by clip length), or something
+else may be clamping it. **It can only be settled by feel**: if 800% is fast enough,
+leave it; if it feels slow, use `Speed` instead (more direct), or set both layers.
 
-| 功能 | 日志标签 |
+---
+
+## 5. Features with zero real-play verification
+
+**Status: waiting on feedback — they work, but there is not enough use yet to tune them**
+
+> This is not "not built yet", it is "built, but the sample is too small". Which values
+> are right and which feel wrong only becomes clear when someone uses them in real
+> play. If something feels off while using it, report it.
+
+The following paths **have patches hooked but have never appeared in the log**
+(as of the last census):
+
+| Feature | Log tag |
 | --- | --- |
-| Sit「榨取模式」整条链路 | `[榨取]` |
-| 「回归累积」+ 坐姿挂起 | `[回归]` |
-| 坐姿 / 口交的射精吸精累积索取欲 | `坐姿吸精` / `坐姿射精` / `口交吸精` / `口交射精` |
-| 余韵的新闭环（累积 → 稳定后发动 → 清空前不换姿势） | `[余韵]` |
+| The whole seated "Drain mode" chain | `[榨取]` |
+| "Return accumulation" + holding the seated pose | `[回归]` |
+| Demand urge accumulated from seated / fellatio ejaculation and absorb | `坐姿吸精` / `坐姿射精` / `口交吸精` / `口交射精` |
+| The new afterglow loop (accumulate → fire once settled → hold the pose until cleared) | `[余韵]` |
 
-**`_sitDeferred` 那条最可疑** —— 我只在 `Show_CenterGirlSit` 上加了前缀拦截，
-游戏若从别的路径进坐姿就漏了。
+**`_sitDeferred` is the most suspicious one** — only `Show_CenterGirlSit` has a prefix
+interceptor; if the game enters the seated pose by another path, it slips through.
 
-###  用日志判断"有没有跑过"时有个陷阱
+### There is a trap when using the log to decide "has this ever run"
 
-**索取欲的来源日志（`骑乘位吸精` / `坐姿射精` / `口交吸精` 之类）只在
-`urgeaudit` 开着的时候才打**（`AuditUrge` 开头就是 `if (_urgeAuditLeft <= 0) return;`）。
-审计条数用完后再看日志，会误判成"这条路径没跑过"。
+**The demand-urge source log lines (`骑乘位吸精` / `坐姿射精` / `口交吸精` and similar)
+are only written while `urgeaudit` is on** (`AuditUrge` starts with
+`if (_urgeAuditLeft <= 0) return;`). Looking at the log after the audit budget is used
+up will make it look as though "this path never ran".
 
-实测踩到过：`[榨取]`（Sit 射精不减速）已出现 1 次，说明 `Event_SitSyaseiStart`
-确实触发了、它的后缀也跑了，而同一个后缀里的 `NoteUrgeEvent("坐姿射精", ...)`
-却因为审计关了而没留下任何痕迹。
+This has actually happened: `[榨取]` (seated ejaculation does not slow down) appeared
+once, which proves `Event_SitSyaseiStart` fired and its postfix ran — yet
+`NoteUrgeEvent("坐姿射精", ...)` in the same postfix left no trace at all, because the
+audit had already switched off.
 
-**要验证这些来源，先 `urgeaudit 200` 再玩。**
+**To verify these sources, run `urgeaudit 200` before playing.**
 
-### 2026-10-07 复盘点
+### 2026-10-07 census
 
-| 功能 | 日志标签 | 状态 |
+| Feature | Log tag | Status |
 | --- | --- | --- |
-| Sit 榨取模式（Sit 射精不减速） | `[榨取]` | **已跑通 1 次**  |
-| 余韵闭环 | `[余韵]` | 已跑通 5 次  |
-| 回归累积 + 坐姿挂起 | `[回归]` | **仍为 0** |
-| 坐姿 / 口交的射精吸精累积 | — | 需开 `urgeaudit` 才能判定 |
+| Seated drain mode (seated ejaculation does not slow down) | `[榨取]` | **ran once** |
+| Afterglow loop | `[余韵]` | ran 5 times |
+| Return accumulation + holding the seated pose | `[回归]` | **still 0** |
+| Seated / fellatio ejaculation and absorb accumulation | — | needs `urgeaudit` to judge |
 
 ---
 
-## 16. 坐姿仍然顶掉索取模式（第 15 条修完还不行）
+## 16. The seated pose still displaces demand mode (fix #15 was not enough)
 
-**状态：已加状态级兜底，待实战验证**
+**Status: state-level fallback added, waiting on real-play verification**
 
-> **声明：本问题可能不是固定触发的。**
-> 也就是说它难以稳定复现，排查成本高于一般缺陷 ——
-> **也要考虑一种可能：游戏本身的源码质量不高**，
-> 这个现象是游戏自身在特定状态下产生的，而插件只是恰好经过。
-> 在拿到稳定的复现步骤之前，不建议为它改插件的逻辑。
+> **Disclaimer: this issue may not trigger deterministically.**
+> In other words it is hard to reproduce reliably and costs more to investigate than
+> an ordinary defect — **and one possibility must be kept in mind: the game's own
+> source quality is not high**, so the symptom may be something the game produces in
+> a particular state, with the plugin merely passing through. Until stable
+> reproduction steps exist, changing the plugin logic for it is not advisable.
 
-**症状**：第 15 条修完（入口处 `if (_demandMode) return false;`）之后，**坐姿依然能顶上来**。
+**Symptom**: after fix #15 (an `if (_demandMode) return false;` at the entry point),
+**the seated pose can still take over**.
 
-**为什么入口拦不住 —— 切状态的是延迟协程**
+**Why the entry point cannot stop it — the state change is a delayed coroutine**
 
 ```csharp
 private IEnumerator _CenterGirl(int i)
 {
-    yield return new WaitForSeconds(effect.GlitchEffect(0.1f, 0.01f, 0.1f));   // ← 先等 0.1 秒
+    yield return new WaitForSeconds(effect.GlitchEffect(0.1f, 0.01f, 0.1f));   // ← waits 0.1 s first
     model.CenterGirlParts(i);
     switch (i)
     {
     case 0: centerGirlState = CenterGirlState.Fella; break;
-    case 1: centerGirlState = CenterGirlState.Sit;   break;   // ← 之后才真正切
+    case 1: centerGirlState = CenterGirlState.Sit;   break;   // ← only now does it switch
     case 2: centerGirlState = CenterGirlState.Osiri; break;
     }
 }
 ```
 
-`Show_CenterGirlSit()` 里是 `StartCoroutine(_CenterGirl(1))`。
-**如果它在我拦下之前就已经被调用过、协程已经排队，那 0.1 秒后它照样把状态切成 Sit** ——
-拦入口（前缀）挡不住已经排进队列的协程。
+`Show_CenterGirlSit()` does `StartCoroutine(_CenterGirl(1))`. **If it was already
+called and the coroutine already queued before we intercepted, then 0.1 s later it
+switches the state to Sit anyway** — a prefix on the entry point cannot stop a
+coroutine that is already queued.
 
-**修法：状态级兜底**
+**The fix: a state-level fallback**
 
-在 `TickDemand()` 里每帧检查：
+In `TickDemand()`, check every frame:
 
 ```csharp
 if (_demandMode && centerGirlState == "Sit")
 {
     Log.LogInfo("…模式进行中，状态却被切成坐姿 → 夺回骑乘位");
-    ShowCenterGirlOsiri();      // 夺回来
+    ShowCenterGirlOsiri();      // take it back
 }
 ```
 
-**为什么这里做"纠正"是恰当的**：
-项目有条规矩是"不要自动纠正，除非异常能与正常瞬态区分开"。
-这里 **`_demandMode && state == Sit` 是绝不合法的组合** —— 可以明确判定，
-不是"猜着纠正"，所以做纠正动作是对的。
+**Why "correcting" is appropriate here**: the project has a rule that says "do not
+auto-correct unless the abnormal state can be told apart from a normal transient".
+Here **`_demandMode && state == Sit` is a combination that can never be legal** — it
+can be judged with certainty rather than guessed at, so acting on it is right.
 
-**调用路径汇总**（这三处都走 `Show_CenterGirlSit`，入口前缀能拦）：
+**Call paths** (all three go through `Show_CenterGirlSit`, so the entry prefix catches
+them):
 
-| 行 | 来源 |
+| Line | Source |
 | --- | --- |
-| 2201 | 剧情脚本 |
-| 2245 | 开发者快捷键 **Z** |
-| 10714 | 坐姿出现计时（`SitGirlStartTimer` 到点后的 10% 掷骰） |
+| 2201 | story script |
+| 2245 | developer hotkey **Z** |
+| 10714 | seated-appearance timer (the 10% roll after `SitGirlStartTimer` expires) |
 
-**但真正生效的是那个延迟协程**，所以入口 + 状态两层都要有。
+**But what actually takes effect is that delayed coroutine**, so both layers are
+needed: the entry point and the state check.
 
-**验证说明**：本条的兜底**尚未在真实场景验证** —— 需要玩到坐姿出现时刻。
-日志里若出现「夺回骑乘位」即说明生效。
+**Verification note**: this fallback **has not been verified in a real scenario** —
+you have to play until the seated pose appears. If "夺回骑乘位" appears in the log,
+the fallback worked.
 
 ---
 
-## 统计
+## Counts
 
-| | 条数 |
+| | Entries |
 | --- | --- |
-| **未解决（本文档）** | **3** |
-| 已解决（正文在工程笔记） | 见 `ENGINEERING-NOTES.md` 的目录 |
+| **Open (this document)** | **3** |
+| Closed (write-ups in the engineering notes) | see the table of contents of `ENGINEERING-NOTES.md` |
 
-剩下的这 3 条**都需要真实使用才能推进**，代码侧无法自证：
+All 3 remaining issues **need real use to move forward**; the code alone cannot settle
+them:
 
-- **3** `EffectiveSpeed` 的语义未确认 —— 待用户手感判断
-- **5** 零实战验证的功能 —— 待反馈 —— 功能已可用，但使用量不够，需要更多用户反馈才能进一步优化
-- **16** 坐姿仍然顶掉索取模式（第 15 条修完还不行） —— 已加状态级兜底，待实战验证
+- **3** `EffectiveSpeed` semantics unconfirmed — waiting on hands-on judgement
+- **5** Features with zero real-play verification — waiting on feedback — they work, but there is not enough use yet to tune them
+- **16** The seated pose still displaces demand mode (fix #15 was not enough) — state-level fallback added, waiting on real-play verification
 
-> `7`（Sit 绝顶值异常）、`S9`（Manman 判定区出屏）已由用户实测确认无问题；
-> `14`（两条调用警告）已定位根因并修复 —— 三条均于 2026-10-13 从本文档移除。
-> `14` 的偶发性意味着「跑一轮没复现」不能算验证通过，正文里写明了这一点。
+> `7` (seated ecstasy anomaly) and `S9` (Manman hit area off-screen) were confirmed
+> fine by the user in real play; `14` (two call warnings) had its root cause found and
+> fixed — all three were removed from this document on 2026-10-13.
+> The intermittent nature of `14` means "one run without a repro" does not count as
+> verification, which the write-up states explicitly.
