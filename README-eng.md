@@ -362,10 +362,10 @@ The plugin provides a **file-based command channel**, so a script can drive the 
 Just write `BepInEx/l2d_dump/cmd/in.txt`:
 
 ```bash
-bash tools/gcmd.sh states          # 状态机快照
-bash tools/gcmd.sh manman          # HitArea_Manman 诊断
-bash tools/gcmd.sh xcheck          # 逻辑交叉检查（23 条不变量）
-bash tools/gcmd.sh demand status   # 索取/榨取模式状态
+bash tools/gcmd.sh states          # state-machine snapshot
+bash tools/gcmd.sh manman          # HitArea_Manman diagnostics
+bash tools/gcmd.sh xcheck          # logic cross-check (23 invariants)
+bash tools/gcmd.sh demand status   # demand / drain mode status
 ```
 
 Read in English, those four comments are: state machine snapshot · HitArea_Manman diagnostics ·
@@ -468,10 +468,10 @@ voluntarily, and that it changes this one game only.
 The signature proves "this was signed by S.M.Y.T."; the checksum proves "what you got is the same thing that was published".
 
 ```powershell
-# 1. 下载 exe 和 SHA256SUMS.txt 到同一个目录
-# 2. 算你自己的哈希
+# 1. download the exe and SHA256SUMS.txt into the same directory
+# 2. compute your own hash
 Get-FileHash "18-9L-6_ED-7-45-45_C-LS-Installer.exe" -Algorithm SHA256
-# 3. 和 SHA256SUMS.txt 里的那行比，一样就没被动过
+# 3. compare it with the matching line in SHA256SUMS.txt — same means untouched
 ```
 
 Those three comments count the steps: download the exe and `SHA256SUMS.txt` into one directory · compute your own

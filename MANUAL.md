@@ -491,7 +491,7 @@ The driven quantity is the **actual attack animation rate** (the one the spank i
 `osiriSpeed` cannot be used: `Play_OsiriMainMixer` pins it at 1, so there is no variation to work with.
 
 ```
-f = (e^(k·over) − 1) / (e^(k·refv) − 1)      k = DemandAttSpeedExp，0 = 线性
+f = (e^(k·over) − 1) / (e^(k·refv) − 1)      k = DemandAttSpeedExp, 0 = linear
 ```
 
 **It is normalised**, so the threshold for "full bonus" matches the linear version; only the shape becomes convex:
@@ -505,7 +505,7 @@ f = (e^(k·over) − 1) / (e^(k·refv) − 1)      k = DemandAttSpeedExp，0 = �
 #### Why the ecstasy animation rate needs its own handling
 
 ```csharp
-// 游戏原码
+// the game's original code
 if (OsiriMixer.State.IsPlaying) OsiriMixer.State.Parameter = osiriSpeed;
 ```
 
@@ -535,7 +535,7 @@ So the speed has to be set directly on **the animation state that is actually pl
 **"Derived from the effect on HP" is the important part:**
 
 ```
-增量（占绝顶上限 %） = 本次榨取的伤害 / 最大生命 × 100 × ChainGainPerHp%
+increment (% of the ecstasy cap) = this drain's damage / max HP, times 100, times ChainGainPerHp%
 ```
 
 It uses **the damage constant itself** (`Osiri吸精ダメージ = 5`, `SitKiss吸精ダメージ = 8`, `吸精ダメージ = 7`),
@@ -565,9 +565,9 @@ private void Event_OsiriSyaseiOnEnd()
     player.Syaseing = false;
     float value = UnityEngine.Random.value;
     if (GameManager.gameover)  Play_Osiri吸精(true);
-    else if (value < 0.5f)     Play_OsiriMainMixer();   // 50% 回骑乘位攻击
-    else if (value < 0.9f)     Play_Osiri吸精(true);     // 40% 吸精
-    else                       tabemi.Osiri解除();       // 10% 【回口交】
+    else if (value < 0.5f)     Play_OsiriMainMixer();   // 50%: back to the riding attack
+    else if (value < 0.9f)     Play_Osiri吸精(true);     // 40%: absorb
+    else                       tabemi.Osiri解除();       // 10%: back to fellatio
 }
 ```
 
@@ -634,8 +634,8 @@ The reason is hard-coded:
 ```csharp
 public void Play_SitKiss吸精(bool startFrom0)
 {
-    tabemi.sitState = SitState.kyusei;   // 进榨取
-    tabemi.kissing  = 2;                 // ← 同时强制进【束缚之吻】
+    tabemi.sitState = SitState.kyusei;   // enter drain
+    tabemi.kissing  = 2;                 // ← also forces the binding kiss
     ...
 }
 ```
@@ -671,8 +671,8 @@ release — **so it gets shorter the more you play**.
 | Attacking | `SpankSpeed*` |
 
 ```csharp
-if (sitState == "kyusei") return;      // 进了榨取 → 交给那套
-if (kissing <= 0.5f) return;           // 不在吻里 → 不管
+if (sitState == "kyusei") return;      // in drain → hand it over to that path
+if (kissing <= 0.5f) return;           // not in the kiss → leave it alone
 ```
 
 **Also, the sliders in the Riding panel (attack power / rate multiplier / chain drain …) are all bound to the binding kiss**:
@@ -750,10 +750,10 @@ the game are picked up automatically. It also draws **the patch's own Manman zon
 **The rhythm comes from animation events; the tone comes from the speed.**
 
 ```
-Osiri 骑乘动画片段
-    └─ Unity 动画事件（按名字回调 "OsiriSE"）   ← 在资源里，不在代码里
+Osiri riding animation clip
+    └─ Unity animation event (callback by name: "OsiriSE")   ← lives in the assets, not the code
           └─ OsiriSE()
-                └─ hSound.PlayOsiri(1..4)   ← 按当前 osiriSpeed 选档
+                └─ hSound.PlayOsiri(1..4)   ← picks a step from the current osiriSpeed
 ```
 
 **The tiering rule:**
@@ -801,13 +801,13 @@ When the cap is set to 0 (unlimited), only `连榨` is shown, with no number.
 ### Commands
 
 ```bash
-bash tools/gcmd.sh demand status     # 姿势 / 段数 / 剩余 / 欲望 / 攻击力 / 倍速 / 回口交基准 / 回归累积 / 余韵
-bash tools/gcmd.sh demand fire       # 手动进入模式
-bash tools/gcmd.sh demand afterglow  # 手动进入余韵（= 强制退出模式的生存阀）
-bash tools/gcmd.sh urgeaudit 60      # 审计欲望的每一次变动（带来源与增量）
-bash tools/gcmd.sh spank [n]         # 模拟打 n 次屁股（走完整逻辑，与真实点击同一份代码）
-bash tools/gcmd.sh states            # 含「动画速率」读数
-bash tools/gcmd.sh animlog <秒>      # 逐帧记录动画速率 → cmd/anim.csv
+bash tools/gcmd.sh demand status     # pose / segments / remaining / urge / attack / speed / return-to-fellatio baseline / return accumulation / afterglow
+bash tools/gcmd.sh demand fire       # enter the mode by hand
+bash tools/gcmd.sh demand afterglow  # enter afterglow by hand (= the safety valve that force-exits the mode)
+bash tools/gcmd.sh urgeaudit 60      # audit every urge change (with its source and increment)
+bash tools/gcmd.sh spank [n]         # simulate n spanks (full logic — the same code a real click runs)
+bash tools/gcmd.sh states            # includes the "animation rate" reading
+bash tools/gcmd.sh animlog <seconds> # record the animation rate frame by frame → cmd/anim.csv
 ```
 
 ---
@@ -819,9 +819,9 @@ the code defaults (this trap was really hit: about thirty settings overwritten, 
 The right approach:
 
 ```bash
-bash tools/cfgsnap.sh save      # 改之前存快照
-bash tools/cfgsnap.sh restore   # 改完还原
-bash tools/cfgsnap.sh diff      # 看差异
+bash tools/cfgsnap.sh save      # snapshot before editing
+bash tools/cfgsnap.sh restore   # restore when done
+bash tools/cfgsnap.sh diff      # show the diff
 ```
 
 `defaults` now requires an explicit `defaults yes` before it will run.
@@ -1019,9 +1019,9 @@ The lines used most often when troubleshooting:
 **Forensics tools:**
 
 ```bash
-bash tools/watch.sh &        # 持续拉取游戏状态 → cmd/watch.txt / watch.csv
-bash tools/cfgsnap.sh save   # 配置快照
-bash tools/gcmd.sh xcheck    # 逻辑交叉检查（不变量核对）
+bash tools/watch.sh &        # keep pulling game state → cmd/watch.txt / watch.csv
+bash tools/cfgsnap.sh save   # config snapshot
+bash tools/gcmd.sh xcheck    # logic cross-check (invariant verification)
 ```
 
 
@@ -1103,14 +1103,14 @@ change, are live.
 The original game performs two DLC checks, and **the two paths are inconsistent**:
 
 ```csharp
-// (1) DLCManager.LoadAssetBundle() —— 正确：游戏根目录
+// (1) DLCManager.LoadAssetBundle() — correct: the game root
 path = Application.dataPath + "/../";
-// (2) TitleDLCCheck.InitiateDLC() —— 错误：指向不存在的 Patches\ 目录
+// (2) TitleDLCCheck.InitiateDLC() — wrong: points at a Patches\ folder that does not exist
 path = Application.dataPath + "/..//Patches/";
 if (AssetBundle.LoadFromFile(...) == null)
 {
     GameManager.DLC = false;
-    PlayerPrefs.SetInt("DLC", 0);        // ← 一旦跑到，就把 DLC 永久关掉
+    PlayerPrefs.SetInt("DLC", 0);        // ← once this runs, the DLC is off for good
 }
 ```
 
@@ -1145,7 +1145,7 @@ The game's `UpdatePartOpacity()` does contain this line:
 
 ```csharp
 modelA.Parts[IDs.CenterGirlSitting_Tights].Opacity = _Op_CenterGirlSitting_Tights;
-//            ↑ 这个字段是 0
+//            ↑ this field is 0
 ```
 
 `Live2D_IDs.CenterGirlSitting_Tights` **should be 19, but is actually 0** — because `CheckParts()` looks for a child by name under some `parent` level, and under that level there is **nothing** named `CenterGirlSitting_Tights`, so the field keeps its default value `0`.
@@ -1171,7 +1171,7 @@ That step calls the plugin's `RestorePartOpacities()`, which writes an **out-of-
 After the game has written part opacity (the `UpdatePartOpacity` postfix), it adds the missing line following **the game's own intent**:
 
 ```csharp
-// 选了裤袜（槽位非 0）就把基础层点亮，否则熄灭
+// if stockings are selected (slot != 0), light the base layer; otherwise turn it off
 FindPart("Tights").Opacity = (Costume.Tights != 0) ? 1f : 0f;
 ```
 
@@ -1338,7 +1338,7 @@ It polls every 0.1 seconds and clears `in.txt` as soon as the command has run.
 ```bash
 bash /e/DSH/build/burger-shop/tools/gcmd.sh tremor fire
 bash /e/DSH/build/burger-shop/tools/gcmd.sh states
-bash /e/DSH/build/burger-shop/tools/gcmd.sh            # 不加参数 = 显示全部命令用法
+bash /e/DSH/build/burger-shop/tools/gcmd.sh            # no argument = print every command's usage
 ```
 
 **Do not use a relative path** (`tools/gcmd.sh ...`) — that depends on which directory you are in, and from `~` it will always fail.
@@ -1358,8 +1358,8 @@ The script itself **contains no Chinese**; the game path is read from `gamepath.
 
 ```bash
 G="D:/Four Nights at the Burger Shop ～ハンバーガー食べながら食べられるミニゲーム～"
-echo "tremor fire" > "$G/BepInEx/l2d_dump/cmd/in.txt"     # 发命令
-tail -5 "$G/BepInEx/l2d_dump/cmd/out.txt"                 # 看结果
+echo "tremor fire" > "$G/BepInEx/l2d_dump/cmd/in.txt"     # send a command
+tail -5 "$G/BepInEx/l2d_dump/cmd/out.txt"                 # read the result
 ```
 
 **The protocol is just these two lines**:
@@ -1395,10 +1395,10 @@ if you need a gap, write them in two separate steps.
 ### Examples
 
 ```bash
-# 立刻手动触发一次动摇，看效果
+# fire a tremor by hand right now and watch what happens
 bash /e/DSH/build/burger-shop/tools/gcmd.sh tremor fire
 
-# 开 15 分钟持续监视，出异常它会自己记进 cmd/xwatch.txt
+# watch for 15 minutes; anything odd is recorded to cmd/xwatch.txt by itself
 bash /e/DSH/build/burger-shop/tools/gcmd.sh xwatch 900
 ```
 
@@ -1464,13 +1464,13 @@ If it hooked the postfix instead, the zero test would already have run and the t
 
 ```
 <repo>\
-├── plugin\       BurgerShopModder.cs / .csproj     ← 游戏内插件的源码
-├── trainer\      BurgerShopTrainer.cs / .csproj    ← 外部编辑器源码
-├── installer\    Installer.cs / payload.zip        ← 安装程序源码与内嵌载荷
-├── verify\       Verify.cs / .csproj               ← 反射字段校验器
-├── src\          Assembly-CSharp.decompiled.cs     ← 反编译出来的游戏逻辑（参考）
-├── refs\         编译用的引用程序集副本
-└── dist\         编译产物
+├── plugin\       BurgerShopModder.cs / .csproj     ← the in-game plugin source
+├── trainer\      BurgerShopTrainer.cs / .csproj    ← the standalone trainer source
+├── installer\    Installer.cs / payload.zip        ← installer source and its embedded payload
+├── verify\       Verify.cs / .csproj               ← the reflection field verifier
+├── src\          Assembly-CSharp.decompiled.cs     ← decompiled game logic (for reference)
+├── refs\         copies of the reference assemblies used for building
+└── dist\         build output
 ```
 
 Rebuilding (the order matters: the payload has to be rebuilt first, because the installer embeds `payload.zip` into the exe):
@@ -1485,7 +1485,7 @@ cd <repo>\installer ; pwsh -File make_payload.ps1
 Checking that every reflection path matches the game's actual DLL:
 
 ```powershell
-<repo>\verify\bin\verify.exe "<游戏>\Four Nights at the Burger Shop_Data\Managed"
+<repo>\verify\bin\verify.exe "<game folder>\Four Nights at the Burger Shop_Data\Managed"
 ```
 
 Only when everything reports `OK` is the trainer usable — this verifier has caught three wrong field owners, so running it once first is recommended after a game version change.

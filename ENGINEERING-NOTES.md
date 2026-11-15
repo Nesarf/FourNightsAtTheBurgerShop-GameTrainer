@@ -303,9 +303,9 @@ Original code:
 ```csharp
 public void 頭叩かれるSit()
 {
-    if (kissing == 0) { return; }                 // 什么都不做
-    if (kissing == 2) { SkillCheck...; return; }   // 走技能检定，【不加计数】
-    if (kissing == 1) { SitGirlKiss叩く量++; }      // ← 只有这一支才累积
+    if (kissing == 0) { return; }                 // do nothing
+    if (kissing == 2) { SkillCheck...; return; }   // skill check — no increment
+    if (kissing == 1) { SitGirlKiss叩く量++; }      // ← only this branch accumulates
 }
 ```
 
@@ -383,7 +383,7 @@ Several things worth noting:
 姿势分布          {'Osiri': 34, 'Sit': 133}
 子状态分布        {'Osiri/attacking': 30, 'Osiri/kyusei': 4, 'Sit/attacking': 133}
 Syaseing 分布     {'0': 162, '1': 5}
-绝顶值最大单步跌幅 −195.1   ← 上限是 199.878，等于整条上限被抹掉
+绝顶值最大单步跌幅 −195.1   ← the cap is 199.878, so the whole cap was wiped out
 索取欲范围        0.0 ~ 1487.2
 段数分布          {0:45, 1:23, 2:50, 5:1, 10:48}
 ```
@@ -431,8 +431,8 @@ character into the kissing state**:
 ```csharp
 public void Play_SitKiss吸精(bool startFrom0)
 {
-    tabemi.sitState = SitState.kyusei;   // 进榨取
-    tabemi.kissing  = 2;                 // ← 同时强制进【束缚之吻】
+    tabemi.sitState = SitState.kyusei;   // enter drain
+    tabemi.kissing  = 2;                 // ← also forces the binding kiss
     model.MouthParts(4);
     _CenterGirlLayer.Play(SitKiss吸精[num]);
     ...
@@ -449,8 +449,8 @@ The path into seated drain is held back by the `kissing` state machine:
 Event_SitKissSyaseiOnEnd()
 {
     if (gameover)          Play_SitKiss吸精(true);
-    else if (Random < 0.5) Play_SitKiss();          // 回坐姿攻击
-    else                   Play_SitKiss吸精(true);   // 50% 进榨取
+    else if (Random < 0.5) Play_SitKiss();          // back to the seated attack
+    else                   Play_SitKiss吸精(true);   // 50%: enter drain
 }
 ```
 
@@ -504,7 +504,7 @@ but there are some 'points' in the middle of that distance that make the height 
 
 ```csharp
 Vector2 parameter = new Vector2(sitSpeed + sitSpeedPlus, sit_HeadZ);
-SitMixerA_HeadZ.State.Parameter = parameter;   // 横轴 = 速度，纵轴 = 行程深度
+SitMixerA_HeadZ.State.Parameter = parameter;   // x axis = speed, y axis = stroke depth
 ```
 
 Every frame, `Update_SitMixers()` aligns the `NormalizedTime` of the four mixers
@@ -514,10 +514,10 @@ Every frame, `Update_SitMixers()` aligns the `NormalizedTime` of the four mixers
 
 ```csharp
 headZ判定Timer += headZ判定interval;
-if (UnityEngine.Random.value < 0.1f)                     // 10% 概率
+if (UnityEngine.Random.value < 0.1f)                     // 10% chance
 {
-    float targetDiff = UnityEngine.Random.Range(-1, 2);   // ← 只有 -1 / 0 / +1
-    StartCoroutine(SitHeadZCoroutine(targetDiff, 0.5f));  // ← 0.5 秒平滑过渡
+    float targetDiff = UnityEngine.Random.Range(-1, 2);   // ← only -1 / 0 / +1
+    StartCoroutine(SitHeadZCoroutine(targetDiff, 0.5f));  // ← a 0.5 s smooth transition
 }
 ```
 
@@ -571,9 +571,9 @@ it does not mean a drain ever started.
 Make the manual command take **the same path** as the automatic afterglow:
 
 ```csharp
-_afterglowPending   = UnityEngine.Random.Range(lo, hi + 1);   // 交给点火逻辑
+_afterglowPending   = UnityEngine.Random.Range(lo, hi + 1);   // handed to the ignition logic
 _afterglowRemaining = 0;
-_afterglowSettleAt  = -999f;                                   // 立即重新计稳定时间
+_afterglowSettleAt  = -999f;                                   // restart the settle timer immediately
 ```
 
 **Verification**
@@ -581,7 +581,7 @@ _afterglowSettleAt  = -999f;                                   // 立即重新�
 ```
 已手动进入余韵：待发动 17 次（局面稳定后自动开第一次榨取）
 [余韵] 最后一段已结束且局面稳定 → 发动余韵 17 次
-状态: [Osiri·kyusei]        ← 榨取真的跑起来了
+状态: [Osiri·kyusei]        ← drain really is running
 ```
 
 ---
@@ -628,7 +628,7 @@ Two gates block the seated entry, and the second one is the real problem:
 
 ```
 [索取模式中]  索取模式中 1 段 / 共剩余 154.5s   索取欲=2…
-[手动余韵后]  [Osiri·kyusei]  不在索取模式   索取欲=1.4%    ← 强制清干净
+[手动余韵后]  [Osiri·kyusei]  不在索取模式   索取欲=1.4%    ← force-cleaned
               已手动进入余韵：待发动 43 次（局面稳定后自动开第一次榨取）
 ```
 
@@ -659,12 +659,12 @@ The panel puts them under the "absorb (drain)" section of the Player tab, and sh
 **Implementation**
 
 ```csharp
-internal static bool PoseIsSit()      // Sit 与 Osiri 在同一个类里，从 centerGirlState 判
+internal static bool PoseIsSit()      // Sit and Osiri live in the same class; decided from centerGirlState
 
-private static int ChainNow()         // 姿势 × 模式 → 取对应那个计数
+private static int ChainNow()         // pose and mode → pick the matching counter
 private static void ChainSet(int v)
-private static int ChainLimitNow()    // 姿势 × 模式 → 取对应那个上限
-internal static string ChainSlotName()  // "坐姿·榨取模式" 这类标签
+private static int ChainLimitNow()    // pose and mode → pick the matching cap
+internal static string ChainSlotName()  // labels like "坐姿·榨取模式" (seated · drain mode)
 ```
 
 `KyuseiMaxChain` **is deprecated** (kept in the config only for compatibility with old files; the logic no longer reads it).
@@ -694,7 +694,7 @@ The only entry point for afterglow accumulation, `NoteDemandSyasei()`, starts wi
 ```csharp
 private static void NoteDemandSyasei(string pose)
 {
-    if (!_demandMode) return;      // ← 常规状态下直接返回
+    if (!_demandMode) return;      // ← returns immediately in the normal state
     ...
 }
 ```
@@ -746,8 +746,8 @@ private static bool DrainSlotIsDemand()
 {
     if (_demandMode) return true;
     if (PoseIdx() != 2) return false;
-    if (sitState == "kyusei") return true;   // 正骑·榨取中
-    if (kissing > 0.5f) return true;         // 正骑·束缚之吻中
+    if (sitState == "kyusei") return true;   // riding · drain in progress
+    if (kissing > 0.5f) return true;         // riding · binding kiss in progress
     return false;
 }
 ```
@@ -880,12 +880,12 @@ take over**.
 ```csharp
 private IEnumerator _CenterGirl(int i)
 {
-    yield return new WaitForSeconds(effect.GlitchEffect(0.1f, 0.01f, 0.1f));   // ← 先等 0.1 秒
+    yield return new WaitForSeconds(effect.GlitchEffect(0.1f, 0.01f, 0.1f));   // ← wait 0.1 s first
     model.CenterGirlParts(i);
     switch (i)
     {
     case 0: centerGirlState = CenterGirlState.Fella; break;
-    case 1: centerGirlState = CenterGirlState.Sit;   break;   // ← 之后才真正切
+    case 1: centerGirlState = CenterGirlState.Sit;   break;   // ← only then does the switch really happen
     case 2: centerGirlState = CenterGirlState.Osiri; break;
     }
 }
@@ -903,7 +903,7 @@ In `TickDemand()`, check every frame:
 if (_demandMode && centerGirlState == "Sit")
 {
     Log.LogInfo("…模式进行中，状态却被切成坐姿 → 夺回骑乘位");
-    ShowCenterGirlOsiri();      // 夺回来
+    ShowCenterGirlOsiri();      // take it back
 }
 ```
 
@@ -941,7 +941,7 @@ copy.** That directly broke the per-tab independence the user had explicitly ask
 **Root cause**
 
 ```csharp
-private static int PIdx { get { int i = PoseIdx(); ... } }   // ← 只看实际姿势
+private static int PIdx { get { int i = PoseIdx(); ... } }   // ← looks at the actual pose only
 private static float P3(ConfigEntry<float>[] a) { return a[PIdx].Value; }
 private static void SetP3(...) { a[PIdx].Value = v; }
 ```
@@ -956,14 +956,14 @@ private static void SetP3(...) { a[PIdx].Value = v; }
 **Fix: add `_editPose`**
 
 ```csharp
-internal static int _editPose = -1;      // -1 = 不在编辑（走实际姿势）
+internal static int _editPose = -1;      // -1 = not editing (follow the actual pose)
 
 private static int PIdx
 {
     get
     {
-        if (_editPose >= 0 && _editPose <= 2) return _editPose;   // 面板编辑中
-        int i = PoseIdx();                                        // 游戏逻辑
+        if (_editPose >= 0 && _editPose <= 2) return _editPose;   // panel editing
+        int i = PoseIdx();                                        // game logic
         return i < 0 ? 1 : (i > 2 ? 2 : i);
     }
 }
@@ -1262,11 +1262,11 @@ config file; **functionality is unaffected**.
 The mouse path looks like this:
 
 ```csharp
-// 每帧由 Update() 算出静态字段
+// recomputed every frame by Update()
 private void Update() { HitAreaCheckWindows(); }
 private void HitAreaCheckWindows() { ... mousePointing = array[i].Drawable.name; ... }
 
-// 点击时读它来派发
+// read at click time to dispatch
 public void Mouse0_Down() { hitAreaDown = Live2D_HitAreaCheck.mousePointing; ... }
 public void Mouse0_Hold() { hitAreaPointing = Live2D_HitAreaCheck.mousePointing; ... }
 public void Mouse0_Up()   { hitAreaUp = Live2D_HitAreaCheck.mousePointing; ... }
@@ -1284,7 +1284,7 @@ private static void Postfix_HitAreaCheckWindows()
     if (PoseIdx() != 2) return;
 
     FieldInfo pf = FieldQuiet(hcT, "mousePointing");
-    if (!string.IsNullOrEmpty(pf.GetValue(null) as string)) return;   // 已命中真的点按区，不抢
+    if (!string.IsNullOrEmpty(pf.GetValue(null) as string)) return;   // a real click area was hit — do not steal it
 
     if (鼠标落在 Manman 矩形内) pf.SetValue(null, "HitArea_Head_Sit");
 }
@@ -1338,14 +1338,14 @@ But the seated pose's head click **is not "accumulate drain urge" at all**; it i
 public void 頭叩かれるSit()
 {
     if (kissing == 0) return;
-    if (kissing == 2)                                  // 【束缚之吻中】
+    if (kissing == 2)                                  // binding kiss in progress
     {
         if (player.Syaseing) return;
-        SkillCheck.GetReadyForSkillCheck();            // ← 技能检定 = 解除束缚之吻
+        SkillCheck.GetReadyForSkillCheck();            // ← the skill check is what releases the binding kiss
     }
-    if (kissing == 1)                                  // 接吻准备窗口
+    if (kissing == 1)                                  // the kiss-preparation window
     {
-        SitGirlKiss叩く量++;                            // ← 累积解除量
+        SitGirlKiss叩く量++;                            // ← accumulates the escape count
         clickEffect.頭叩くエフェクト();
     }
 }
@@ -1458,7 +1458,7 @@ lot of features stop working"
 if (_demandMode && centerGirlState == "Sit")
 {
     Log.LogInfo("…模式进行中，状态却被切成坐姿 → 夺回骑乘位");
-    ShowCenterGirlOsiri();      // ← 强制切到 Osiri
+    ShowCenterGirlOsiri();      // ← force the switch to Osiri
 }
 ```
 
@@ -1486,14 +1486,14 @@ Osiri**.
 **The fix: remember which pose the mode was entered in**
 
 ```csharp
-private static int _demandModePose = -1;   // 0=口交 1=背榨 2=正骑；-1=无模式
+private static int _demandModePose = -1;   // 0 = fellatio, 1 = rear, 2 = riding; -1 = no mode
 
-// 进入模式时
+// on mode entry
 _demandModePose = PoseIdx();
-// 退出/清零时（4 处）
+// on exit / reset (4 places)
 _demandMode = false; _demandModePose = -1;
 
-// 兜底改成只对"背榨进入的模式"生效
+// narrowed the fallback to modes entered from Rear
 if (_demandMode && _demandModePose == 1) { ...夺回骑乘位... }
 ```
 
@@ -1533,10 +1533,10 @@ such area. `ManmanBindDrawable` was **also empty** (no drawable bound).
 current pose.**
 
 ```csharp
-foreach (string nm in HitAreaDrawableNames())   // ← 全部，无过滤
+foreach (string nm in HitAreaDrawableNames())   // ← all of them, no filter
     DrawOutline(...);
 ...
-if (SitPussyAreaEnabled.Value)                  // ← 再加一个 Manman
+if (SitPussyAreaEnabled.Value)                  // ← plus one more for Manman
     DrawOutline(..., "HitArea_Manman (插件自建)");
 ```
 
@@ -1610,8 +1610,8 @@ as the kissing speed**, since the two have different meanings.
 **Mutual exclusion**
 
 ```csharp
-if (GetStringField(tab, "sitState") == "kyusei") return;   // 进了榨取 → 交给那套
-if (GetFloat(tab, "kissing") <= 0.5f) return;              // 不在吻里 → 不管
+if (GetStringField(tab, "sitState") == "kyusei") return;   // in drain → hand it over to that path
+if (GetFloat(tab, "kissing") <= 0.5f) return;              // not in the kiss → leave it alone
 ```
 
 **Setting both would fight each other**, so they are strictly mutually exclusive on `sitState`.
@@ -1628,8 +1628,8 @@ point I had **no evidence at all**, only "the patch is mounted".
 **The log said "never used"**:
 
 ```
-[屁股]（NoteSpank 的日志）   0 次   ← 从没被调用
-HitArea_Manman 出现 2 次           ← 但那 2 次是【挂载日志】本身
+[屁股]（NoteSpank 的日志）   0 次   ← never called
+HitArea_Manman 出现 2 次           ← but those 2 are the mount log itself
 ```
 
 **Two things were added so it could be verified**
