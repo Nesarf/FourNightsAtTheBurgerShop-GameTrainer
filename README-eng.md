@@ -31,6 +31,14 @@ The game itself is never modified.
 > Building requires you to take the reference DLLs **from your own game installation** (see 「Build」 below).
 > That is deliberate — game assets are copyrighted and should not be redistributed.
 
+> **A note on the Chinese in these documents.** The trainer's default language is
+> Chinese, so logs, panel labels and screenshots are quoted in Chinese — that is what a
+> fresh install actually prints. Switch the panel to English (the `English` button, or
+> `Language = en` in the cfg) and the same output comes out in English: `[榨取]` →
+> `[drain]`, `[回归]` → `[return]`, `[余韵]` → `[afterglow]`, `[索取欲]` →
+> `[demand urge]`, `[吸精]` → `[absorb]`. File names on disk, game API names and
+> registry paths stay Chinese either way — they are literals, not interface text.
+
 ---
 
 ## Runtime environment

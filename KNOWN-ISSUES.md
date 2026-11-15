@@ -5,6 +5,14 @@
 > [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) under the same entry number;
 > version-level changes are in [`CHANGELOG.md`](CHANGELOG.md).
 
+> **A note on the Chinese in this file.** Log tags and panel labels are quoted in their
+> Chinese form, because the trainer's default language is Chinese — that is what a fresh
+> install prints, and what the logs pasted into these issues contain. Switch the panel to
+> English (the `English` button, or `Language = en` in the cfg) and the same output comes
+> out in English: `[榨取]` → `[drain]`, `[回归]` → `[return]`, `[余韵]` → `[afterglow]`,
+> `[索取欲]` → `[demand urge]`, `[吸精]` → `[absorb]`. Game API names and event labels
+> such as `坐姿吸精` stay Chinese either way — they are literals in the game's code.
+
 **Maintenance rule**: once an issue is fixed, **delete it from here** (the write-up
 moves into the engineering notes) and leave only a one-line summary in `CHANGELOG.md`.
 

@@ -10,6 +10,15 @@
 > **Looking for "what is still unfixed"? → see [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md).**
 > **Looking for "why does this feature look like that"? → search this file for a keyword.**
 
+> **A note on the Chinese in this file.** Log tags and panel labels are quoted in their
+> Chinese form, because the trainer's default language is Chinese — that is what a fresh
+> install prints, and what every log and screenshot collected so far contains. Switch the
+> panel to English (the `English` button, or `Language = en` in the cfg) and the same
+> output comes out in English: `[榨取]` → `[drain]`, `[回归]` → `[return]`, `[余韵]` →
+> `[afterglow]`, `[索取欲]` → `[demand urge]`, `[吸精]` → `[absorb]`. File names on
+> disk, game API names and registry paths stay Chinese either way — they are literals,
+> not interface text.
+
 The value of these notes is not "what got fixed" but **why it behaved that way**.
 Many of the entries below stand for a reusable rule, for example:
 
