@@ -604,6 +604,48 @@ if _btn_bare:
 else:
     ok("(16) every panel button carries an explicit width")
 
+# ── English documents: no Chinese left in code-block comments ───
+# [Why] translating those by hand was worth doing once; without a rule the next edit
+# puts them straight back, and nobody reads a 2700-line file looking for a Chinese
+# comment. Quoted material stays Chinese on purpose — log output, game API names,
+# file names and panel labels — so only the tail of a comment is judged.
+_EN_DOCS = ('README-eng.md', 'MANUAL.md', 'CHANGELOG.md', 'KNOWN-ISSUES.md',
+            'ENGINEERING-NOTES.md')
+_EN_CJK = re.compile(r'[\u4e00-\u9fff\u3040-\u30ff]')
+# lines that quote a Chinese label or a command receipt on purpose
+_en_left = []
+for _name in _EN_DOCS:
+    _doc = ROOT / _name
+    if not _doc.exists():
+        continue
+    _fence = False
+    for _no, _line in enumerate(read(_doc).split('\n'), 1):
+        if _line.strip().startswith('```'):
+            _fence = not _fence
+            continue
+        if not _fence or not _EN_CJK.search(_line):
+            continue
+        _tail = None
+        if '//' in _line:
+            _tail = _line.split('//', 1)[1]
+        elif _line.strip().startswith('#'):
+            _tail = _line.strip()
+        elif '←' in _line:
+            _tail = _line.split('←', 1)[1]
+        if _tail is None or not _EN_CJK.search(_tail):
+            continue
+        # enough Latin letters left after stripping CJK means English prose with an API
+        # name in it — that is quoted material, not a comment still written in Chinese
+        if len(re.findall(r'[A-Za-z]', _EN_CJK.sub('', _tail))) >= 8:
+            continue
+        _en_left.append('%s:%d %s' % (_name, _no, _line.strip()[:60]))
+
+if _en_left:
+    fail("(17) Chinese left in code-block comments of the English docs: "
+         + ", ".join(_en_left[:4]))
+else:
+    ok("(17) no Chinese in code-block comments of the English docs")
+
 # ── summary ─────────────────────────────────────────────────
 print()
 print(f'result: {len(fails)} failed, {len(warns)} warnings')

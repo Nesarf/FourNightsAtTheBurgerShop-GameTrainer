@@ -249,7 +249,7 @@ hold these characters.
 | `dist/` | the compiled products |
 | `MANUAL.md` / `使用说明.md` | **the full manual** (features, parameters, troubleshooting), English / Chinese |
 | `KNOWN-ISSUES.md` / `已知问题.md` | **what is currently unresolved** (only the unfixed ones), English / Chinese |
-| `ENGINEERING-NOTES.md` / `工程笔记.md` | **engineering notes**: symptom / root cause / fix / lesson for every pitfall (44 numbered entries + 5 appendices + 5 S-series entries, with a table of contents), English / Chinese |
+| `ENGINEERING-NOTES.md` / `工程笔记.md` | **engineering notes**: symptom / root cause / fix / lesson for every pitfall (45 numbered entries + 5 appendices + 5 S-series entries, with a table of contents), English / Chinese |
 | `CHANGELOG.md` / `更新日志.md` | per-version changes, English / Chinese |
 
 ## Just download it (no build)
@@ -396,7 +396,7 @@ The script needs `tools/gamepath.txt` pointing at your game folder (**that file 
 | **why a feature looks the way it does** (reverse-engineering findings, pitfalls) | [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) (Chinese original: [`工程笔记.md`](工程笔记.md)) |
 | what changed in each version | [`CHANGELOG.md`](CHANGELOG.md) |
 
-`ENGINEERING-NOTES.md` holds **44** historical entries + **5** appendices + **5** S-series entries,
+`ENGINEERING-NOTES.md` holds **45** historical entries + **5** appendices + **5** S-series entries,
 each written as **symptom / root cause / fix / lesson**. It opens with a **table of contents**,
 so you can jump straight to one entry.
 

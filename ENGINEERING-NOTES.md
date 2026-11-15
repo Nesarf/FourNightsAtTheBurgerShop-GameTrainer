@@ -33,7 +33,7 @@ Many of the entries below stand for a reusable rule, for example:
 
 ## Table of contents
 
-**44** numbered entries in total, plus **5** appendices and **5** S-series entries. The order is **chronological** (in the order they were written), not by importance — it is kept because later entries frequently refer back to earlier conclusions.
+**45** numbered entries in total, plus **5** appendices and **5** S-series entries. The order is **chronological** (in the order they were written), not by importance — it is kept because later entries frequently refer back to earlier conclusions.
 
 `1-40` numbered entries
 
@@ -83,6 +83,7 @@ Many of the entries below stand for a reusable rule, for example:
 | 42 | The blind spot of the second English round: the checker sees call sites, not variables |
 | 43 | Three blind spots of the translation: concatenation, init order, the regex |
 | 44 | Layout: buttons that stretch across the row, and how to watch a shape you cannot see |
+| 45 | Renaming and translating the docs: the file name, one checker, two kinds of Chinese |
 
 Appendices (mechanism descriptions and rules, not defects)
 
@@ -2512,6 +2513,24 @@ This was not caused by the change in hand, but the invariant states its own caus
 **But the smoothing added here (EaseToward) makes the phenomenon last longer** — it used to snap into place, now it approaches at a rate, so the current value stays above the cap for longer.
 
 1.01 points on 691 is 0.15%, which does not affect function, but the invariant could be made more accurate: either relax the tolerance from 0.5, or apply the same smoothing to the cap. **Left to decide.**
+
+---
+
+## 45. Renaming and translating the docs: the file name, one checker, two kinds of Chinese
+
+**What happened**: the ten documents became "the file name states the language" — Chinese uses Chinese titles (`使用说明.md` / `更新日志.md` / `已知问题.md` / `工程笔记.md`), English keeps the standard names (`MANUAL.md` / `CHANGELOG.md` / `KNOWN-ISSUES.md` / `ENGINEERING-NOTES.md`).
+
+**Finding 1: GitHub only renders `README.md`.** It looks for a file whose base name is `README` (optionally followed by `.md` / `.rst` / `.txt`, or nothing at all); `README-chs.md` and `README-eng.md` are not candidates — after renaming everything, the repository front page goes **blank**. So Chinese takes `README.md` and English carries `-eng`.
+
+**Finding 2: `sync.sh` only runs under git-bash.** The msys userland has no `diff`, and the script decides "are the two trees equal" with `diff -q ... 2>/dev/null`; a missing command returns non-zero, so **every file reads as differs** and it looks like both trees fell apart. msys and git-bash are two separate userlands and do not share tools.
+
+**Finding 3: one renamed file means six places to edit** — the language switch at the top, the document index table, the "this is a translation of X" line, the `DOCS` list in `tools/sync.sh`, the file CI reads release notes from, and the file `static-check` reads checksums from. Missing any one leaves a dead link or reads an empty file. Sweeping every relative link afterwards with a script — pull each link target out, then run `test -f` on it — beats eyeballing.
+
+**Finding 4: the Chinese left in an English document comes in two kinds, and they get opposite treatment.** One is a **quotation** — log tags `[榨取]`, game API names `Osiri叩かれる()`, Chinese file names, panel labels like 「索取」. Translating those breaks the ability to match a log line or a button, so they stay. The other is a **comment** — the explanation after `//` inside a code block — which exists for the reader and has to be translated. This round cleared 99 lines (`README-eng` 7 / `MANUAL` 44 / `ENGINEERING-NOTES` 48).
+
+**Why clearing is not enough**: same reason as (16) — there is no fixed shape to look at. So rule (17) was added: it walks the code blocks of the five English documents and reports any line whose `//`, leading `#`, or `←` is still followed by Chinese; a comment that leaves enough Latin letters behind (8 or more) once CJK is stripped is an English sentence quoting an API name, and is let through.
+
+**One trap worth recording**: replacing code blocks from Python eats `\v` and `\b` inside string literals as escape sequences — `<repo>\verify\bin\...` came out as `<repo>`, a vertical tab, `erify`, a backspace and `in`. Build backslashes with `chr(92)` instead of typing them into a literal.
 
 ---
 
