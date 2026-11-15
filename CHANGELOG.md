@@ -11,9 +11,18 @@ the `#N` after an entry is its number in that file.
 
 ---
 
-## Unreleased
+## v1.0.100
 
-**Document renaming: the file name now states the language.**
+**The installer now ships the English manual; document file names state the language.**
+
+### Installer: one more manual
+
+`MANUAL.md` is now installed into the game folder next to `使用说明.md` — English readers
+no longer have to go back to the repository to read it. The install manifest grew from 27
+files to 28; uninstall still restores exactly what the manifest lists, and the regression
+run installs 28, removes 28, leaving only the game's own files.
+
+### Document renaming: the file name states the language
 
 Not a word of prose changed — only file names. Old links break; replace them
 with the new names.
@@ -29,6 +38,13 @@ with the new names.
 The English editions took over the standard names for known issues, engineering
 notes and the changelog; the Chinese editions moved to Chinese titles. The
 content did not move — only the file name did.
+
+### Also
+
+99 Chinese comment lines inside code blocks of the English documents became English — a
+comment is an explanation for the reader, so it gets translated; log tags, game API names
+and Chinese file names are quotations and stay. Rule (17) was added to keep it that way.
+The three Chinese lines at the end of `LICENSE` became English too.
 
 ---
 

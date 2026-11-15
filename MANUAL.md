@@ -1247,7 +1247,7 @@ The effect: the size went **from 1.2 MB down to about 50 KB**, and what is left 
 
 **Recommended**: open `汉堡店修改器-安装程序.exe` and click 「卸载还原」. It will:
 
-- delete exactly the 27 files from the manifest written at install time (including `数值修改器.exe`, the readme and the scripts)
+- delete exactly the 28 files from the manifest written at install time (including `数值修改器.exe`, the readme and the scripts)
 - also clean up what BepInEx generated at runtime: `cache`, `LogOutput.log`, `config\BepInEx.cfg` and so on
 - **keep files that existed before the install** — the manifest entry whose hash is empty is the one that decides this
 - if the directory holds someone else's BepInEx (other `.dll` files present), skip the whole thing so your mod environment is not broken
