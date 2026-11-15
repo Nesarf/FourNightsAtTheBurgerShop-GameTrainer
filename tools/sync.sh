@@ -114,7 +114,6 @@ INSTALLER=(
 # Docs: release -> work
 DOCS=(
   README.md
-  README-chs.md
   README-eng.md
   更新日志.md
   CHANGELOG.md
