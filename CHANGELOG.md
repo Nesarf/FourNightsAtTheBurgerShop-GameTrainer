@@ -11,6 +11,27 @@ the `#N` after an entry is its number in that file.
 
 ---
 
+## Unreleased
+
+**Document renaming: the file name now states the language.**
+
+Not a word of prose changed — only file names. Old links break; replace them
+with the new names.
+
+| Document | Chinese edition now | English edition now |
+| --- | --- | --- |
+| Project overview | `README.md` (unchanged — this is what the repository front page shows) | `README-eng.md` (was `README.en.md`) |
+| Manual | `使用说明.md` (unchanged) | `MANUAL.md` (was `使用说明.en.md`) |
+| Known issues | `已知问题.md` (was `KNOWN-ISSUES.md`) | `KNOWN-ISSUES.md` (was `KNOWN-ISSUES.en.md`) |
+| Engineering notes | `工程笔记.md` (was `ENGINEERING-NOTES.md`) | `ENGINEERING-NOTES.md` (was `ENGINEERING-NOTES.en.md`) |
+| Changelog | `更新日志.md` (was `CHANGELOG.md`) | `CHANGELOG.md` (was `CHANGELOG.en.md`) |
+
+The English editions took over the standard names for known issues, engineering
+notes and the changelog; the Chinese editions moved to Chinese titles. The
+content did not move — only the file name did.
+
+---
+
 ## v1.0.99 — command replies in English, plus three layout fixes
 
 ### Command replies: the ones outside `Say(...)`

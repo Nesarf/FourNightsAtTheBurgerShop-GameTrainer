@@ -239,10 +239,10 @@ hold these characters.
 | `installer/` | installer source (installs BepInEx and the plugin into the game folder, single-file distribution) |
 | `tools/` | debugging scripts (drive the game, snapshot the config, cross-check the logic) |
 | `dist/` | the compiled products |
-| `使用说明.md` | **the full manual** (features, parameters, troubleshooting) |
-| `KNOWN-ISSUES.md` | **what is currently unresolved** (only the unfixed ones) |
-| `ENGINEERING-NOTES.md` | **engineering notes**: symptom / root cause / fix / lesson for every pitfall (44 numbered entries + 5 appendices + 5 S-series entries, with a table of contents) |
-| `CHANGELOG.md` | per-version changes |
+| `MANUAL.md` / `使用说明.md` | **the full manual** (features, parameters, troubleshooting), English / Chinese |
+| `KNOWN-ISSUES.md` / `已知问题.md` | **what is currently unresolved** (only the unfixed ones), English / Chinese |
+| `ENGINEERING-NOTES.md` / `工程笔记.md` | **engineering notes**: symptom / root cause / fix / lesson for every pitfall (44 numbered entries + 5 appendices + 5 S-series entries, with a table of contents), English / Chinese |
+| `CHANGELOG.md` / `更新日志.md` | per-version changes, English / Chinese |
 
 ## Just download it (no build)
 
