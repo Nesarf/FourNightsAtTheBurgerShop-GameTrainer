@@ -217,8 +217,16 @@ jobs:
           }
 
           # Fallback: a tag was pushed but nobody created the release yet.
-          # Mark it clearly as unsigned so nobody mistakes it for the real one.
-          $banner = "> **Note: the assets on this page were built by CI and are NOT code-signed.**`n> Use the release carrying the S.M.Y.T. signature instead.`n`n"
-          Set-Content -Encoding utf8 notes-final.md -Value $banner
-          Get-Content notes.md -Raw | Add-Content -Encoding utf8 notes-final.md
+          # Whether the warning belongs there depends on the ASSETS, not on how they got
+          # here: this repository's normal flow signs locally and syncs the signed build
+          # in, so the copy CI uploads is already signed. Only an unsigned build earns it.
+          $sig = Get-AuthenticodeSignature (Join-Path 'out' '18-9L-6_ED-7-45-45_C-LS-Installer.exe')
+          if ($sig.Status -eq 'Valid') {
+            Write-Host "assets carry a valid signature ($($sig.SignerCertificate.Subject)) - no warning banner"
+            Copy-Item notes.md notes-final.md -Force
+          } else {
+            $banner = "> **Note: the assets on this page were built by CI and are NOT code-signed.**`n> Use the release carrying the S.M.Y.T. signature instead.`n`n"
+            Set-Content -Encoding utf8 notes-final.md -Value $banner
+            Get-Content notes.md -Raw | Add-Content -Encoding utf8 notes-final.md
+          }
           gh release create $tag @assets --title "数值修改器 $tag" --notes-file notes-final.md
