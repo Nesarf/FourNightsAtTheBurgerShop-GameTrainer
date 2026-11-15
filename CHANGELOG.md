@@ -11,6 +11,39 @@ the `#N` after an entry is its number in that file.
 
 ---
 
+## v1.0.101
+
+**Uninstall now knows what it owns after a reinstall, the receipt states how many files were
+kept, and `bilibili` stops counting as untranslated.**
+
+### Uninstall: it still deletes after an over-install
+
+The old test was "did this file exist before the install" — if it did, the entry was recorded
+with an empty hash and uninstall kept it. Installing over an existing install therefore marked
+every file as the user's own, so uninstall deleted 0 files and left everything behind while
+reporting only "deleted 0 files".
+
+There is now a second test: a path listed in the previous manifest counts as ours. An
+over-install no longer records manifest paths as pre-existing, so uninstall deletes them.
+
+The receipt changed too — the command line used to print only the delete count, and now prints
+the full summary: how many deleted, how many kept, how many queued for deletion on reboot.
+
+### bilibili is no longer counted as untranslated
+
+It is a platform name, like GitHub, and should not be translated. A self-mapping in `en.txt`
+takes the coverage to 1049 / 1049.
+
+### Verification
+
+```
+Regression      install 28 / over-install 28 / uninstall 28 / reinstall 28
+Receipt         完成：删除 28 个文件
+Static check    17 rules, 0 failed
+```
+
+---
+
 ## v1.0.100
 
 **The installer now ships the English manual; document file names state the language.**

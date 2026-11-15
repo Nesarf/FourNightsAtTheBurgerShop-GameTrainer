@@ -505,6 +505,7 @@ HitArea_Manman_By_Plugins 中心已绑定到模型相对位置 ({0:0.000}, {1:0.
 
 # ---- 关于栏 ----
 仓库	Repository
+bilibili	bilibili
 反馈邮箱	Feedback email
 已用系统浏览器打开	Opened in your browser
 

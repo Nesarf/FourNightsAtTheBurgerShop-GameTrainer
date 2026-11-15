@@ -17,7 +17,7 @@ namespace BurgerShopInstaller
     {
         /// <summary>窗口标题。随界面语言走，所以是属性而不是 const。</summary>
         internal static string AppTitle { get { return Txt.T("汉堡店 数值修改器 · 安装程序"); } }
-        internal const string Version = "1.0.100";
+        internal const string Version = "1.0.101";
         internal const string GameExe = "Four Nights at the Burger Shop.exe";
 
         /// <summary>插件的 BepInPlugin GUID。用来识别"这个 dll 是我们的旧版"。</summary>
@@ -58,8 +58,9 @@ namespace BurgerShopInstaller
                 {
                     if (uninstall)
                     {
-                        int n = Installer.Uninstall(root, null);
-                        Console.WriteLine(Txt.T("已卸载，删除 {0} 个文件：{1}", n, root));
+                        Installer.Uninstall(root, null);
+                        Console.WriteLine(Installer.LastUninstallSummary);
+                        Console.WriteLine(Txt.T("目录：{0}", root));
                         if (Installer.LastUninstallPending)
                             Console.WriteLine(Txt.T("注意：有文件被游戏占用，已登记为下次重启时自动删除。"));
                     }
@@ -343,6 +344,9 @@ namespace BurgerShopInstaller
             {
                 if (raw == null) throw new InvalidOperationException(Txt.T("安装包内缺少载荷资源，文件可能已损坏。"));
 
+                // 【所有权】上一份清单里列过的路径算「我们的」。否则重复安装时文件已存在，
+                // 一律记成「安装前就有」，卸载就一个也不删 —— 开发时反复覆盖安装踩过这个。
+                var previous = ReadManifest(root);
                 var installed = new List<string>();
                 using (var zip = new ZipArchive(raw, ZipArchiveMode.Read))
                 {
@@ -376,7 +380,7 @@ namespace BurgerShopInstaller
                         }
 
                         // 记录 hash；安装前就存在的文件记为空串 —— 卸载时不动它们
-                        installed.Add(rel + "\t" + (existedBefore ? "" : Sha256(dest)));
+                        installed.Add(rel + "\t" + (existedBefore && !previous.ContainsKey(rel) ? "" : Sha256(dest)));
                     }
                 }
 
@@ -536,6 +540,7 @@ namespace BurgerShopInstaller
                            + (errors.Count > 0 ? Txt.T("，失败 {0} 个", errors.Count) : "");
             foreach (string err in errors) report?.Invoke(new Step { Text = "× " + err, Percent = 100 });
 
+            LastUninstallSummary = summary;
             report?.Invoke(new Step { Text = summary, Percent = 100 });
 
             if (errors.Count > 0)
@@ -552,6 +557,9 @@ namespace BurgerShopInstaller
 
         /// <summary>上次卸载是否有文件被登记为重启后删除。</summary>
         internal static bool LastUninstallPending;
+
+        /// <summary>上次卸载的结果摘要（删除 / 保留 / 待重启删除 / 失败）。</summary>
+        internal static string LastUninstallSummary = "";
 
         /// <summary>自底向上删除空目录（只删空的，不会碰任何有内容的目录）。</summary>
         private static void RemoveEmptyDirs(string path)
