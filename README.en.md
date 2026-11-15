@@ -383,7 +383,7 @@ The script needs `tools/gamepath.txt` pointing at your game folder (**that file 
 
 | Looking for | Where to go |
 | --- | --- |
-| how to use it, what each parameter is | [`使用说明.en.md`](使用说明.en.md) (Chinese original: [`使用说明.md`](使用说明.md)) |
+| how to use it, what each parameter is | [`MANUAL.en.md`](MANUAL.en.md) (Chinese original: [`使用说明.md`](使用说明.md)) |
 | **what is still unfixed right now** | [`KNOWN-ISSUES.en.md`](KNOWN-ISSUES.en.md) |
 | **why a feature looks the way it does** (reverse-engineering findings, pitfalls) | [`ENGINEERING-NOTES.en.md`](ENGINEERING-NOTES.en.md) (Chinese original: [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md)) |
 | what changed in each version | [`CHANGELOG.en.md`](CHANGELOG.en.md) |
