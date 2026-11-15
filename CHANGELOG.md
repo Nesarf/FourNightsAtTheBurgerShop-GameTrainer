@@ -282,7 +282,7 @@ the job / step names and every message in `.github/workflows/build.yml` are Engl
 
 - `MANUAL.md` brought up to the same structure as the Chinese manual
 - `KNOWN-ISSUES.md` and `CHANGELOG.md` added
-- `README.eng.md` brought up to the same structure as the Chinese README
+- `README-eng.md` brought up to the same structure as the Chinese README
 - `ENGINEERING-NOTES.md` opens with an English reading note
 
 ### Verification
@@ -361,7 +361,7 @@ The first round (v1.0.91) translated "the drawing calls that wrap `L.T` directly
 
 ### Checksums
 
-See the "checksums" section of `README.eng.md`, or `SHA256SUMS.txt`.
+See the "checksums" section of `README-eng.md`, or `SHA256SUMS.txt`.
 
 ## v1.0.91 — full English UI
 
@@ -426,7 +426,7 @@ Fixed one install bug reported by a user, plus a handful of small problems found
 ### Documentation
 
 - **New English usage guide** (`MANUAL.md`, 347 lines). The 1479 lines were not translated word for word: tables were translated row by row, the long "why it is designed this way" passages were condensed to a sentence or two, and the top states that "the in-game panel is still Chinese; what you get here are the English names for reference". Both guides have a language switch at the top
-- **New English README** (`README.eng.md`, 190 lines), with a language switch at the top of both READMEs. Not a word-for-word translation; rearranged around what an English reader needs: how to install, what it requires, why it gets flagged, how to verify the files
+- **New English README** (`README-eng.md`, 190 lines), with a language switch at the top of both READMEs. Not a word-for-word translation; rearranged around what an English reader needs: how to install, what it requires, why it gets flagged, how to verify the files
 - **Merged the duplicate `使用说明.md`** — there was one in the repository root and one in `dist/`, identical in content, kept in sync by hand with `tools/sync.sh`. Now only the root copy exists, and both packaging and CI read it
 - **"six columns" changed to "eight columns" in the README and Description** — v1.0.4 added the preset and about columns but three places still said six. The wording now distinguishes "the first six columns are by pose, the last two are tools and information", otherwise a reader would think two more poses had been added
 - **README "feature overview" gained the main features and the design trade-offs** — it used to describe only the column structure and the three parameter sets and mention none of the core mechanics

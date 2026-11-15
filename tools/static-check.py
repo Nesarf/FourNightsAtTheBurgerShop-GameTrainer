@@ -242,7 +242,7 @@ else:
 # twice and nobody would have noticed — a user verifying would conclude the file had been
 # tampered with. "Numbers in documentation" are the first thing to rot, so something has to
 # watch them.
-_sha_lines = re.findall(r'^([0-9a-f]{64})  (\S+)$', read(ROOT / 'README.chs.md') or '', re.M)
+_sha_lines = re.findall(r'^([0-9a-f]{64})  (\S+)$', read(ROOT / 'README-chs.md') or '', re.M)
 if not _sha_lines:
     warn("(10) no SHA256 checksums found in README (ignore if that is intentional)")
 else:

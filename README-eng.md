@@ -12,7 +12,7 @@
 
 ---
 
-[**中文**](README.chs.md) | **English**
+[**中文**](README-chs.md) | **English**
 
 ---
 

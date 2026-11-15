@@ -12,7 +12,7 @@
 
 ---
 
-**中文** | [**English**](README.eng.md)
+**中文** | [**English**](README-eng.md)
 
 ---
 
@@ -367,7 +367,7 @@ bash tools/gcmd.sh demand status   # 索取/榨取模式状态
 | **某个功能为什么长这样**（逆向发现、踩过的坑） | [`工程笔记.md`](工程笔记.md) · [`ENGINEERING-NOTES.md`](ENGINEERING-NOTES.md) |
 | 每个版本改了什么 | [`更新日志.md`](更新日志.md) · [`CHANGELOG.md`](CHANGELOG.md) |
 
-**英文读者**：`README.eng.md`、`MANUAL.md`、`KNOWN-ISSUES.md`、`CHANGELOG.md`、`ENGINEERING-NOTES.md`
+**英文读者**：`README-eng.md`、`MANUAL.md`、`KNOWN-ISSUES.md`、`CHANGELOG.md`、`ENGINEERING-NOTES.md`
 是完整英文版，与中文版同结构。
 
 `工程笔记.md` 有 **44 条**历史记录 + **5 篇**附录 + **5 条** S 系列，
