@@ -220,8 +220,11 @@ jobs:
           # Whether the warning belongs there depends on the ASSETS, not on how they got
           # here: this repository's normal flow signs locally and syncs the signed build
           # in, so the copy CI uploads is already signed. Only an unsigned build earns it.
+          # [why SignerCertificate and not Status] the runner has never seen our self-signed
+          # root, so a perfectly good signature reports UnknownError there. "Is there a
+          # signature at all" is the question this banner asks, not "does this machine trust it".
           $sig = Get-AuthenticodeSignature (Join-Path 'out' '18-9L-6_ED-7-45-45_C-LS-Installer.exe')
-          if ($sig.Status -eq 'Valid') {
+          if ($sig.SignerCertificate -ne $null) {
             Write-Host "assets carry a valid signature ($($sig.SignerCertificate.Subject)) - no warning banner"
             Copy-Item notes.md notes-final.md -Force
           } else {
