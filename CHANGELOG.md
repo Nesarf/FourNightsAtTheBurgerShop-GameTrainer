@@ -11,6 +11,28 @@ the `#N` after an entry is its number in that file.
 
 ---
 
+## v1.0.102
+
+**S.M.Y.T. Production now appears in three places.**
+
+- Closing the installer as a user pops a dialog titled `F.D.C.U.S.` whose text is
+  `S.M.Y.T. Production`. Only a user-initiated close triggers it — shutdown, a kill from
+  Task Manager, and command-line mode all stay silent.
+- The in-game panel and the standalone trainer each show `S.M.Y.T. Production` in the
+  bottom-right corner.
+
+The panel line is drawn with an absolute rect instead of the layout: inside GUILayout it
+would move along with the content whenever the panel collapses or its content gets shorter.
+
+### Verification
+
+```
+Regression      install 28 / over-install 28 / uninstall 28 / reinstall 28
+Static check    17 rules, 0 failed
+```
+
+---
+
 ## v1.0.101
 
 **Uninstall now knows what it owns after a reinstall, the receipt states how many files were

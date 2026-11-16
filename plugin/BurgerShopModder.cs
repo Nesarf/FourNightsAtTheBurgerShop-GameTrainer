@@ -15,7 +15,7 @@ namespace BurgerShopModder
     /// Four Nights at the Burger Shop — 数值修改器
     /// 用反射操作游戏托管字段，不修改原始 Assembly-CSharp.dll，卸载 BepInEx 即完全还原。
     /// </summary>
-    [BepInPlugin(Guid, "Burger Shop Trainer / 数值修改器", "1.0.101")]
+    [BepInPlugin(Guid, "Burger Shop Trainer / 数值修改器", "1.0.102")]
     [BepInProcess("Four Nights at the Burger Shop.exe")]
     public class Plugin : BaseUnityPlugin
     {
@@ -9236,7 +9236,7 @@ namespace BurgerShopModder
         private string _aboutHint = "";
 
         /// <summary>插件版本。与 [BepInPlugin] 里那个字符串保持一致。</summary>
-        internal const string PluginVersion = "1.0.101";
+        internal const string PluginVersion = "1.0.102";
 
         private const string UrlRepo = "https://github.com/Nesarf/FourNightsAtTheBurgerShop-GameTrainer";
         private const string UrlBili = "https://space.bilibili.com/11247581";
@@ -9350,6 +9350,7 @@ namespace BurgerShopModder
         // 自己做一张近乎不透明的深色底 —— 纯色背景必须用 Texture2D，
         // 默认皮肤用的是九宫格精灵，改颜色改不出实底。
         private static GUIStyle _winStyle;
+        private static GUIStyle _sigStyle;
         private static Texture2D _winBg;
 
         private static void EnsureWinStyle()
@@ -9371,6 +9372,11 @@ namespace BurgerShopModder
             _winStyle.fontSize = 12;
             _winStyle.fontStyle = FontStyle.Bold;
             _winStyle.padding = new RectOffset(10, 10, 22, 8);
+
+            _sigStyle = new GUIStyle(GUI.skin.label);
+            _sigStyle.fontSize = 10;
+            _sigStyle.alignment = TextAnchor.LowerRight;
+            _sigStyle.normal.textColor = new Color(0.62f, 0.66f, 0.78f, 0.85f);
         }
 
         /// <summary>
@@ -9576,6 +9582,11 @@ namespace BurgerShopModder
                 GUILayout.Width(w));
             GUI.skin.window = prevWin;
             _win.width = w;
+
+            // 右下角署名。绝对定位 —— 交给 GUILayout 会占布局空间，面板收起或内容变短时位置会飘。
+            if (_win.height > 24f)
+                GUI.Label(new Rect(_win.x + _win.width - 138f, _win.y + _win.height - 15f, 130f, 13f),
+                          "S.M.Y.T. Production", _sigStyle);
         }
 
         private void DrawWindow(int id)

@@ -79,6 +79,7 @@ namespace BurgerShopTrainer
         private readonly Dictionary<string, Control> _controls = new Dictionary<string, Control>();
         private readonly Dictionary<string, Label> _valueLabels = new Dictionary<string, Label>();
         private Label _statusLabel;
+        private Label _signature;
 
         private static readonly Color Ink = Color.FromArgb(28, 32, 44);
         private static readonly Color Accent = Color.FromArgb(158, 128, 255);
@@ -195,6 +196,22 @@ namespace BurgerShopTrainer
                 AutoSize = true
             };
             Controls.Add(_statusLabel);
+
+            // 右下角署名
+            _signature = new Label
+            {
+                Text = "S.M.Y.T. Production",
+                AutoSize = true,
+                ForeColor = Color.FromArgb(150, 150, 160),
+                BackColor = Color.Transparent,
+                Font = new Font("Microsoft YaHei UI", 8f)
+            };
+            Controls.Add(_signature);
+            Size sigPref = _signature.PreferredSize;
+            float sigK = ScaleFactor();
+            _signature.Location = new Point(
+                ClientSize.Width - sigPref.Width - (int)Math.Round(12 * sigK),
+                ClientSize.Height - sigPref.Height - (int)Math.Round(8 * sigK));
 
             if (!File.Exists(_cfgPath))
             {
