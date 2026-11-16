@@ -11,6 +11,27 @@ the `#N` after an entry is its number in that file.
 
 ---
 
+## v1.0.103
+
+**Fixes the close dialog added in 1.0.102: it flashed and vanished.**
+
+Showing a `MessageBox` straight from `OnFormClosing` does not work — the modal box takes the
+closing window as its owner, and the close that is already in progress disposes it right
+away. The form now cancels that first close with `e.Cancel`, shows the dialog, and then
+closes itself.
+
+Verified by hand: closing the installer leaves the `F.D.C.U.S.` dialog up with
+`S.M.Y.T. Production` in it.
+
+### Verification
+
+```
+Regression      install 28 / over-install 28 / uninstall 28 / reinstall 28
+Close dialog    user close shows and holds the dialog; command-line mode stays silent
+```
+
+---
+
 ## v1.0.102
 
 **S.M.Y.T. Production now appears in three places.**

@@ -17,7 +17,7 @@ namespace BurgerShopInstaller
     {
         /// <summary>窗口标题。随界面语言走，所以是属性而不是 const。</summary>
         internal static string AppTitle { get { return Txt.T("汉堡店 数值修改器 · 安装程序"); } }
-        internal const string Version = "1.0.102";
+        internal const string Version = "1.0.103";
         internal const string GameExe = "Four Nights at the Burger Shop.exe";
 
         /// <summary>插件的 BepInPlugin GUID。用来识别"这个 dll 是我们的旧版"。</summary>
@@ -607,15 +607,24 @@ namespace BurgerShopInstaller
             Detect();
         }
 
+        private bool _saidGoodbye;
+
         /// <summary>
-        /// 关闭时道别。只在用户自己关窗口时弹 —— 关机、任务管理器结束进程、程序自己退出都不打扰。
+        /// 关闭时道别。只在用户自己关窗口时弹 —— 关机、结束进程、程序自己退出都不打扰。
+        ///
+        /// 【先拦一次再关】直接在 OnFormClosing 里 Show 是不行的：模态框拿正在关闭的窗口
+        /// 当 owner，关闭流程继续走下去会把它一起销毁，弹窗一闪就没了（实测）。
+        /// 所以先 e.Cancel 拦住，弹完再由我们自己 Close 一次。
         /// </summary>
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
-            if (e.CloseReason == CloseReason.UserClosing)
-                MessageBox.Show("S.M.Y.T. Production", "F.D.C.U.S.",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            if (e.CloseReason != CloseReason.UserClosing || _saidGoodbye) return;
+            _saidGoodbye = true;
+            e.Cancel = true;
+            MessageBox.Show("S.M.Y.T. Production", "F.D.C.U.S.",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            Close();
         }
 
         /// <summary>从内嵌资源设置窗口图标。</summary>
