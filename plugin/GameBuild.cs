@@ -24,11 +24,20 @@ namespace BurgerShopModder
     /// </summary>
     internal static class GameBuild
     {
-        /// <summary>开发与测试时对着的 Assembly-CSharp.dll 的 SHA256（小写）。</summary>
-        internal const string ExpectedSha256 =
-            "9f2c64db2dc259d4347aeb00ef644507a22aee9d5a3b66328cb27babda9a0bb4";
+        /// <summary>
+        /// 已经实测过的游戏构建，一份一行：SHA256 与字节数。
+        ///
+        /// 【为什么是列表】这个游戏没有版本号，作者每次更新都会重新编译 Assembly-CSharp.dll，
+        /// 指纹就变一次 —— 但方法名与签名往往没动，补丁照样挂得上。只认一份的话，每次游戏
+        /// 更新都会报「不一致」，而实际上三十几个挂载点全挂上了（Ver. 1.2 就是这样）。
+        /// </summary>
+        internal static readonly string[] KnownSha256 =
+        {
+            "9f2c64db2dc259d4347aeb00ef644507a22aee9d5a3b66328cb27babda9a0bb4",   // 最初的构建
+            "11bbe4e5027f8d6fcec8bf44b7b4f3448b31e9d2bc7bcd8f7a72f828bf8f18fc",   // Ver. 1.2
+        };
 
-        internal const long ExpectedSize = 293888;
+        internal static readonly long[] KnownSize = { 293888, 306176 };
 
         private static bool _done;
         private static string _state;     // same / different / unknown
@@ -55,7 +64,7 @@ namespace BurgerShopModder
                 case "same":
                     return L.T("游戏程序集与开发时一致");
                 case "different":
-                    return L.T("游戏程序集与开发时【不一致】—— 补丁可能挂不上，见下方详情");
+                    return L.T("游戏程序集不在已知列表里 —— 补丁挂载结果见下方");
                 default:
                     return L.T("查不到游戏程序集（{0}）", _detail ?? L.T("未知原因"));
             }
@@ -66,8 +75,13 @@ namespace BurgerShopModder
         {
             EnsureChecked();
             var sb = new StringBuilder();
-            sb.AppendLine("  期望 SHA256 : " + ExpectedSha256);
-            sb.AppendLine(L.T("  期望大小   : {0} 字节", ExpectedSize));
+            sb.AppendLine(L.T("  已知构建   : {0} 份", KnownSha256.Length));
+            for (int i = 0; i < KnownSha256.Length; i++)
+            {
+                bool hit = string.Equals(_actual, KnownSha256[i], StringComparison.OrdinalIgnoreCase);
+                sb.AppendLine("    #" + (i + 1) + "  " + KnownSha256[i] + "  " + KnownSize[i] + L.T(" 字节")
+                              + (hit ? L.T("  ← 就是这一份") : ""));
+            }
             if (!string.IsNullOrEmpty(_actual))
             {
                 sb.AppendLine("  实际 SHA256 : " + _actual);
@@ -122,8 +136,13 @@ namespace BurgerShopModder
                     _actual = sb.ToString();
                 }
 
-                _state = string.Equals(_actual, ExpectedSha256, StringComparison.OrdinalIgnoreCase)
-                       ? "same" : "different";
+                _state = "different";
+                for (int i = 0; i < KnownSha256.Length; i++)
+                    if (string.Equals(_actual, KnownSha256[i], StringComparison.OrdinalIgnoreCase))
+                    {
+                        _state = "same";
+                        break;
+                    }
             }
             catch (Exception e)
             {
@@ -171,10 +190,9 @@ namespace BurgerShopModder
                 else if (_state == "different")
                 {
                     if (log != null)
-                        log.LogWarning(L.T("游戏程序集核对：与开发时【不一致】。")
-                            + L.T("补丁可能挂不上，面板「系统 → 取证 / 自检」里有详情。")
-                            + L.T(" 期望 ") + ExpectedSha256.Substring(0, 16) + "…"
-                            + L.T("，实际 ") + (_actual != null ? _actual.Substring(0, 16) : "?") + "…");
+                        log.LogWarning(L.T("游戏程序集不在已知列表里。")
+                            + L.T("补丁挂载结果见下方日志；面板「系统 → 取证 / 自检」里有指纹对照。")
+                            + L.T(" 实际 ") + (_actual != null ? _actual.Substring(0, 16) : "?") + "…");
                 }
                 else
                 {

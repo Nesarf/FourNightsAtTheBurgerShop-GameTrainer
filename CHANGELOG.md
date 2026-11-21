@@ -11,6 +11,41 @@ the `#N` after an entry is its number in that file.
 
 ---
 
+## v1.0.104
+
+**Supports game Ver. 1.2, and fixes one event hook that had been missing all along.**
+
+### Several known builds
+
+The game carries no version number, and the author recompiles `Assembly-CSharp.dll` on every
+update, so the fingerprint changes each time — but method names and signatures usually do not,
+and the patches still attach. Only one fingerprint used to be recognised, so Ver. 1.2 reported
+"does not match the development build" while all 43 mount points attached fine.
+
+Known builds are now a table, and "fingerprint not recognised" no longer means "may not work":
+the verdict reads "not in the known list, see the mount result". The table is also listed in
+`README.md`.
+
+### Event hooks: 10/11 became 11/11
+
+`PlayerControl.EcstasyReset` has a zero-argument and a one-argument overload. The activity
+recorder looked it up with `GetMethod(name)`, hit `AmbiguousMatchException`, and the catch
+treated it as "not found". It now walks every method of that name and hooks them all.
+
+The log line "event hook failed PlayerControl.EcstasyReset: Ambiguous match found." described
+exactly this and sat there unattended — it only lost one class of event, nothing functional.
+The table had also spelled the class `ECstasyReset` (capital C); fixed too.
+
+### Verification
+
+```
+Ver. 1.2      assembly check: matches; 43 mount points; hooks 11/11
+Regression    install 28 / uninstall 28 / reinstall 28
+Static check  17 rules, 0 failed
+```
+
+---
+
 ## v1.0.103
 
 **Fixes the close dialog added in 1.0.102: it flashed and vanished.**

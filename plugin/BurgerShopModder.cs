@@ -15,7 +15,7 @@ namespace BurgerShopModder
     /// Four Nights at the Burger Shop — 数值修改器
     /// 用反射操作游戏托管字段，不修改原始 Assembly-CSharp.dll，卸载 BepInEx 即完全还原。
     /// </summary>
-    [BepInPlugin(Guid, "Burger Shop Trainer / 数值修改器", "1.0.103")]
+    [BepInPlugin(Guid, "Burger Shop Trainer / 数值修改器", "1.0.104")]
     [BepInProcess("Four Nights at the Burger Shop.exe")]
     public class Plugin : BaseUnityPlugin
     {
@@ -9236,7 +9236,7 @@ namespace BurgerShopModder
         private string _aboutHint = "";
 
         /// <summary>插件版本。与 [BepInPlugin] 里那个字符串保持一致。</summary>
-        internal const string PluginVersion = "1.0.103";
+        internal const string PluginVersion = "1.0.104";
 
         private const string UrlRepo = "https://github.com/Nesarf/FourNightsAtTheBurgerShop-GameTrainer";
         private const string UrlBili = "https://space.bilibili.com/11247581";
@@ -11341,11 +11341,20 @@ namespace BurgerShopModder
             {
                 Type t = FindType(typeName);
                 if (t == null) return false;
-                MethodInfo m = t.GetMethod(methodName, AllFlags);
-                if (m == null) return false;
                 MethodInfo post = typeof(Plugin).GetMethod("Postfix_GameEvent_Generic", AllFlags);
                 if (post == null) return false;
-                _harmony.Patch(m, null, new HarmonyMethod(post), null);
+
+                // 【同名重载要全部挂】GetMethod(name) 在有两个重载时抛 AmbiguousMatch，
+                // 被 catch 当成「未找到」—— PlayerControl.EcstasyReset 有 0 参 / 1 参两个，
+                // 于是这条记录点一直挂着「未找到」（11 个里缺 1 个，日志里看得出来）。
+                int hit = 0;
+                foreach (MethodInfo m in t.GetMethods(AllFlags))
+                {
+                    if (m.Name != methodName) continue;
+                    _harmony.Patch(m, null, new HarmonyMethod(post), null);
+                    hit++;
+                }
+                if (hit == 0) return false;
                 _eventKinds[typeName + "." + methodName] = kind;
                 return true;
             }
@@ -11370,7 +11379,7 @@ namespace BurgerShopModder
                 new string[] { "PlayerControl", "HPChange",                 "hp_change" },
                 new string[] { "PlayerControl", "HPGaugeChangeValue",       "hp_gauge" },
                 new string[] { "PlayerControl", "EcstasyChange",            "ecstasy_change" },
-                new string[] { "PlayerControl", "ECstasyReset",             "ecstasy_reset" },
+                new string[] { "PlayerControl", "EcstasyReset",             "ecstasy_reset" },
                 new string[] { "PlayerControl", "EcstasyGaugeChangePercent","ecstasy_gauge" },
                 // 资源 / 场景
                 new string[] { "DLCManager", "LoadAssetBundle", "dlc_load" },

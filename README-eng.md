@@ -139,8 +139,17 @@ So what follows are **facts you can check yourself**, not a sentence like "suppo
 | --- | --- |
 | **Engine** | Unity **2022.1.24f1** (`709dddfb713f`) |
 | **Game assembly** | `Four Nights at the Burger Shop_Data/Managed/Assembly-CSharp.dll` |
-| **Size** | 293888 bytes |
-| **SHA256** | `9f2c64db2dc259d4347aeb00ef644507a22aee9d5a3b66328cb27babda9a0bb4` |
+
+Builds tested so far, one per row:
+
+| Build | Size | SHA256 |
+| --- | --- | --- |
+| original | 293888 bytes | `9f2c64db2dc259d4347aeb00ef644507a22aee9d5a3b66328cb27babda9a0bb4` |
+| Ver. 1.2 | 306176 bytes | `11bbe4e5027f8d6fcec8bf44b7b4f3448b31e9d2bc7bcd8f7a72f828bf8f18fc` |
+
+Both were tested and every patch attached (43 mount points). A fingerprint outside this
+table is not automatically bad — this game carries no version number and the author
+recompiles the assembly on every update; **the mount result in the log** is the reliable signal.
 
 Check it yourself:
 
@@ -485,12 +494,12 @@ Get-FileHash "18-9L-6_ED-7-45-45_C-LS-Installer.exe" -Algorithm SHA256
 Those three comments count the steps: download the exe and `SHA256SUMS.txt` into one directory · compute your own
 hash · compare it with the matching line in `SHA256SUMS.txt`, and if it is the same the file was not touched.
 
-The values for v1.0.103 are:
+The values for v1.0.104 are:
 
 ```
-74d98a9a860e1ee3e9b8fb00aec23004d41e6720bc876aefe1a19c32ea09b5c6  18-9L-6_ED-7-45-45_C-LS-Installer.exe
-2fe63c4d9f13282aa77a1497b3ae453f83e99c5065470dac37d9fed7b6eac807  18-9L-6_ED-7-45-45_C-LS-Trainer.exe
-7f1e3383b6a9a547e58d2bb3a65ec72996fb4054a0e96e9349e699151f0e63d1  18-9L-6_ED-7-45-45_C-LS.dll
+0cc0ae152536c03f5346cf32f7d1b1b1a218810043bb560a3cf54e4024a23714  18-9L-6_ED-7-45-45_C-LS-Installer.exe
+c48273579a158d33bf8163ab6b7d080927cf8dade620dc475df644e93a2a098f  18-9L-6_ED-7-45-45_C-LS-Trainer.exe
+3220699e4e0e37dff30e3e989f492ff20fc225151c11bfdc0d73910b2e98edea  18-9L-6_ED-7-45-45_C-LS.dll
 ```
 
 **If the checksum does not match, do not run it** — that means the file was modified on the way.

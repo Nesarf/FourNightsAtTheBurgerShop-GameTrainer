@@ -638,11 +638,10 @@ HitArea_Manman_By_Plugins 已绑定到素材：	HitArea_Manman_By_Plugins bound 
 ·闸门关	 · gate closed
 ERR 用法: demand on|off|fire|afterglow|status	ERR usage: demand on|off|fire|afterglow|status
 游戏程序集与开发时一致	Game assembly matches the development build
-游戏程序集与开发时【不一致】—— 补丁可能挂不上，见下方详情	Game assembly does NOT match the development build — patches may fail to attach; see the details below
+游戏程序集不在已知列表里 —— 补丁挂载结果见下方	This game build is not in the known list — patch results are below
 查不到游戏程序集（{0}）	Game assembly not found ({0})
 未知原因	unknown reason
 没找到 Assembly-CSharp.dll	Assembly-CSharp.dll not found
-  期望大小   : {0} 字节	  Expected size : {0} bytes
   实际大小   : {0} 字节	  Actual size   : {0} bytes
   说明       : {0}	  Note          : {0}
 ERR 拿不到配置对象	ERR cannot reach the config object
@@ -1059,10 +1058,12 @@ ERR 未知命令: 	ERR unknown command:
 
 # ---- 游戏程序集核对日志（v1.0.98 补，v1.0.94 只扫了 Log.* 漏掉 log.Log*）----
 游戏程序集核对：与开发时一致	Assembly check: matches the build this was developed against
-游戏程序集核对：与开发时【不一致】。	Assembly check: does NOT match the development build. 
-补丁可能挂不上，面板「系统 → 取证 / 自检」里有详情。	Patches may fail to hook; see System -> forensics / self-test in the panel.
- 期望 	 expected 
-，实际 	, actual 
+游戏程序集不在已知列表里。	Assembly check: this build is not in the known list.
+补丁挂载结果见下方日志；面板「系统 → 取证 / 自检」里有指纹对照。	Patch results follow in the log; System -> forensics / self-test has the fingerprint comparison.
+ 实际 	 actual 
+  已知构建   : {0} 份	  Known builds: {0}
+ 字节	 bytes
+  ← 就是这一份	  <- this one
 游戏程序集核对：查不到（	Assembly check: cannot read it (
 ）—— 这不等于不匹配，只是没能核对。	) - that is not a mismatch, the check simply could not run.
 未知	unknown
