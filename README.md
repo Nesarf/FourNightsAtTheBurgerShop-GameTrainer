@@ -462,9 +462,9 @@ Get-FileHash "18-9L-6_ED-7-45-45_C-LS-Installer.exe" -Algorithm SHA256
 v1.0.104 的值是：
 
 ```
-0cc0ae152536c03f5346cf32f7d1b1b1a218810043bb560a3cf54e4024a23714  18-9L-6_ED-7-45-45_C-LS-Installer.exe
-c48273579a158d33bf8163ab6b7d080927cf8dade620dc475df644e93a2a098f  18-9L-6_ED-7-45-45_C-LS-Trainer.exe
-3220699e4e0e37dff30e3e989f492ff20fc225151c11bfdc0d73910b2e98edea  18-9L-6_ED-7-45-45_C-LS.dll
+9aa3b719b9c707471746e7bcc2aa0c7e229c217b36b34fe73c54c6ffea88289d  18-9L-6_ED-7-45-45_C-LS-Installer.exe
+bef4f8c17711b2b79cf12314716a1609f5c8749eaa72ab4aebfbd11d9d0d8a15  18-9L-6_ED-7-45-45_C-LS-Trainer.exe
+58836536eaf8bcd1dc49e20f766d3af6e0e2caeac3f03448e10922764671f2fc  18-9L-6_ED-7-45-45_C-LS.dll
 ```
 
 **校验和对不上就别运行**，那说明文件在中途被改过。

@@ -1,4 +1,4 @@
-﻿# 组装安装程序的载荷（BepInEx 核心 + 插件 + 编辑器 + 卸载脚本）
+# 组装安装程序的载荷（BepInEx 核心 + 插件 + 编辑器 + 卸载脚本）
 # 产出：installer\payload.zip（内嵌进安装程序 exe 的资源）
 
 $ErrorActionPreference = 'Stop'
@@ -41,14 +41,26 @@ New-Item -ItemType Directory -Path $cfgDir  -Force | Out-Null
 $plugName = '2' + [char]0x00D7 + '9+9L+6[ED]+7+2' + [char]0x00D7 + '45' + [char]0x2192 + '1[C]+LS.dll'
 Copy-Item -LiteralPath (Join-Path $dist $plugName) -Destination $plugDir -Force
 
-# 默认配置：带完整注释，装好即可被编辑器读取
-$gameCfg = Join-Path $game 'BepInEx\config\nesarf.burgershop.modder.cfg'
-if (Test-Path $gameCfg) {
-    Copy-Item $gameCfg $cfgDir -Force
-    Write-Host '已并入默认配置文件'
-} else {
-    Write-Host '警告：游戏目录里没有生成的 cfg，BepInEx 首次运行会自己生成' -ForegroundColor Yellow
-}
+# 配置：打的是仓库里那一份，不是这台机器上的那一份。
+#
+# 【这里改过两次，第二次才对】
+# 原来的写法是 Copy-Item $game\BepInEx\config\nesarf.burgershop.modder.cfg ——
+# 把打包机当前的配置复制进载荷。那份会随调试漂移，谁也说不清用户装到的是什么。
+# issue #4 报的就是这个现象。
+#
+# 我随后改成「完全不打包」—— 那也错了：这份配置是作者点名要给用户的起点，
+# 一整套调好的手感参数（TargetHp 300、DemandThresholdBase_Osiri 100、CapStepPerSec 54.69…），
+# 和代码默认值差着 114 项。不打包等于把这份工作丢掉。
+#
+# 正确做法：把它放进仓库，打包时取这一份。进 git、可审查、和打包机上怎么调试无关。
+$shipCfg = Join-Path $root 'ship-default.cfg'
+if (-not (Test-Path $shipCfg)) { throw '找不到 installer\ship-default.cfg —— 出厂配置必须留在仓库里' }
+# 两份，内容相同：
+#   .cfg         装完即可被编辑器读取的活跃配置
+#   .shipped.cfg 出厂状态的参照，default 预设读它 —— 用户改过之后还能回到这里
+Copy-Item $shipCfg (Join-Path $cfgDir 'nesarf.burgershop.modder.cfg')          -Force
+Copy-Item $shipCfg (Join-Path $cfgDir 'nesarf.burgershop.modder.shipped.cfg')  -Force
+Write-Host '已并入出厂配置：installer\ship-default.cfg（仓库内那份，不是本机当前的）'
 
 # 3) 打包
 $staging = Join-Path $root '_staging'

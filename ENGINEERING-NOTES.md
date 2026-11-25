@@ -85,6 +85,7 @@ Many of the entries below stand for a reusable rule, for example:
 | 44 | Layout: buttons that stretch across the row, and how to watch a shape you cannot see |
 | 45 | Renaming and translating the docs: the file name, one checker, two kinds of Chinese |
 | 46 | The two changelogs fell 18 versions behind? No — the comparison was wrong |
+| 47 | Issue #4: the installer shipped my own debugging config, and the editor crashed on reset |
 
 Appendices (mechanism descriptions and rules, not defects)
 
@@ -2552,6 +2553,79 @@ It was not. Every version from v1.0.99 downwards is written as `## v1.0.99 — <
 **A second false alarm, from the same rule file**: rule (6) exempts the checker from its own local-path scan by comparing resolved paths, so it covered only the copy that was actually running. Running the working copy's script against the release tree — which is what a two-tree check does — left the release copy unexempted, and the checker's own rule table was reported as a leaked local path, with `tools/static-check.py` named as the file it came from. The exemption now matches by file name and parent directory, the shape `sync.sh` has always used. Both runs are clean.
 
 **Why this is worth an entry**: the failure was not a wrong file, it was a wrong reading of a right file — and the wrong reading carried more detail than the correct silence would have. A file that has lost a version announces nothing. A filter that has lost eighteen matches announces eighteen.
+
+---
+
+## 47. Issue #4: the installer shipped my own debugging config, and the editor crashed on reset
+
+**The report**: a fresh install already had some settings changed, the panel's "reset all switches" did nothing about it, and choosing "restore defaults" in the editor threw `KeyNotFoundException: the given key was not present in the dictionary` at `BurgerShopTrainer.MainForm.<BuildButtons>b__20_3`.
+
+**Root cause 1: the payload carried the developer's config.** `make_payload.ps1` did this:
+
+```
+$gameCfg = Join-Path $game 'BepInEx\config\nesarf.burgershop.modder.cfg'
+if (Test-Path $gameCfg) { Copy-Item $gameCfg $cfgDir -Force }
+```
+
+The comment above it said "default configuration, with the full comments, so the editor can read it right after install". The intent was to give the editor something to read. What it actually did was copy **whatever this machine had tuned at the time** — in this case `GodMode = true`, right under the `# Default value: false` line that BepInEx writes. Every user got my debugging session as their starting point, and nothing told them which values were not the default.
+
+The config is no longer packaged. BepInEx generates it on first launch from the code defaults, which is exactly what "factory default" means. The editor already had a line for the case where there is no config yet (`the config file is not there yet, launch the game once`), so nothing needed to be added for it.
+
+**Root cause 2: two collections of different lengths.** `_settings` is filled from every key in the cfg (243 of them), while `_controls` only gets the thirteen keys listed in `Order` that the editor draws widgets for. The reset handler walked `_settings` and indexed `_controls` with every key:
+
+```
+foreach (Setting st in _settings)
+    ((CheckBox)_controls[st.Key]).Checked = false;    // the fourteenth key throws
+```
+
+It could not work — not rarely, not under a special condition, but on every click as soon as the cfg held any key outside those thirteen. `TryGetValue` with a skip is the fix; a setting the editor does not show is left alone, which is also the correct behaviour.
+
+**Root cause 3, found while fixing 2: the default values were made up.** `DefaultOf` was a switch with four cases (`MaxBurgerNum` 10, `TabemiPowerMul` 10, `ClockFullTime` 180, `GameSpeed` 1) and `default: return 0` for everything else. The other sliders would have been reset to zero — which for something like `TargetHp` means setting it to 0, not restoring it. The real defaults are already in the cfg, three comment lines above each key, written by BepInEx: `# Setting type`, `# Default value`, `# Acceptable value range`. The parser now reads the middle one, and the four hardcoded cases stay only as a fallback for a config that somehow lacks the comment.
+
+**The design decision that came out of it: `default` as a virtual preset.** Rather than only removing the shipped config, the preset list now always starts with an entry called `default` that has no file behind it. Applying it walks `ConfigDefinitions` and writes each entry's `DefaultValue` back through `BoxedValue`. It cannot be overwritten or deleted — a baseline that can be edited is not a baseline. This turns "restore defaults" from two partial mechanisms (ten switches in the panel, four hardcoded keys in the editor) into one complete one covering all 243 parameters, and it can never go stale the way a shipped file would when a parameter is added.
+
+Applying it still backs up the current state first, same as any other preset. That rule did not get an exception.
+
+**Verified on the machine, not by reading the code**:
+
+```
+payload          BepInEx/config/ is an empty directory, no cfg entry
+editor reset     GodMode true→false, PowerUnlock true→false, TargetHp 300 untouched
+                 (TargetHp has no widget — the key that used to throw)
+preset apply     "restored 243 items; previous state backed up as default.current-before-apply-..."
+panel            default is listed first, marked read-only, with only a "restore" button
+```
+
+`TargetHp = 300` staying put is the part worth keeping: it is evidence that the skip works, because that is the key the old code died on.
+
+**Follow-up, same round: where default gets its values, autosave, and what "save" means**
+
+The first version made `default` mean "the code defaults". The author pointed out that the config shipped in the installer is a factory state he tuned on purpose. Checked and confirmed: it differs from the code defaults in 114 entries (`TargetHp 300` vs 100, `DemandThresholdBase_Osiri 100` vs 20, `CapStepPerSec 54.69` vs 20). So `default` has to point at that file — otherwise "the state you get after installing" and "the state you get after clicking default" are two different things.
+
+Three changes:
+
+- the factory config lives in the repository (`installer/ship-default.cfg`), and packaging takes that file instead of whatever the build machine currently has
+- `default` reads the shipped copy that the installer places in the config directory, falling back to the code default per entry when the file is missing one
+- internal state such as `ConfigVersion` is skipped — its DefaultValue is 0, and writing that back tells the plugin "this config was never migrated", so the next launch runs the migration again
+
+Then autosave, and the pair of save actions:
+
+- "Save" writes only to autosave, never to a named preset
+- "Save as" is the only way to create a named preset
+- before any preset is applied, the current state goes into autosave, so "undo" is always available
+
+So picking the wrong preset or fiddling with values only touches autosave; the presets the user stored are never quietly rewritten.
+
+**A trap I walked into here**: applying autosave wrote the backup before reading the file — and the backup target was autosave itself, so it overwrote itself with the current state and then applied that. Undo became a no-op (measured: set 120, click undo, still 120, expected 150). Reading the preset has to happen before writing the backup.
+
+**Verified by reading values at each step**:
+
+```
+TargetHp 150 + Save                 autosave = 150
+Save as "test"                      named preset = 150
+TargetHp 200 + apply "test"         current back to 150, autosave = 200
+TargetHp 120 + Save                 named preset still 150, autosave = 120
+```
 
 ---
 

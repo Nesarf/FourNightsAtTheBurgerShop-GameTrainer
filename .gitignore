@@ -8,6 +8,9 @@ refs/
 tools/gamepath.txt
 cfg-snapshots/
 *.cfg
+# 出厂配置要进仓库：它是发布物的一部分，必须可审查、可追溯。
+# 这一条放行的是「内容」，不是「某台机器上的状态」—— 打包脚本读的就是仓库里这份。
+!installer/ship-default.cfg
 
 # Runtime logs and analysis output
 watch-archive/

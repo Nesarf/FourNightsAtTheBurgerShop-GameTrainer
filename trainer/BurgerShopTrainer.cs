@@ -69,6 +69,8 @@ namespace BurgerShopTrainer
         public double Max;
         public bool IsInt;
         public string Value;
+        // cfg 里 BepInEx 自己写的那行注释，读出来就是插件代码里的真默认值
+        public string DefaultValue;
     }
 
     internal sealed class MainForm : Form
@@ -467,18 +469,33 @@ namespace BurgerShopTrainer
             reset.Size = S(120, 34);
             reset.Click += (s, e) =>
             {
+                int done = 0, skipped = 0;
                 foreach (Setting st in _settings)
                 {
+                    Control ctl;
+                    // 【原来这里是 _controls[st.Key] 直接索引】_settings 装的是 cfg 里的
+                    // 全部参数（五十多个），而界面只给 Order 里那十三项建了控件 ——
+                    // 走到第十四个键就抛 KeyNotFoundException，点一次崩一次。
+                    // issue #4 的堆栈指向的正是这个 lambda。
+                    if (!_controls.TryGetValue(st.Key, out ctl)) { skipped++; continue; }
+
                     if (st.IsBool)
                     {
-                        ((CheckBox)_controls[st.Key]).Checked = false;
+                        bool on = false;
+                        bool.TryParse(st.DefaultValue, out on);
+                        ((CheckBox)ctl).Checked = on;
                     }
                     else
                     {
-                        double def = DefaultOf(st.Key);
-                        ((TrackBar)_controls[st.Key]).Value = ToBar(def, st.Min, st.Max);
+                        double def;
+                        if (!TryDefaultOf(st, out def)) { skipped++; continue; }
+                        ((TrackBar)ctl).Value = ToBar(def, st.Min, st.Max);
                     }
+                    done++;
                 }
+
+                if (_statusLabel != null)
+                    _statusLabel.Text = Txt.T("已恢复 {0} 项默认值（本界面之外的 {1} 项未动）", done, skipped);
             };
 
             // 【这一行曾经漏掉】四个按钮都创建好、绑了事件，却从没挂到窗口上 ——
@@ -487,15 +504,23 @@ namespace BurgerShopTrainer
             Controls.AddRange(new Control[] { save, launch, open, reset });
         }
 
-        private static double DefaultOf(string key)
+        // 默认值优先取 cfg 注释里那一行；取不到（老配置、手写配置）才退回硬编码。
+        // 硬编码只保留这四项，因为它们是这四项在极老的配置里可能缺注释，其余正常生成的
+        // cfg 都带 Default value —— 而硬编码一份完整副本必然和插件里的真值走散。
+        private static bool TryDefaultOf(Setting st, out double def)
         {
-            switch (key)
+            def = 0;
+            if (!string.IsNullOrEmpty(st.DefaultValue)
+                && double.TryParse(st.DefaultValue, NumberStyles.Any, CultureInfo.InvariantCulture, out def))
+                return true;
+
+            switch (st.Key)
             {
-                case "MaxBurgerNum": return 10;
-                case "TabemiPowerMul": return 10;
-                case "ClockFullTime": return 180;
-                case "GameSpeed": return 1;
-                default: return 0;
+                case "MaxBurgerNum": def = 10; return true;
+                case "TabemiPowerMul": def = 10; return true;
+                case "ClockFullTime": def = 180; return true;
+                case "GameSpeed": def = 1; return true;
+                default: return false;
             }
         }
 
@@ -524,6 +549,7 @@ namespace BurgerShopTrainer
             string[] lines = File.ReadAllLines(_cfgPath, Encoding.UTF8);
             string section = "";
             string comment = "";
+            string defaultValue = "";
 
             foreach (string raw in lines)
             {
@@ -536,6 +562,15 @@ namespace BurgerShopTrainer
                 if (line.StartsWith("#"))
                 {
                     string c = line.TrimStart('#').Trim();
+                    // 【默认值就从这里来】BepInEx 给每个参数写三行注释：Setting type /
+                    // Default value / Acceptable value range。第二行就是插件代码里的默认值，
+                    // 比在程序里另存一份硬编码副本可靠。原来那份 DefaultOf 只认四个键，
+                    // 其余一律返回 0 —— 点「恢复默认」等于把没写到的参数清零。
+                    if (c.StartsWith("Default value"))
+                    {
+                        defaultValue = c.Substring("Default value".Length).TrimStart(':', ' ').Trim();
+                        continue;
+                    }
                     if (c.Length > 0 && !c.StartsWith("Setting type") && !c.StartsWith("Default value")
                         && !c.StartsWith("Acceptable value range") && !c.StartsWith("Settings file"))
                         comment = c;
@@ -569,10 +604,12 @@ namespace BurgerShopTrainer
                     IsBool = isBool,
                     IsInt = isInt,
                     Comment = comment,
+                    DefaultValue = defaultValue,
                     Min = isBool ? 0 : (isInt ? 0 : 0),
                     Max = isBool ? 0 : (isInt ? 100 : 1)
                 });
                 comment = "";
+                defaultValue = "";
             }
         }
 

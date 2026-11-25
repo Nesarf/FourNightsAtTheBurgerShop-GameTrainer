@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -15,7 +15,7 @@ namespace BurgerShopModder
     /// Four Nights at the Burger Shop — 数值修改器
     /// 用反射操作游戏托管字段，不修改原始 Assembly-CSharp.dll，卸载 BepInEx 即完全还原。
     /// </summary>
-    [BepInPlugin(Guid, "Burger Shop Trainer / 数值修改器", "1.0.104")]
+    [BepInPlugin(Guid, "Burger Shop Trainer / 数值修改器", "1.0.105")]
     [BepInProcess("Four Nights at the Burger Shop.exe")]
     public class Plugin : BaseUnityPlugin
     {
@@ -9236,7 +9236,7 @@ namespace BurgerShopModder
         private string _aboutHint = "";
 
         /// <summary>插件版本。与 [BepInPlugin] 里那个字符串保持一致。</summary>
-        internal const string PluginVersion = "1.0.104";
+        internal const string PluginVersion = "1.0.105";
 
         private const string UrlRepo = "https://github.com/Nesarf/FourNightsAtTheBurgerShop-GameTrainer";
         private const string UrlBili = "https://space.bilibili.com/11247581";
@@ -9280,22 +9280,27 @@ namespace BurgerShopModder
             Section("配置预设");
             Hint("把当前的全部设置存成一份快照，以后一键切回去。");
             Hint("预设只含修改器的设置，不含存档。");
+            Hint("「default」是出厂状态，「autosave」是当前状态的固定槽 —— 两个都只读。");
+            Hint("手滑点了别的预设，就点 autosave 的「撤回」。");
 
             GUILayout.Space(4f);
             GUILayout.BeginHorizontal();
             GUILayout.Label(L.T("名字"), GUILayout.Width(44f));
-            _presetName = GUILayout.TextField(_presetName ?? "", 24, GUILayout.Width(210f));
-            if (GUILayout.Button(L.T("存为预设"), GUILayout.Width(BtnW("存为预设", 90f))))
+            _presetName = GUILayout.TextField(_presetName ?? "", 24, GUILayout.Width(180f));
+            if (GUILayout.Button(L.T("另存为"), GUILayout.Width(BtnW("另存为", 70f))))
                 _presetHint = PresetStore.Save(_presetName);
+            if (GUILayout.Button(L.T("保存"), GUILayout.Width(BtnW("保存", 70f))))
+                _presetHint = PresetStore.Save(PresetStore.AutoName);
             GUILayout.EndHorizontal();
-            Hint("存的时候如果同名已存在，旧的那份会先自动备份。");
+            Hint("「保存」只写 autosave，不会碰你存下的任何一份。");
+            Hint("要把当前状态固定成一个名字，用「另存为」—— 那才是新建一份预设。");
 
             GUILayout.Space(6f);
             var names = PresetStore.List();
             Section(L.T("已有预设（{0}）", names.Count));
             if (names.Count == 0)
             {
-                Hint("还没有预设。填个名字，点上面的「存为预设」。");
+                Hint("还没有预设。填个名字，点上面的「另存为」。");
             }
             else
             {
@@ -9303,21 +9308,39 @@ namespace BurgerShopModder
                 foreach (string n in names)
                 {
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label("  " + n);
-                    if (GUILayout.Button(L.T("应用"), GUILayout.Width(BtnW("应用", 56f)))) _presetHint = PresetStore.Apply(n);
-                    if (GUILayout.Button(L.T("覆盖"), GUILayout.Width(BtnW("覆盖", 56f))))
+                    if (PresetStore.IsDefault(n))
                     {
-                        _presetName = n;
-                        _presetHint = PresetStore.Save(n);
+                        // default 是虚拟的：不在磁盘上，也不许覆盖或删除。
+                        // 这一项存在的意义就是「随时能回到出厂状态」，所以只有「恢复」一个按钮。
+                        GUILayout.Label("  " + n + L.T("（出厂状态 · 只读）"));
+                        if (GUILayout.Button(L.T("恢复"), GUILayout.Width(BtnW("恢复", 56f))))
+                            _presetHint = PresetStore.Apply(n);
                     }
-                    if (GUILayout.Button(L.T("删除"), GUILayout.Width(BtnW("删除", 56f)))) _presetHint = PresetStore.Delete(n);
+                    else if (PresetStore.IsAuto(n))
+                    {
+                        // autosave 是「当前状态」的固定槽：顶上的「保存」写它，
+                        // 应用别的预设时它又被写成应用前的样子。它能被应用，不能删除。
+                        GUILayout.Label("  " + n + L.T("（当前状态 · 只读）"));
+                        if (GUILayout.Button(L.T("撤回"), GUILayout.Width(BtnW("撤回", 56f))))
+                            _presetHint = PresetStore.Apply(n);
+                    }
+                    else
+                    {
+                        // 「覆盖」这个按钮去掉了：覆盖别人的预设需要显式「另存为」同名，
+                        // 顶上的「保存」只写 autosave —— 命名预设不会被顺手改掉。
+                        GUILayout.Label("  " + n);
+                        if (GUILayout.Button(L.T("应用"), GUILayout.Width(BtnW("应用", 56f))))
+                            _presetHint = PresetStore.Apply(n);
+                        if (GUILayout.Button(L.T("删除"), GUILayout.Width(BtnW("删除", 56f))))
+                            _presetHint = PresetStore.Delete(n);
+                    }
                     GUILayout.EndHorizontal();
                 }
                 GUILayout.EndScrollView();
             }
 
             GUILayout.Space(4f);
-            Hint("「应用」会覆盖当前全部设置 —— 覆盖前会自动备份一份当前状态，提示里会写出文件名。");
+            Hint("「应用」会覆盖当前全部设置，覆盖前的状态自动存进 autosave —— 点它的「撤回」就退回来。");
             if (!string.IsNullOrEmpty(_presetHint)) GUILayout.Label("  " + _presetHint);
             GUILayout.Space(4f);
             string dir = PresetStore.DirPath();

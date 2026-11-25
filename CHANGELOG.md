@@ -11,6 +11,52 @@ the `#N` after an entry is its number in that file.
 
 ---
 
+## Unreleased
+
+**Fixes issue #4: the factory config now comes from the repository, the editor's "restore defaults" no longer crashes, and the preset list gained `default` and `autosave`.**
+
+### The factory config: from "whatever the build machine has" to "the one in the repository"
+
+`make_payload.ps1` used to copy `nesarf.burgershop.modder.cfg` straight out of the build machine's game directory, under a comment calling it the "default configuration". Shipping a config was never the problem — shipping *the current one* was, because it changes with whatever happens to be tuned on that machine, and nobody can say what a user actually installs.
+
+The config itself is wanted: it differs from the code defaults in 114 entries and is a tuned feel, not an accident. It now lives in the repository (`installer/ship-default.cfg`) and packaging takes that file. It is in git, auditable, and unaffected by debugging on the build machine.
+
+### "Restore defaults" in the editor
+
+Three problems, fixed together:
+
+1. **It crashed on every click.** `_settings` holds every key in the cfg; widgets exist for only the 13 the editor draws. The handler walked the first and indexed the second, so the fourteenth key threw `KeyNotFoundException`. It now skips keys it has no widget for.
+2. **The default values were wrong.** Only four keys had a hardcoded default; everything else returned 0, which set those parameters to zero. The real defaults are read from the `# Default value` comment BepInEx writes above each key.
+3. **Boolean defaults were always assumed false.** They now come from the same source.
+
+### New: `default` (factory state) and `autosave` (current state)
+
+Both are read-only. `default` is virtual; `autosave` is the one file with a fixed name.
+
+- **default** writes every parameter back to the shipped factory config, falling back to the code default where that file has no entry. Internal state such as `ConfigVersion` is skipped — writing 0 back makes the plugin think the config was never migrated.
+- **autosave** is the fixed slot for "the current state". Before any preset is applied, the current state goes into it, so undo is always one click away.
+
+### What "save" means
+
+- **"Save" writes only to autosave** and never touches a named preset
+- **"Save as" is the only way to create a named preset**
+- The old "overwrite" button in the list is gone — two entry points for one action only make people guess which is right
+
+Picking the wrong preset or fiddling with values now only affects autosave; the presets you stored are never quietly rewritten.
+
+### Verification
+
+```
+TargetHp 150 + Save                 autosave = 150
+Save as "test"                      named preset = 150
+TargetHp 200 + apply "test"         current back to 150, autosave = 200
+TargetHp 120 + Save                 named preset still 150, autosave = 120
+```
+
+Root cause and lessons are in `ENGINEERING-NOTES.md` entry 47.
+
+---
+
 ## v1.0.104
 
 **Supports game Ver. 1.2, and fixes one event hook that had been missing all along.**

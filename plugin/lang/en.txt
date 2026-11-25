@@ -25,9 +25,7 @@
 # ---- 预设栏按钮 ----
 打开	Open
 复制	Copy
-存为预设	Save as preset
 应用	Apply
-覆盖	Overwrite
 删除	Delete
 
 # ---- 系统栏 ----
@@ -39,9 +37,6 @@
 配置预设	Presets
 把当前的全部设置存成一份快照，以后一键切回去。	Save every current setting as a snapshot and switch back to it in one click.
 预设只含修改器的设置，不含存档。	A preset holds trainer settings only. Your save file is not part of it.
-存的时候如果同名已存在，旧的那份会先自动备份。	If a preset with that name already exists, the older one is backed up first.
-还没有预设。填个名字，点上面的「存为预设」。	No presets yet. Type a name, then click "Save as preset" above.
-「应用」会覆盖当前全部设置 —— 覆盖前会自动备份一份当前状态，提示里会写出文件名。	"Apply" overwrites every current setting. The current state is backed up first, and the status line names the backup file.
 遇到问题、想报 bug、想要别的游戏版本的适配 —— 上面三个地方都能找到我。	Found a problem, want to report a bug, or need this for another game version? All three links above reach me.
 变化率（按每次实际变化的量缩放）	Rate scaling (multiplies each actual change)
 100% = 原版；0% = 该类变化完全不发生	100% = vanilla; 0% = that kind of change never happens
@@ -650,7 +645,6 @@ ERR 预设名不合法（只允许中英文、数字、空格、- 和 _）	ERR i
 ，原同名预设已备份	, the previous one was backed up
 ERR 保存预设失败：{0}	ERR failed to save the preset: {0}
 ERR 没有这个预设：{0}	ERR no such preset: {0}
-已应用预设「{0}」：{1} 项{2}；应用前的状态已备份为 {3}	Applied preset [{0}]: {1} entries{2}; the previous state was backed up as {3}
 （{0} 项预设里没有，保持当前值）	 ({0} entries were not in the preset and keep their current values)
 ERR 应用预设失败：{0}	ERR failed to apply the preset: {0}
 已删除预设「{0}」（文件改名为 {1}，想找回就改回去）	Deleted preset [{0}] (the file was renamed to {1}; rename it back to recover)
@@ -1118,3 +1112,20 @@ ERR 插件实例不存在	ERR the plugin instance does not exist
 关于现在是独立栏（第 7 栏），不需要展开了	About is its own tab now (tab 7); there is nothing to expand
 页签: 	tabs: 
 (当前) 	(current) 
+另存为	Save as
+保存	Save
+撤回	Undo
+恢复	Restore
+（出厂状态 · 只读）	(factory state, read-only)
+手滑点了别的预设，就点 autosave 的「撤回」。	If you apply the wrong preset, click "Undo" on autosave.
+已应用预设「{0}」：{1} 项{2}；应用前的状态已存为 autosave，列表里可以退回来	Applied preset [{0}]: {1} entries{2}; the previous state was saved as autosave, and you can return to it from the list
+已恢复出厂状态：{0} 项{1}{2}{3}；恢复前的状态已存为 autosave，列表里可以退回来	Restored the factory state: {0} entries{1}{2}{3}; the previous state was saved as autosave, and you can return to it from the list
+（其中 {0} 项取自随包出厂配置）	({0} of them came from the shipped factory config)
+（没有随包出厂配置，用的是代码默认值）	(no shipped factory config; using the code defaults)
+，跳过 {0} 项内部状态	; skipped {0} internal entries
+ERR 「autosave」不能删除 —— 它是撤销上一次覆盖的退路。	ERR autosave cannot be deleted — it is the way back from the last overwrite.
+「保存」只写 autosave，不会碰你存下的任何一份。	"Save" writes only to autosave and never touches any preset you have stored.
+要把当前状态固定成一个名字，用「另存为」—— 那才是新建一份预设。	To pin the current state under a name, use "Save as" — that is what creates a new preset.
+（当前状态 · 只读）	(current state, read-only)
+「default」是出厂状态，「autosave」是当前状态的固定槽 —— 两个都只读。	"default" is the factory state and "autosave" is the fixed slot for the current state; both are read-only.
+「应用」会覆盖当前全部设置，覆盖前的状态自动存进 autosave —— 点它的「撤回」就退回来。	"Apply" overwrites every setting; the state before that goes into autosave — click its "Undo" to come back.
