@@ -84,6 +84,7 @@ Many of the entries below stand for a reusable rule, for example:
 | 43 | Three blind spots of the translation: concatenation, init order, the regex |
 | 44 | Layout: buttons that stretch across the row, and how to watch a shape you cannot see |
 | 45 | Renaming and translating the docs: the file name, one checker, two kinds of Chinese |
+| 46 | The two changelogs fell 18 versions behind? No — the comparison was wrong |
 
 Appendices (mechanism descriptions and rules, not defects)
 
@@ -2531,6 +2532,26 @@ This was not caused by the change in hand, but the invariant states its own caus
 **Why clearing is not enough**: same reason as (16) — there is no fixed shape to look at. So rule (17) was added: it walks the code blocks of the five English documents and reports any line whose `//`, leading `#`, or `←` is still followed by Chinese; a comment that leaves enough Latin letters behind (8 or more) once CJK is stripped is an English sentence quoting an API name, and is let through.
 
 **One trap worth recording**: replacing code blocks from Python eats `\v` and `\b` inside string literals as escape sequences — `<repo>\verify\bin\...` came out as `<repo>`, a vertical tab, `erify`, a backspace and `in`. Build backslashes with `chr(92)` instead of typing them into a literal.
+
+---
+
+## 46. The two changelogs fell 18 versions behind? No — the comparison was wrong
+
+**What happened**: rule (18) was added to `tools/static-check.py`. The Chinese and English changelogs must list the same versions in the same order.
+
+**Why it was added, and what went wrong before it existed**: `CHANGELOG.md` opens with a promise — same versions, same order, same entries as `更新日志.md`. To check that promise I pulled the `## v...` headings out of both files and compared them. The Chinese file gave 23 versions, the English one gave 5, and the reading was "the translation is 18 versions behind".
+
+It was not. Every version from v1.0.99 downwards is written as `## v1.0.99 — <description>` in the English file; my filter required the heading to end immediately after the number, and dropped all eighteen of them. The answer that came back read exactly like a finding: a specific count, a range, a list of the missing versions.
+
+**The rule as it stands**: `^##\s+(v[\d.]+)`. Take the version out of the head of the heading and ignore whatever follows it, so a description cannot hide a version.
+
+**The negative test was wrong the first time as well**: rewriting one heading to `## v1.0.9-REMOVED` did not make the rule fire, because `[\d.]+` stops at the hyphen and the version was still legible. Removing the number itself does fire it — `1 failed`, naming `v1.0.9` as absent from `CHANGELOG.md`.
+
+**A trap on the way back**: `git checkout -- <file>` after that test rewrote the line endings (`core.autocrlf`), and the file grew by exactly 945 bytes — one CR per line. `sync.sh` then reported the two trees as differing while `git diff` reported zero changed lines. Both were true: content matched, bytes did not. Copying the working copy over the release copy settled it.
+
+**A second false alarm, from the same rule file**: rule (6) exempts the checker from its own local-path scan by comparing resolved paths, so it covered only the copy that was actually running. Running the working copy's script against the release tree — which is what a two-tree check does — left the release copy unexempted, and the checker's own rule table was reported as a leaked local path, with `tools/static-check.py` named as the file it came from. The exemption now matches by file name and parent directory, the shape `sync.sh` has always used. Both runs are clean.
+
+**Why this is worth an entry**: the failure was not a wrong file, it was a wrong reading of a right file — and the wrong reading carried more detail than the correct silence would have. A file that has lost a version announces nothing. A filter that has lost eighteen matches announces eighteen.
 
 ---
 

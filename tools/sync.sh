@@ -112,6 +112,9 @@ INSTALLER=(
 )
 
 # Docs: release -> work
+# design/PLAN.json rides here rather than with the code: it describes the project the way
+# the engineering notes do, and it is maintained in the release copy. Left out of this list
+# it would drift silently, which is the one thing the two-tree rule exists to prevent.
 DOCS=(
   README.md
   README-eng.md
@@ -121,6 +124,7 @@ DOCS=(
   KNOWN-ISSUES.md
   工程笔记.md
   ENGINEERING-NOTES.md
+  design/PLAN.json
   LICENSE
 )
 

@@ -1,0 +1,189 @@
+{
+  "title": "汉堡店的四个夜晚数值修改器：目标网络（按形状分组，按 after 边排序）",
+  "sections": ["units", "plan"],
+  "goals": [
+    {
+      "id": "plugin",
+      "title": "游戏内插件本体：Harmony 挂载 + BepInEx 生命周期",
+      "scope": "project",
+      "status": "done",
+      "parent": null,
+      "after": [],
+      "source": "README.md；ENGINEERING-NOTES.md 第 5 条（挂载点数量下限）",
+      "notes": "整个工程的底座。所有面板、命令通道、预设都长在这一份程序集上。它的判据只有一条能自动跑：挂载点数量不得低于下限（规则 (8)，当前 36）。挂载点掉下来等于一半补丁没挂上，而界面看起来仍然正常，所以这条必须由检查器盯。",
+      "touches": ["plugin/BurgerShopModder.cs"],
+      "verifiedBy": ["tools/static-check.py"]
+    },
+    {
+      "id": "panel",
+      "title": "八栏面板与 54 个可调参数",
+      "scope": "capability",
+      "status": "done",
+      "parent": "plugin",
+      "after": ["plugin"],
+      "source": "使用说明.md；static-check 规则 (2)(3)(13)(14)",
+      "notes": "八栏：玩家 / 口交 / 背榨 / 正骑 / 换装 / 系统 / 预设 / 关于。参数分散在 BindP3 声明、面板控件、set 分支、描述模板、说明书五处，缺一处就是静默失效 —— 没有报错，功能就是不工作。这五处的一致性全部由检查器守，人眼不看。",
+      "touches": [
+        "plugin/BurgerShopModder.cs",
+        "plugin/Localization.cs",
+        "plugin/lang/en.txt"
+      ],
+      "verifiedBy": ["tools/static-check.py"]
+    },
+    {
+      "id": "command-channel",
+      "title": "文件命令通道：用脚本驱动游戏，不碰键鼠",
+      "scope": "capability",
+      "status": "done",
+      "parent": "plugin",
+      "after": ["plugin"],
+      "source": "ENGINEERING-NOTES.md 第 10 条",
+      "notes": "写一条命令到文件，插件读到就执行，回执写回另一个文件。截图、切栏、改参数、跑自检都走这条路，所以验证不必靠人点鼠标。它自己的判据是回执能不能读回来，没有自动检查 —— 一个通道坏掉的表现是回执文件不更新，容易和「命令写错了」混在一起。",
+      "touches": ["plugin/GameCommandServer.cs"],
+      "verifiedBy": []
+    },
+    {
+      "id": "presets",
+      "title": "配置预设：整份快照存读，覆盖前先备份",
+      "scope": "capability",
+      "status": "done",
+      "parent": "panel",
+      "after": ["panel"],
+      "source": "ENGINEERING-NOTES.md 第 20 条一带；v1.0.4 更新日志",
+      "notes": "用 ConfigDefinitions + GetSerializedValue 整份存整份读，不逐参数维护名单 —— 逐参数名单必然会被忘。应用预设是覆盖操作，所以每次先写一份时间戳备份，回执里写出备份文件名。这条规矩来自一次真实事故：早期调 defaults 把用户三十来项调参覆盖成了代码默认值。",
+      "touches": ["plugin/PresetStore.cs", "plugin/CfgGuard.cs"],
+      "verifiedBy": ["tools/static-check.py"]
+    },
+    {
+      "id": "build-check",
+      "title": "游戏构建核对：指纹不在已知表里也不等于不能工作",
+      "scope": "capability",
+      "status": "done",
+      "parent": "plugin",
+      "after": ["plugin"],
+      "source": "README.md；v1.0.104 更新日志",
+      "notes": "读游戏目录里的 Assembly-CSharp.dll 算 SHA256，与已知构建表比对。这里有一个刻意的设计：只报告、不拦截。指纹不认识时给出的是「不在已知表里，请看挂载结果」，而不是「可能不能用」——因为补丁挂的是具名方法，方法签名通常跨版本不变。Ver. 1.2 就是这种情况：指纹变了，43 个挂载点全挂上了。",
+      "touches": ["plugin/GameBuild.cs"],
+      "verifiedBy": []
+    },
+    {
+      "id": "installer",
+      "title": "安装程序：内嵌 BepInEx，装 / 卸 / 再装",
+      "scope": "project",
+      "status": "done",
+      "parent": null,
+      "after": ["plugin"],
+      "source": "installer/；CHANGELOG v1.0.1 到 v1.0.3",
+      "notes": "安装程序自带 BepInEx 5.4.23.5，用户不用另装。载荷是 zip，打包顺序是「先签内层，再打包，最后签外层」——反过来会让载荷里躺着未签名的 dll。卸载按清单工作，不靠猜文件名。它的判据是回归：装 28 / 卸 28 / 再装 28，退出码全 0，且装进去的文件带签名。这条只能手工跑，没有自动检查。",
+      "touches": ["installer"],
+      "verifiedBy": []
+    },
+    {
+      "id": "trainer",
+      "title": "独立修改器：游戏没开也能看参数",
+      "scope": "capability",
+      "status": "done",
+      "parent": null,
+      "after": [],
+      "source": "trainer/；shared/Locale.cs",
+      "notes": "和插件共用 Locale，所以两种语言在两处说法一致。它改的是配置文件，插件下次读到才生效 —— 不是实时注入。这条区别要记住：改完没反应，先看插件有没有重新读配置。",
+      "touches": ["trainer", "shared/Locale.cs"],
+      "verifiedBy": []
+    },
+    {
+      "id": "checker",
+      "title": "静态检查器：18 条规则，不编译、不进游戏",
+      "scope": "capability",
+      "status": "done",
+      "parent": null,
+      "after": [],
+      "source": "tools/static-check.py；ENGINEERING-NOTES.md 第 44 到 46 条",
+      "notes": "这个工程没有单元测试，检查器就是唯一的自动判据。规则都长成「某件事在五处必须一致」的形状，因为缺一处不报错。新规则的前提是同类问题已经犯过一次 —— 规则 (18) 就是这么来的：我用手比中英更新日志，比错了，才把它交给机器。",
+      "touches": ["tools/static-check.py"],
+      "verifiedBy": ["tools/static-check.py"]
+    },
+    {
+      "id": "two-trees",
+      "title": "两棵树：代码朝发布树走，文档朝工作副本走",
+      "scope": "capability",
+      "status": "done",
+      "parent": null,
+      "after": ["checker"],
+      "source": "tools/sync.sh 文件头；ENGINEERING-NOTES.md 附录「两棵树同步规则」",
+      "notes": "方向不是单向的：代码与工具以工作副本为准（work → release），文档以发布树为准（release → work）。两个方向都曾经搞反过：反一次丢方法，反一次把本地路径漏进说明书。判据是 bash tools/sync.sh check，它必须报零差异。不要手工复制文件。",
+      "touches": ["tools/sync.sh"],
+      "verifiedBy": []
+    },
+    {
+      "id": "docs",
+      "title": "中英成对文档：文件名即语言",
+      "scope": "capability",
+      "status": "done",
+      "parent": null,
+      "after": ["checker"],
+      "source": "ENGINEERING-NOTES.md 第 45、46 条",
+      "notes": "中文用中文标题，英文用标准名，只有 README.md 例外 —— GitHub 只认这个文件名渲染首页。翻译对最容易出的问题是单边漂移：一边加了版本、加了条目，另一边没有。规则 (18) 盯三张表：更新日志的版本清单、工程笔记的编号条目、工程笔记的 S 系列。",
+      "touches": [
+        "README.md",
+        "README-eng.md",
+        "使用说明.md",
+        "MANUAL.md",
+        "更新日志.md",
+        "CHANGELOG.md",
+        "已知问题.md",
+        "KNOWN-ISSUES.md",
+        "工程笔记.md",
+        "ENGINEERING-NOTES.md"
+      ],
+      "verifiedBy": ["tools/static-check.py"]
+    },
+    {
+      "id": "release",
+      "title": "发版：签名链、校验和、Release 资产",
+      "scope": "release",
+      "status": "done",
+      "parent": null,
+      "after": ["installer", "checker"],
+      "source": "SIGNINGS.ndjson；.github/workflows/build.yml；CHANGELOG 各版本",
+      "notes": "顺序是固定的：升版本号（六处）→ 重建 → 签内层两个 → 重打包载荷 → 重建安装程序 → 签外层 → 回归 → 算校验和 → 文档 → tag → Release。CI 只做构建，不签名，所以 release job 遇到已存在的 Release 会跳过而不是覆盖 —— 否则未签名产物会顶掉签名版。资产名只能用 ASCII 且不含方括号（GitHub 会把单引号换成点，gh 会拿方括号当通配符）。",
+      "touches": ["dist", ".github/workflows/build.yml", "SIGNINGS.ndjson"],
+      "verifiedBy": []
+    },
+    {
+      "id": "known-issue-3",
+      "title": "EffectiveSpeed 的语义未确认（等手感判断）",
+      "scope": "task",
+      "status": "open",
+      "parent": null,
+      "after": [],
+      "source": "KNOWN-ISSUES.md 第 3 条",
+      "notes": "绝顶动画速度走 Animancer 的 EffectiveSpeed，设 800% 实测是 3.38。可能是这个属性的正常语义（按片长归一化），也可能有别的东西在夹。只能靠手感定：够快就留着，觉得慢就改用 Speed 或两层都设。要真实游玩才能推进。",
+      "touches": [],
+      "verifiedBy": []
+    },
+    {
+      "id": "known-issue-5",
+      "title": "零实战验证的功能（等更多使用反馈）",
+      "scope": "task",
+      "status": "open",
+      "parent": null,
+      "after": [],
+      "source": "KNOWN-ISSUES.md 第 5 条",
+      "notes": "这一条的性质和其他两条不同：不是没做，是做了但样本太少。哪些数值合适、哪些手感不对，要有人在真实游玩里用出来才算数，单人调不出来。",
+      "touches": [],
+      "verifiedBy": []
+    },
+    {
+      "id": "known-issue-16",
+      "title": "坐姿仍然顶掉索取模式（已加状态级兜底，待实战验证）",
+      "scope": "task",
+      "status": "open",
+      "parent": null,
+      "after": [],
+      "source": "KNOWN-ISSUES.md 第 16 条",
+      "notes": "第 15 条的修法不够。已加状态级兜底，但没在真实游玩里验过。和第 3 条一样带一条声明：可能不是固定触发，也要考虑游戏自身源码质量的可能 —— 拿到稳定复现步骤之前不动插件逻辑。",
+      "touches": [],
+      "verifiedBy": []
+    }
+  ]
+}

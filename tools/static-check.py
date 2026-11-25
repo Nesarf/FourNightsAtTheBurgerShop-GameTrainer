@@ -19,6 +19,8 @@ This file turns that consistency into rules a machine can check.
   (6) pose wording that should not be hard-coded ("索取" must not appear in a shared template)
   (7) the mount count must not drop below the expected figure (guards against "half the patches hooked")
   (16) every panel button must carry an explicit width (no full-row stretching)
+  (18) a document and its translation carry the same headings, in the same order
+       (changelog versions, engineering-note numbers, engineering-note S series)
 
 Usage:
     python tools/static-check.py [repo root]
@@ -157,7 +159,12 @@ for p in list(ROOT.rglob('*.cs')) + list(ROOT.rglob('*.ps1')) + list(ROOT.rglob(
     if '.git' in p.parts:
         continue
     # skip the checker itself — it spells these patterns out, otherwise it checks itself
-    if p.resolve() == pathlib.Path(__file__).resolve():
+    # [Match by name, not by full path] The exemption used to compare resolved paths, so it
+    # only covered the copy that was actually running. Running the working copy's script
+    # against the release tree (which is exactly what a two-tree check does) left the
+    # release copy unexempted, and its own rule table was reported as a leaked path.
+    # Same shape as the sync.sh exemption below, which always matched by name.
+    if p.name == pathlib.Path(__file__).name and p.parent.name == pathlib.Path(__file__).parent.name:
         continue
     # tools/sync.sh is a DETECTOR — its LEAKPAT variable spells those literals out.
     # Same as the checker itself: a legitimate self-reference exemption.
@@ -645,6 +652,68 @@ if _en_left:
          + ", ".join(_en_left[:4]))
 else:
     ok("(17) no Chinese in code-block comments of the English docs")
+
+# ── a document and its translation carry the same headings ───
+# [Why] 更新日志.md and CHANGELOG.md are a translation pair, and the English file opens
+# with a promise: "same versions, same order, same entries". A version written into one
+# side and forgotten on the other leaves a file that still looks complete — nothing about
+# a changelog announces the release it is missing.
+# The engineering notes are the same problem in a different shape: two numberings (the
+# numbered entries and the S series) run side by side, and an entry translated on one
+# side only is equally invisible. All three lists are compared, not one of them.
+# [Why this rule exists in this shape] Comparing the two by hand went wrong the first
+# time. The filter matched only headings that ended right after the number, while the
+# English file writes "## v1.0.99 — <description>" for every version below v1.0.100.
+# That produced "the English changelog is 18 versions behind", and it was false — the
+# files agreed all along. A comparison that quietly loses matches is worse than no
+# comparison, because its answer reads like evidence. This rule takes the version number
+# out of the heading and nothing else, so a description cannot hide a version.
+_ZH_LOG = ROOT / '更新日志.md'
+_EN_LOG = ROOT / 'CHANGELOG.md'
+_ZH_NOTES = ROOT / '工程笔记.md'
+_EN_NOTES = ROOT / 'ENGINEERING-NOTES.md'
+_VER_HEAD = re.compile(r'^##\s+(v[\d.]+)', re.M)
+_NUM_HEAD = re.compile(r'^##\s+(\d+)\.', re.M)
+_S_HEAD = re.compile(r'^##\s+(S\d+)\.', re.M)
+
+
+def _log_versions(p):
+    return _VER_HEAD.findall(read(p)) if p.exists() else []
+
+
+def _note_numbers(p):
+    # [Why both] the numbered entries and the S series are two parallel numberings;
+    # a translation that drops an entry shows up in whichever list it belonged to.
+    if not p.exists():
+        return [], []
+    _t = read(p)
+    return _NUM_HEAD.findall(_t), _S_HEAD.findall(_t)
+
+
+def _compare_pair(label, zh, en):
+    if not zh or not en:
+        warn('(18) %s: one side is missing or has no headings' % label)
+        return
+    if zh == en:
+        ok('(18) %s: %d entries, same order on both sides' % (label, len(zh)))
+        return
+    _only_zh = [v for v in zh if v not in set(en)]
+    _only_en = [v for v in en if v not in set(zh)]
+    _why = []
+    if _only_zh:
+        _why.append('only on the Chinese side: ' + ', '.join(_only_zh[:5]))
+    if _only_en:
+        _why.append('only on the English side: ' + ', '.join(_only_en[:5]))
+    if not _why:
+        _why.append('the same entries but in a different order')
+    fail('(18) %s disagrees — %s' % (label, '; '.join(_why)))
+
+
+_compare_pair('changelogs', _log_versions(_ZH_LOG), _log_versions(_EN_LOG))
+_zh_num, _zh_s = _note_numbers(_ZH_NOTES)
+_en_num, _en_s = _note_numbers(_EN_NOTES)
+_compare_pair('engineering notes (numbered)', _zh_num, _en_num)
+_compare_pair('engineering notes (S series)', _zh_s, _en_s)
 
 # ── summary ─────────────────────────────────────────────────
 print()
