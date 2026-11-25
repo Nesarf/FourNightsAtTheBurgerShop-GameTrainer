@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -373,6 +374,21 @@ namespace BurgerShopInstaller
                         if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
 
                         bool existedBefore = File.Exists(dest);
+
+                        // 【不覆盖用户已有的配置】
+                        // 载荷里带着出厂配置，是为了让全新安装有个好起点。但如果用户已经有一份，
+                        // 无条件覆盖会把人家调过的一整套参数换掉 —— 那是 issue #4 的另一半：
+                        // 反馈说的是「装完设置变了」，而升级时把设置改掉同样糟，只是更难被发现。
+                        //
+                        // 只有活跃配置文件受这条保护。shipped.cfg 是 default 预设的基准，
+                        // 它必须跟着版本更新，所以照常写。
+                        if (existedBefore && rel.EndsWith("nesarf.burgershop.modder.cfg", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // 记空串：卸载时不删它，因为这次也没写过它
+                            installed.Add(rel + "\t");
+                            continue;
+                        }
+
                         using (Stream src = e.Open())
                         using (var outFile = File.Create(dest))
                         {
@@ -477,14 +493,34 @@ namespace BurgerShopInstaller
                         try
                         {
                             string p = Path.Combine(root, rel);
-                            if (Directory.Exists(p)) Directory.Delete(p, true);
+                            if (!Directory.Exists(p)) continue;
+
+                            // 【只删空目录，别递归】
+                            // 原来这里是 Directory.Delete(p, true)。manifest 里明明把用户的
+                            // 配置文件记成「安装前就存在，卸载不删」，上面第 439 行也确实跳过了它 ——
+                            // 然后这一行把整个 config 目录连根删掉，用户的配置跟着没了。
+                            // 两条规则互相打架时，危险的那条得让路。
+                            //
+                            // 自底向上：先清空的子目录，再看这一层。还有东西就留着 ——
+                            // 剩下的要么是用户的，要么是 BepInEx 自己的缓存，都不该由这一行决定。
+                            foreach (string sub in Directory.GetDirectories(p, "*", SearchOption.AllDirectories)
+                                                        .OrderByDescending(x => x.Length))
+                            {
+                                if (Directory.GetFileSystemEntries(sub).Length == 0) Directory.Delete(sub);
+                            }
+                            if (Directory.GetFileSystemEntries(p).Length == 0) Directory.Delete(p);
                         }
                         catch { }
                     }
                     foreach (string rel in new[]
                     {
                         @"BepInEx\LogOutput.log", @"BepInEx\output_log.txt",
-                        @"BepInEx\config\BepInEx.cfg", @"BepInEx\config\nesarf.burgershop.modder.cfg"
+                        // 【用户配置不在这张表里】这条曾经是「随包附带的默认配置」，
+                        // 卸载时删掉它算恢复原状。现在它是用户自己调出来的设置：
+                        // 安装时会跳过它、清单里也记着「不删」，却在这一行被兜底删掉。
+                        // 三处规则里两处说不删、一处说删，结果由最不显眼的那处决定 ——
+                        // 删完之后 config 目录变空，RemoveEmptyDirs 再把 BepInEx 整个收走。
+                        @"BepInEx\config\BepInEx.cfg"
                     })
                     {
                         try

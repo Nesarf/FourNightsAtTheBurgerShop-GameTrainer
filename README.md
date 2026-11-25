@@ -462,7 +462,7 @@ Get-FileHash "18-9L-6_ED-7-45-45_C-LS-Installer.exe" -Algorithm SHA256
 v1.0.104 的值是：
 
 ```
-9aa3b719b9c707471746e7bcc2aa0c7e229c217b36b34fe73c54c6ffea88289d  18-9L-6_ED-7-45-45_C-LS-Installer.exe
+fbd655891cd92f4a2694685fb27d369720a6d955eccda00d4c1b68cb495910b9  18-9L-6_ED-7-45-45_C-LS-Installer.exe
 bef4f8c17711b2b79cf12314716a1609f5c8749eaa72ab4aebfbd11d9d0d8a15  18-9L-6_ED-7-45-45_C-LS-Trainer.exe
 58836536eaf8bcd1dc49e20f766d3af6e0e2caeac3f03448e10922764671f2fc  18-9L-6_ED-7-45-45_C-LS.dll
 ```
