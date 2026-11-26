@@ -338,7 +338,7 @@ the last two are tools and information:
 
 In English, in the same order: Player / Fellatio / Rear / Riding / Outfit / System / Presets / About.
 
-- **Presets** (`预设`) — store the entire current configuration as a named snapshot and switch back to it at any time
+- **Presets** (`预设`) — config snapshots: save / save as / apply / delete, plus the read-only `default` and `autosave`
 - **About** (`关于`) — repository URL, bilibili, feedback email
 
 The same mechanism goes by a different name in each of the three tabs — **Fellatio 「吸取」 Absorb,
@@ -356,8 +356,8 @@ Rear 「索取」 Demand, Riding 「榨取」 Drain** — and **the parameters a
 - **binding kiss** — an independent speed control exclusive to Riding (entering the kiss and triggering the chain drain
   are two separate things)
 - **Manman zone** — a hit area symmetric with spank: it raises the demand urge and gives the seated animation a speed impulse
-- **config presets** — store the entire current configuration as a named snapshot and switch back to it at any time
-  (an automatic backup is taken before overwriting)
+- **config presets** — save / save as / apply / delete named snapshots; `default` returns to the factory state and
+  `autosave` undoes the last overwrite
 - **game build check** — compares the game assembly fingerprint on startup and tells you plainly when the version does not match
 
 ### Some design trade-offs
@@ -366,8 +366,8 @@ Rear 「索取」 Demand, Riding 「榨取」 Drain** — and **the parameters a
   so changing one tab does not affect the other two
 - **safe with two config writers** — the in-game panel and the external editor can both change it without
   overwriting each other
-- **a way back before overwriting** — applying a preset or migrating the config always backs up first,
-  and writes out the backup file name
+- **a way back before overwriting** — applying a preset or migrating the config always backs up first;
+  applying a preset writes that backup into `autosave`, so one click takes you back
 
 The full documentation is **[`使用说明.md`](使用说明.md)**.
 

@@ -252,7 +252,7 @@ HitArea 筛选	HitArea filter
 展开	Expand
 强制显示全部部件	Force-show every part
 恢复默认	Restore defaults
-恢复默认上限（100 / 100）	Restore the default caps (100 / 100)
+恢复为 100 / 100	Reset to 100 / 100
 截图存档	Save a screenshot
 手动触发动摇	Trigger the tremor by hand
 手动进入{0}	Enter {0} manually

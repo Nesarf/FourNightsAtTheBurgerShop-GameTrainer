@@ -9908,7 +9908,10 @@ namespace BurgerShopModder
             GUILayout.EndHorizontal();
 
             GUILayout.Space(4f);
-            if (GUILayout.Button(L.T("恢复默认上限（100 / 100）"), Btn("恢复默认上限（100 / 100）")))
+            // 【这里不叫「默认」】把上限写回 100/100 是回到代码默认值，而出厂配置里
+            // 这两项是 300。同一个「默认」给出两个值，用户没法判断哪个才对。
+            // 按钮直接说它做什么：恢复为 100 / 100。
+            if (GUILayout.Button(L.T("恢复为 100 / 100"), Btn("恢复为 100 / 100")))
             {
                 TargetHp.Value = 100f;
                 TargetEcstasy.Value = 100f;

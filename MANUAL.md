@@ -135,7 +135,7 @@ So once the caps have been shaved, **healing gets harder and harder**. The count
 | **Lock HP cap / lock ecstasy cap** | when a cap is shaved, press it straight back to the baseline (the field is written exactly, with no percentage compensation, to avoid cumulative drift) |
 | **HP / ecstasy cap target** | an **absolute value** target, approached smoothly every frame at the "approach speed"; 0 = disabled |
 | **Approach speed** | points per second; lower is smoother |
-| **×1.5 / ×2 / restore default** | quick target presets |
+| **×1.5 / ×2 / reset to 100 / 100** | quick target presets |
 
 > **Why "set it to a value" rather than "add a percentage"**: an early version worked in percentages and multiplied once per slider
 > change, so dragging **expanded exponentially** into the hundreds of thousands or tens of millions and caused stutter. Now the slider
@@ -366,7 +366,7 @@ The panel (F9) is split into eight tabs. **The first six are grouped by "which p
 | **Riding** | the seated pose (`Sit`) — the mechanic on this side is called **"Drain"**, and there is also the **binding kiss** and the **Manman zone** |
 | **Costume** | costume + parts (two tabs before, now merged) |
 | **System** | caps + system (two tabs before, now merged) |
-| **Presets** | config snapshots: save / apply / overwrite / delete. Unrelated to pose |
+| **Presets** | config snapshots: save / save as / apply / delete, plus the read-only `default` (factory state) and `autosave` (current state). Unrelated to pose |
 | **About** | repository URL, bilibili, feedback email. Unrelated to pose |
 
 > **The three poses use different words for the same underlying mechanic**:
