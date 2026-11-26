@@ -11,7 +11,32 @@ the `#N` after an entry is its number in that file.
 
 ---
 
-## Unreleased
+## v1.0.106
+
+**One label change and two fixes on the English side.**
+
+### "restore default (100 / 100)" renamed
+
+That button in the Player tab writes the HP / ecstasy caps back to 100/100 — the code default. In the shipped config those two are 300. One word, two different values, and no way for a user to tell which "default" is meant. It is now "reset to 100 / 100", which says what it does.
+
+### Two fixes in English mode
+
+- `default(factory state, read-only)` was missing the space before the parenthesis — the Chinese full-width bracket does not need one, the English half-width one does. A leading space was added to the translation
+- The Presets tab had two hints saying the same thing (what to do after a misclick); one is gone. English text is longer, and with both in place the bottom of the panel was pushed out of view — even the `Preset folder:` line could not be shown
+
+### Documentation
+
+The Presets entry in 使用说明 / MANUAL now mentions `default` and `autosave` and no longer lists the "overwrite" button that was removed; both READMEs updated to match.
+
+### Verification
+
+Confirmed from an actual screenshot in English mode (`Language = en`): tab names and buttons all English, `default (factory state, read-only)` correctly spaced, `Preset folder:` visible, `Restore` button working.
+
+Regression: install 29 / uninstall 28 keeping 1 / reinstall 29; all three artifacts at v1.0.106.0, signatures Valid.
+
+---
+
+## v1.0.105
 
 **Fixes issue #4: the factory config now comes from the repository, the editor's "restore defaults" no longer crashes, and the preset list gained `default` and `autosave`.**
 

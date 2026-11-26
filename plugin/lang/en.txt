@@ -1116,7 +1116,7 @@ ERR 插件实例不存在	ERR the plugin instance does not exist
 保存	Save
 撤回	Undo
 恢复	Restore
-（出厂状态 · 只读）	(factory state, read-only)
+（出厂状态 · 只读）	 (factory state, read-only)
 手滑点了别的预设，就点 autosave 的「撤回」。	If you apply the wrong preset, click "Undo" on autosave.
 已应用预设「{0}」：{1} 项{2}；应用前的状态已存为 autosave，列表里可以退回来	Applied preset [{0}]: {1} entries{2}; the previous state was saved as autosave, and you can return to it from the list
 已恢复出厂状态：{0} 项{1}{2}{3}；恢复前的状态已存为 autosave，列表里可以退回来	Restored the factory state: {0} entries{1}{2}{3}; the previous state was saved as autosave, and you can return to it from the list
@@ -1126,6 +1126,5 @@ ERR 插件实例不存在	ERR the plugin instance does not exist
 ERR 「autosave」不能删除 —— 它是撤销上一次覆盖的退路。	ERR autosave cannot be deleted — it is the way back from the last overwrite.
 「保存」只写 autosave，不会碰你存下的任何一份。	"Save" writes only to autosave and never touches any preset you have stored.
 要把当前状态固定成一个名字，用「另存为」—— 那才是新建一份预设。	To pin the current state under a name, use "Save as" — that is what creates a new preset.
-（当前状态 · 只读）	(current state, read-only)
+（当前状态 · 只读）	 (current state, read-only)
 「default」是出厂状态，「autosave」是当前状态的固定槽 —— 两个都只读。	"default" is the factory state and "autosave" is the fixed slot for the current state; both are read-only.
-「应用」会覆盖当前全部设置，覆盖前的状态自动存进 autosave —— 点它的「撤回」就退回来。	"Apply" overwrites every setting; the state before that goes into autosave — click its "Undo" to come back.

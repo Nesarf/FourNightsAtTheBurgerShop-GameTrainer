@@ -15,7 +15,7 @@ namespace BurgerShopModder
     /// Four Nights at the Burger Shop — 数值修改器
     /// 用反射操作游戏托管字段，不修改原始 Assembly-CSharp.dll，卸载 BepInEx 即完全还原。
     /// </summary>
-    [BepInPlugin(Guid, "Burger Shop Trainer / 数值修改器", "1.0.105")]
+    [BepInPlugin(Guid, "Burger Shop Trainer / 数值修改器", "1.0.106")]
     [BepInProcess("Four Nights at the Burger Shop.exe")]
     public class Plugin : BaseUnityPlugin
     {
@@ -9236,7 +9236,7 @@ namespace BurgerShopModder
         private string _aboutHint = "";
 
         /// <summary>插件版本。与 [BepInPlugin] 里那个字符串保持一致。</summary>
-        internal const string PluginVersion = "1.0.105";
+        internal const string PluginVersion = "1.0.106";
 
         private const string UrlRepo = "https://github.com/Nesarf/FourNightsAtTheBurgerShop-GameTrainer";
         private const string UrlBili = "https://space.bilibili.com/11247581";
@@ -9340,7 +9340,10 @@ namespace BurgerShopModder
             }
 
             GUILayout.Space(4f);
-            Hint("「应用」会覆盖当前全部设置，覆盖前的状态自动存进 autosave —— 点它的「撤回」就退回来。");
+            // 这里原来还有一条 Hint：「应用」会覆盖当前全部设置，覆盖前的状态自动存进 autosave ——
+            // 点它的「撤回」就退回来。它和上面那条「手滑点了别的预设，就点 autosave 的撤回」是同一件事，
+            // 而两条加起来正好把面板底部挤出可视区：英文文本更长，连「预设目录」那行都看不到，
+            // 最后一条 Hint 的末尾也被裁掉。说一遍就够。
             if (!string.IsNullOrEmpty(_presetHint)) GUILayout.Label("  " + _presetHint);
             GUILayout.Space(4f);
             string dir = PresetStore.DirPath();
